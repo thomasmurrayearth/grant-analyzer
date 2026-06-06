@@ -1,0 +1,1161 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="Discover and score grant opportunities for climate and deeptech startups." />
+  <meta name="theme-color" content="#1E3A5F" />
+  <link rel="manifest" href="/manifest.json" />
+  <link rel="icon" href="/icons/icon.svg" type="image/svg+xml" />
+  <title>Grant Opportunity Analyser</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    .tier-must  { background:#1A7A4A; color:#fff; }
+    .tier-big   { background:#6B21A8; color:#fff; }
+    .tier-quick { background:#1D4ED8; color:#fff; }
+    .tier-prep  { background:#0F766E; color:#fff; }
+    .tier-strat { background:#B45309; color:#fff; }
+    .tier-low   { background:#6B7280; color:#fff; }
+
+    .score-5{ background:#1A7A4A; }
+    .score-4{ background:#2D9D6A; }
+    .score-3{ background:#CA8A04; }
+    .score-2{ background:#DC4E1B; }
+    .score-1{ background:#991B1B; }
+
+    #log { scroll-behavior: smooth; }
+    th[data-sort]:hover { cursor: pointer; background:#1E3A5F !important; }
+
+    @keyframes fadeUp {
+      from { opacity:0; transform:translateY(12px); }
+      to   { opacity:1; transform:translateY(0); }
+    }
+    .fade-up { animation: fadeUp .4s ease both; }
+
+    /* Drop zone drag-active state */
+    .drop-active { border-color:#1E3A5F !important; background:#EFF6FF !important; }
+
+    /* Editable review field */
+    .rev-input {
+      width:100%; border:1px solid #CBD5E1; border-radius:0.5rem;
+      padding:0.5rem 0.75rem; font-size:0.875rem;
+      outline:none; transition:box-shadow .15s;
+    }
+    .rev-input:focus { box-shadow:0 0 0 2px #1E3A5F40; border-color:#1E3A5F; }
+    .install-banner {
+      display: none;
+    }
+    .install-banner.active {
+      display: flex;
+    }
+  </style>
+</head>
+
+<body class="bg-slate-50 min-h-screen font-sans text-slate-800">
+
+<!-- ── HEADER ─────────────────────────────────────────────────────────────── -->
+<header class="bg-[#1E3A5F] text-white py-6 px-8 shadow-lg">
+  <div class="max-w-5xl mx-auto">
+    <h1 class="text-2xl font-bold tracking-tight">Grant Opportunity Analyser</h1>
+    <p class="text-slate-300 text-sm mt-0.5">Climate &amp; Deeptech Startup Funding Intelligence</p>
+  </div>
+</header>
+
+<div id="install-banner" class="hidden install-banner max-w-5xl mx-auto mt-4 px-6">
+  <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-white border border-slate-200 rounded-2xl p-4 shadow-sm">
+    <div>
+      <p class="text-sm text-slate-700 font-medium">Install this app in Chrome for one-click access anytime.</p>
+      <p class="text-xs text-slate-500 mt-1">After installation, open it directly from Chrome or your desktop launcher.</p>
+    </div>
+    <button id="btn-install-app" class="bg-[#1E3A5F] hover:bg-[#16305A] text-white font-semibold px-4 py-2.5 rounded-lg text-sm transition-colors">
+      Install app
+    </button>
+  </div>
+</div>
+
+<!-- ── MAIN ───────────────────────────────────────────────────────────────── -->
+<main class="max-w-5xl mx-auto px-6 py-10 space-y-8">
+
+  <!-- ── FORM ──────────────────────────────────────────────────────────────── -->
+  <section id="form-section" class="bg-white rounded-2xl shadow-sm border border-slate-200 p-8">
+    <h2 class="text-lg font-semibold mb-1">Company Brief</h2>
+    <p class="text-sm text-slate-500 mb-6">Provide any combination of the inputs below — the more context you give, the better the results.</p>
+
+    <div class="space-y-5">
+
+      <!-- URL -->
+      <div>
+        <label class="block text-sm font-medium text-slate-700 mb-1">
+          Website URL <span class="text-slate-400 font-normal">(optional)</span>
+        </label>
+        <input id="url" type="url" placeholder="https://example.com"
+               class="w-full border border-slate-300 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#1E3A5F]" />
+        <p class="text-xs text-slate-400 mt-1">
+          If the site uses JavaScript rendering or bot protection it may not load — use the fields below as a fallback.
+        </p>
+      </div>
+
+      <!-- Text area + Drop zone — side-by-side on desktop -->
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+
+        <!-- Paste text -->
+        <div class="flex flex-col">
+          <label class="block text-sm font-medium text-slate-700 mb-1">
+            Paste company text <span class="text-slate-400 font-normal">(optional)</span>
+          </label>
+          <textarea id="extra-text" rows="5" placeholder="Paste an about page, pitch description, or any company information here…"
+                    class="flex-1 border border-slate-300 rounded-lg px-4 py-2.5 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-[#1E3A5F]"></textarea>
+        </div>
+
+        <!-- Drop zone -->
+        <div class="flex flex-col">
+          <label class="block text-sm font-medium text-slate-700 mb-1">
+            Upload a document <span class="text-slate-400 font-normal">(optional)</span>
+          </label>
+          <div id="drop-zone"
+               class="flex-1 flex flex-col items-center justify-center border-2 border-dashed border-slate-300 rounded-xl p-5 text-center cursor-pointer hover:border-[#1E3A5F] hover:bg-blue-50 transition-colors min-h-[9rem]">
+
+            <!-- Idle state -->
+            <div id="drop-idle">
+              <svg class="mx-auto w-8 h-8 text-slate-400 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
+                      d="M9 13h6m-3-3v6m5 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414A1 1 0 0119 9.414V19a2 2 0 01-2 2z" />
+              </svg>
+              <p class="text-sm text-slate-500">Drop a PDF, DOCX, or TXT here</p>
+              <p class="text-xs text-slate-400 mt-1">
+                or
+                <label class="text-[#1E3A5F] underline cursor-pointer">
+                  browse
+                  <input id="file-input" type="file" accept=".pdf,.docx,.doc,.txt" class="hidden" />
+                </label>
+              </p>
+            </div>
+
+            <!-- Loading state -->
+            <div id="drop-loading" class="hidden">
+              <div class="w-5 h-5 border-2 border-[#1E3A5F] border-t-transparent rounded-full animate-spin mx-auto mb-2"></div>
+              <p class="text-sm text-slate-500">Extracting text…</p>
+            </div>
+
+            <!-- File attached state -->
+            <div id="drop-file" class="hidden text-center">
+              <svg class="mx-auto w-7 h-7 text-green-600 mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+              </svg>
+              <p id="drop-filename" class="text-sm font-medium text-slate-700 break-all"></p>
+              <button id="drop-clear" type="button" class="text-xs text-red-500 hover:text-red-700 mt-1 underline">Remove</button>
+            </div>
+
+          </div>
+        </div>
+
+      </div><!-- /grid -->
+
+      <!-- Optional preferences -->
+      <details class="group">
+        <summary class="cursor-pointer text-sm text-slate-500 select-none group-open:text-slate-700">
+          Optional preferences ▸
+        </summary>
+        <div class="mt-4 space-y-4 pl-1">
+          <div>
+            <label class="block text-sm font-medium text-slate-700 mb-1">Priority geographies for funding</label>
+            <input id="geos" type="text" placeholder="e.g. United Kingdom, EU, India"
+                   class="w-full border border-slate-300 rounded-lg px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#1E3A5F]" />
+          </div>
+          <div class="flex flex-wrap gap-6 text-sm">
+            <label class="flex items-center gap-2">
+              <input id="chk-consortium"   type="checkbox" checked class="accent-[#1E3A5F]" />
+              Open to consortium applications
+            </label>
+            <label class="flex items-center gap-2">
+              <input id="chk-accelerators" type="checkbox" checked class="accent-[#1E3A5F]" />
+              Open to accelerators / incubators
+            </label>
+            <label class="flex items-center gap-2">
+              <input id="chk-prizes" type="checkbox" checked class="accent-[#1E3A5F]" />
+              Open to challenge prizes
+            </label>
+          </div>
+        </div>
+      </details>
+
+      <div class="flex items-center gap-3">
+        <button id="btn-run"
+                class="bg-[#1E3A5F] hover:bg-[#16305A] text-white font-semibold px-7 py-2.5 rounded-lg text-sm transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
+          Analyse Company
+        </button>
+        <p id="form-error" class="hidden text-sm text-red-600"></p>
+      </div>
+      <p class="text-xs text-slate-400 mt-2">
+        By clicking "Analyse Company" you agree to our
+        <a href="/terms.html" target="_blank" class="underline hover:text-slate-600">Terms of Use</a>
+        and acknowledge that we collect usage data to improve this service as described in our
+        <a href="/privacy.html" target="_blank" class="underline hover:text-slate-600">Privacy Policy</a>.
+      </p>
+
+    </div>
+  </section>
+
+  <!-- ── PROGRESS ───────────────────────────────────────────────────────────── -->
+  <section id="progress-section" class="hidden bg-white rounded-2xl shadow-sm border border-slate-200 p-8">
+    <div class="flex items-center gap-3 mb-4">
+      <div id="spinner" class="w-5 h-5 border-2 border-[#1E3A5F] border-t-transparent rounded-full animate-spin shrink-0"></div>
+      <h2 id="progress-heading" class="text-lg font-semibold">Analysis in progress</h2>
+    </div>
+
+    <!-- Stage indicators -->
+    <div class="flex gap-4 mb-5 flex-wrap">
+      <div id="stage-1" class="flex items-center gap-2 text-sm text-slate-400">
+        <div class="w-2 h-2 rounded-full bg-slate-300"></div>Company Research
+      </div>
+      <div class="text-slate-300 text-xs self-center">→</div>
+      <div id="stage-2" class="flex items-center gap-2 text-sm text-slate-400">
+        <div class="w-2 h-2 rounded-full bg-slate-300"></div>Grant Discovery
+      </div>
+      <div class="text-slate-300 text-xs self-center">→</div>
+      <div id="stage-3" class="flex items-center gap-2 text-sm text-slate-400">
+        <div class="w-2 h-2 rounded-full bg-slate-300"></div>Deep Research &amp; Scoring
+      </div>
+    </div>
+
+    <!-- Live log -->
+    <div id="log" class="bg-slate-900 text-slate-100 rounded-lg p-4 font-mono text-xs h-56 overflow-y-auto space-y-1"></div>
+  </section>
+
+  <!-- ── REVIEW CARD ─────────────────────────────────────────────────────────── -->
+  <section id="review-section" class="hidden bg-white rounded-2xl shadow-sm border-2 border-[#1E3A5F] p-8 fade-up">
+
+    <div class="flex items-start gap-4 mb-6">
+      <div class="w-9 h-9 rounded-full bg-green-100 flex items-center justify-center shrink-0 text-green-600 text-lg font-bold">✓</div>
+      <div>
+        <h2 class="text-lg font-semibold">Company research complete — review before continuing</h2>
+        <p class="text-sm text-slate-500 mt-0.5">
+          Check and correct the profile below. The more accurate it is, the better your grant results will be.
+        </p>
+        <p id="rev-source-note" class="text-xs text-slate-400 mt-1 italic"></p>
+      </div>
+    </div>
+
+    <!-- Editable fields grid -->
+    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
+
+      <div>
+        <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1">Company Name</label>
+        <input id="rev-name" type="text" class="rev-input" />
+      </div>
+
+      <div>
+        <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1">Sector / Classification</label>
+        <input id="rev-classification" type="text" placeholder="e.g. Climate Tech / Deeptech / AI" class="rev-input" />
+      </div>
+
+      <div>
+        <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1">Stage</label>
+        <select id="rev-stage" class="rev-input bg-white">
+          <option value="Pre-seed">Pre-seed</option>
+          <option value="Seed">Seed</option>
+          <option value="Series A">Series A</option>
+          <option value="Growth">Growth</option>
+          <option value="unknown">Unknown</option>
+        </select>
+      </div>
+
+      <div>
+        <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1">Headquarters</label>
+        <input id="rev-hq" type="text" placeholder="e.g. London, UK" class="rev-input" />
+      </div>
+
+      <div class="sm:col-span-2">
+        <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1">
+          Technology Readiness Level (TRL)
+          <span class="font-normal text-slate-400 normal-case ml-1">— used to filter out grants with incompatible TRL requirements</span>
+        </label>
+        <input id="rev-trl" type="text" placeholder="e.g. TRL 7 — live pilots completed, pre-commercial" class="rev-input" />
+      </div>
+
+    </div>
+
+    <div class="space-y-4 mb-4">
+
+      <div>
+        <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1">Value Proposition</label>
+        <textarea id="rev-value-prop" rows="2" class="rev-input resize-none" placeholder="One sentence — what problem they solve and for whom"></textarea>
+      </div>
+
+      <div>
+        <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1">Core Technology</label>
+        <input id="rev-technology" type="text" class="rev-input" placeholder="e.g. Waste heat recovery, edge computing" />
+      </div>
+
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div>
+          <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1">
+            Key Themes <span class="font-normal text-slate-400">(comma-separated)</span>
+          </label>
+          <input id="rev-key-themes" type="text" class="rev-input" placeholder="e.g. net zero, waste heat, fuel poverty" />
+        </div>
+        <div>
+          <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1">
+            Operational Geographies <span class="font-normal text-slate-400">(comma-separated)</span>
+          </label>
+          <input id="rev-op-geos" type="text" class="rev-input" placeholder="e.g. United Kingdom, Wales" />
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Action buttons -->
+    <div class="flex flex-wrap gap-3 pt-2 border-t border-slate-100">
+      <button id="btn-continue"
+              class="bg-[#1E3A5F] hover:bg-[#16305A] text-white font-semibold px-7 py-2.5 rounded-lg text-sm transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
+        Find Grants →
+      </button>
+      <button id="btn-back"
+              class="border border-slate-300 text-slate-600 hover:bg-slate-50 font-medium px-5 py-2.5 rounded-lg text-sm transition-colors">
+        ← Start over
+      </button>
+    </div>
+
+  </section>
+
+  <!-- ── RESULTS ────────────────────────────────────────────────────────────── -->
+  <section id="results-section" class="hidden space-y-8 fade-up">
+
+    <div class="flex flex-col sm:flex-row gap-4 sm:items-start sm:justify-between">
+      <div id="company-card" class="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 flex-1"></div>
+      <button id="btn-download"
+              class="self-start bg-[#1A7A4A] hover:bg-[#166040] text-white font-semibold px-6 py-2.5 rounded-lg text-sm transition-colors whitespace-nowrap">
+        ↓ Download XLSX
+      </button>
+    </div>
+
+    <div id="exec-summary" class="bg-white rounded-2xl shadow-sm border border-slate-200 p-6"></div>
+
+    <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-6">
+      <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4">
+        <h2 class="text-lg font-semibold">Grant Opportunities</h2>
+        <div class="flex gap-2 flex-wrap">
+          <button class="tier-filter text-xs px-3 py-1 rounded-full border border-slate-300 hover:bg-slate-100 active" data-tier="all">All</button>
+          <button class="tier-filter text-xs px-3 py-1 rounded-full tier-must"  data-tier="Must Pursue">Must Pursue</button>
+          <button class="tier-filter text-xs px-3 py-1 rounded-full tier-big"   data-tier="Big Bet">Big Bet</button>
+          <button class="tier-filter text-xs px-3 py-1 rounded-full tier-quick" data-tier="Quick Win">Quick Win</button>
+          <button class="tier-filter text-xs px-3 py-1 rounded-full tier-prep"  data-tier="Prepare for Next Window">Next Window</button>
+          <button class="tier-filter text-xs px-3 py-1 rounded-full tier-strat" data-tier="Strategic Positioning">Strategic</button>
+          <button class="tier-filter text-xs px-3 py-1 rounded-full tier-low"   data-tier="Low Priority">Low Priority</button>
+        </div>
+      </div>
+      <div class="overflow-x-auto">
+        <table id="opp-table" class="w-full text-sm border-collapse">
+          <thead>
+            <tr class="bg-[#1E3A5F] text-white text-left">
+              <th class="px-3 py-2 font-semibold" data-sort="name">Grant / Programme</th>
+              <th class="px-3 py-2 font-semibold" data-sort="managing_body">Body</th>
+              <th class="px-3 py-2 font-semibold" data-sort="geography">Geography</th>
+              <th class="px-3 py-2 font-semibold" data-sort="priority_score">Score ↕</th>
+              <th class="px-3 py-2 font-semibold" data-sort="thematic_fit_score">TF</th>
+              <th class="px-3 py-2 font-semibold" data-sort="strategic_value_score">SV</th>
+              <th class="px-3 py-2 font-semibold" data-sort="ease_score">Ease</th>
+              <th class="px-3 py-2 font-semibold">Tier</th>
+              <th class="px-3 py-2 font-semibold">Funding</th>
+              <th class="px-3 py-2 font-semibold">Status</th>
+            </tr>
+          </thead>
+          <tbody id="opp-body"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <div id="detail-panel" class="hidden bg-white rounded-2xl shadow-sm border-2 border-[#1E3A5F] p-6 space-y-4 fade-up"></div>
+
+    <div id="rec-section" class="bg-white rounded-2xl shadow-sm border border-slate-200 p-6"></div>
+
+    <!-- Strategic Watchlist -->
+    <div id="watchlist-section" class="hidden bg-white rounded-2xl shadow-sm border border-amber-200 p-6">
+      <div class="flex items-center gap-3 mb-2">
+        <h2 class="text-lg font-semibold">Strategic Watchlist</h2>
+        <span id="watchlist-count" class="text-xs bg-amber-100 text-amber-800 px-2.5 py-0.5 rounded-full font-medium"></span>
+      </div>
+      <p class="text-sm text-slate-500 mb-4">
+        Relevant funders and programmes that are not currently actionable as direct applications —
+        due to relationship-led access, unclear application routes, in-kind-only support, or similar barriers.
+        Worth monitoring or pursuing through a partner.
+      </p>
+      <div class="overflow-x-auto">
+        <table class="w-full text-sm border-collapse">
+          <thead>
+            <tr class="text-white text-left" style="background:#92400E">
+              <th class="px-3 py-2 font-semibold">Name</th>
+              <th class="px-3 py-2 font-semibold">Body</th>
+              <th class="px-3 py-2 font-semibold">Type</th>
+              <th class="px-3 py-2 font-semibold">Route</th>
+              <th class="px-3 py-2 font-semibold">Why Relevant</th>
+              <th class="px-3 py-2 font-semibold">Why Not Main</th>
+              <th class="px-3 py-2 font-semibold">What Would Unlock</th>
+            </tr>
+          </thead>
+          <tbody id="watchlist-body"></tbody>
+        </table>
+      </div>
+    </div>
+
+  </section>
+
+</main>
+
+<!-- ── FOOTER ─────────────────────────────────────────────────────────────── -->
+<footer class="text-center text-xs text-slate-400 py-8 space-y-2">
+  <p>Powered by Claude claude-sonnet-4-6 · Grant data sourced via live web search</p>
+  <p class="space-x-3">
+    <a href="/privacy.html" class="underline hover:text-slate-600">Privacy Policy</a>
+    <span>·</span>
+    <a href="/terms.html" class="underline hover:text-slate-600">Terms of Use</a>
+    <span>·</span>
+    <a href="mailto:thomasmurraynz@gmail.com" class="underline hover:text-slate-600">Contact</a>
+  </p>
+</footer>
+
+<!-- ── SCRIPTS ────────────────────────────────────────────────────────────── -->
+<script>
+// ---------------------------------------------------------------------------
+// State
+// ---------------------------------------------------------------------------
+let _result           = null;
+let _jobId            = null;
+let _pendingProfile   = null;   // Claude's raw profile from Phase 1
+let _pendingPrefs     = null;   // preferences saved when Phase 1 starts
+let _attachedFileText = '';     // text extracted from uploaded file
+let _sortCol          = 'priority_score';
+let _sortAsc          = false;
+let _tierFilter       = 'all';
+
+// ---------------------------------------------------------------------------
+// DOM helpers
+// ---------------------------------------------------------------------------
+const $ = id => document.getElementById(id);
+
+function showError(msg) {
+  const el = $('form-error');
+  el.textContent = msg;
+  el.classList.remove('hidden');
+}
+function clearError() { $('form-error').classList.add('hidden'); }
+
+function tierClass(tier) {
+  const map = {
+    'Must Pursue': 'tier-must', 'Big Bet': 'tier-big',
+    'Quick Win': 'tier-quick', 'Prepare for Next Window': 'tier-prep',
+    'Strategic Positioning': 'tier-strat', 'Low Priority': 'tier-low',
+  };
+  return map[tier] || 'tier-low';
+}
+
+function timingBadge(t) {
+  const map = {
+    'open_now':            '<span class="text-xs font-medium text-green-700 bg-green-50 border border-green-200 px-2 py-0.5 rounded-full">● Open now</span>',
+    'known_future_window': '<span class="text-xs font-medium text-blue-700 bg-blue-50 border border-blue-200 px-2 py-0.5 rounded-full">◎ Opens on known schedule</span>',
+    'recurring_uncertain': '<span class="text-xs font-medium text-amber-700 bg-amber-50 border border-amber-200 px-2 py-0.5 rounded-full">◌ Likely to recur — timing uncertain</span>',
+    'timing_unknown':      '<span class="text-xs text-slate-500 bg-slate-50 border border-slate-200 px-2 py-0.5 rounded-full">? Timing unknown</span>',
+  };
+  return map[t] || '';
+}
+
+function linkTypeBadge(t) {
+  const map = {
+    'application_portal': '<span class="text-xs text-green-700 bg-green-50 border border-green-200 px-2 py-0.5 rounded-full">✓ Application portal</span>',
+    'programme_page':     '<span class="text-xs text-blue-700 bg-blue-50 border border-blue-200 px-2 py-0.5 rounded-full">Programme page</span>',
+    'funder_homepage':    '<span class="text-xs text-amber-700 bg-amber-50 border border-amber-200 px-2 py-0.5 rounded-full">⚠ Funder homepage — navigate to find application</span>',
+  };
+  return map[t] || '';
+}
+
+function scoreClass(n) {
+  if (n >= 5) return 'score-5'; if (n >= 4) return 'score-4';
+  if (n >= 3) return 'score-3'; if (n >= 2) return 'score-2';
+  return 'score-1';
+}
+
+function scoreDots(n) {
+  const filled = Math.round(n || 0);
+  let html = '<span class="flex gap-0.5">';
+  for (let i = 1; i <= 5; i++) {
+    const cls = i <= filled ? scoreClass(filled) : 'bg-slate-200';
+    html += `<span class="w-2 h-2 rounded-full inline-block ${cls}"></span>`;
+  }
+  return html + '</span>';
+}
+
+function esc(s) {
+  return String(s || '')
+    .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+    .replace(/"/g,'&quot;');
+}
+
+function logLine(msg, type = 'info') {
+  const log    = $('log');
+  const colour = type === 'search'  ? 'text-cyan-400'
+               : type === 'stage'   ? 'text-yellow-300 font-semibold'
+               : type === 'success' ? 'text-green-400'
+               : type === 'error'   ? 'text-red-400'
+               : 'text-slate-300';
+  const div = document.createElement('div');
+  div.className  = colour;
+  div.textContent = msg;
+  log.appendChild(div);
+  log.scrollTop  = log.scrollHeight;
+}
+
+// ---------------------------------------------------------------------------
+// Stage indicators
+// ---------------------------------------------------------------------------
+function setStageActive(n) {
+  [1, 2, 3].forEach(i => {
+    const el  = $(`stage-${i}`);
+    if (!el) return;
+    const dot = el.querySelector('div');
+    if (i < n) {
+      el.className  = 'flex items-center gap-2 text-sm text-green-600';
+      dot.className = 'w-2 h-2 rounded-full bg-green-500';
+    } else if (i === n) {
+      el.className  = 'flex items-center gap-2 text-sm text-[#1E3A5F] font-semibold';
+      dot.className = 'w-2 h-2 rounded-full bg-[#1E3A5F] animate-pulse';
+    } else {
+      el.className  = 'flex items-center gap-2 text-sm text-slate-400';
+      dot.className = 'w-2 h-2 rounded-full bg-slate-300';
+    }
+  });
+}
+
+function markPhase1Done() {
+  // Stop spinner, update heading, mark Stage 1 green, others grey
+  $('spinner').classList.add('hidden');
+  $('progress-heading').textContent = 'Company research complete';
+  const s1  = $('stage-1');
+  s1.className = 'flex items-center gap-2 text-sm text-green-600';
+  s1.querySelector('div').className = 'w-2 h-2 rounded-full bg-green-500';
+  [2, 3].forEach(i => {
+    const el  = $(`stage-${i}`);
+    el.className = 'flex items-center gap-2 text-sm text-slate-400';
+    el.querySelector('div').className = 'w-2 h-2 rounded-full bg-slate-300';
+  });
+}
+
+function resumeSpinner() {
+  $('spinner').classList.remove('hidden');
+  $('progress-heading').textContent = 'Analysis in progress';
+}
+
+// ---------------------------------------------------------------------------
+// Reset UI to initial state
+// ---------------------------------------------------------------------------
+function resetUI() {
+  _result = _jobId = _pendingProfile = _pendingPrefs = null;
+  _attachedFileText = '';
+
+  $('progress-section').classList.add('hidden');
+  $('review-section').classList.add('hidden');
+  $('results-section').classList.add('hidden');
+  $('detail-panel').classList.add('hidden');
+  $('log').innerHTML = '';
+  $('btn-run').disabled = false;
+  $('btn-continue').disabled = false;
+  $('progress-heading').textContent = 'Analysis in progress';
+  $('spinner').classList.remove('hidden');
+  clearError();
+}
+
+// ---------------------------------------------------------------------------
+// Drag-and-drop / file upload
+// ---------------------------------------------------------------------------
+const dropZone  = $('drop-zone');
+const fileInput = $('file-input');
+
+dropZone.addEventListener('dragover', e => {
+  e.preventDefault();
+  dropZone.classList.add('drop-active');
+});
+dropZone.addEventListener('dragleave', () => dropZone.classList.remove('drop-active'));
+dropZone.addEventListener('drop', async e => {
+  e.preventDefault();
+  dropZone.classList.remove('drop-active');
+  const file = e.dataTransfer.files[0];
+  if (file) await handleFile(file);
+});
+dropZone.addEventListener('click', e => {
+  // Don't trigger file picker when clicking the "Remove" button
+  if (e.target.closest('#drop-clear') || e.target.closest('#drop-file')) return;
+  if ($('drop-file').classList.contains('hidden')) fileInput.click();
+});
+fileInput.addEventListener('change', async () => {
+  if (fileInput.files[0]) await handleFile(fileInput.files[0]);
+});
+
+async function handleFile(file) {
+  $('drop-idle').classList.add('hidden');
+  $('drop-file').classList.add('hidden');
+  $('drop-loading').classList.remove('hidden');
+
+  const formData = new FormData();
+  formData.append('file', file);
+
+  try {
+    const resp = await fetch('/extract', { method: 'POST', body: formData });
+    if (!resp.ok) {
+      const err = await resp.json().catch(() => ({ detail: 'Unknown error' }));
+      throw new Error(err.detail);
+    }
+    const data = await resp.json();
+    _attachedFileText = data.text;
+
+    $('drop-loading').classList.add('hidden');
+    $('drop-file').classList.remove('hidden');
+    $('drop-filename').textContent = file.name;
+  } catch (err) {
+    _attachedFileText = '';
+    $('drop-loading').classList.add('hidden');
+    $('drop-idle').classList.remove('hidden');
+    showError('Could not read file: ' + err.message);
+  }
+}
+
+$('drop-clear').addEventListener('click', e => {
+  e.stopPropagation();
+  _attachedFileText = '';
+  fileInput.value   = '';
+  $('drop-file').classList.add('hidden');
+  $('drop-idle').classList.remove('hidden');
+});
+
+// ---------------------------------------------------------------------------
+// Phase 1 — Analyse Company
+// ---------------------------------------------------------------------------
+async function runPhase1() {
+  clearError();
+  const url  = $('url').value.trim();
+  const text = $('extra-text').value.trim();
+
+  const combined = [text, _attachedFileText].filter(Boolean).join('\n\n');
+
+  if (!url && !combined) {
+    showError('Please provide a website URL, paste some text, or upload a document.');
+    return;
+  }
+
+  resetUI();
+
+  // Save preferences for the continue call
+  _pendingPrefs = {
+    geographies:  $('geos').value.trim(),
+    consortium:   $('chk-consortium').checked,
+    accelerators: $('chk-accelerators').checked,
+    prizes:       $('chk-prizes').checked,
+  };
+
+  $('progress-section').classList.remove('hidden');
+  $('btn-run').disabled = true;
+  setStageActive(1);
+
+  const body = {
+    url,
+    text: combined,
+    ..._pendingPrefs,
+  };
+
+  try {
+    const resp = await fetch('/analyse', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body),
+    });
+    if (!resp.ok) {
+      const err = await resp.json().catch(() => ({ detail: resp.statusText }));
+      throw new Error(err.detail || 'Server error');
+    }
+    await streamSSE(resp, handlePhase1Event);
+  } catch (err) {
+    logLine('ERROR: ' + err.message, 'error');
+  } finally {
+    $('btn-run').disabled = false;
+  }
+}
+
+function handlePhase1Event(evt) {
+  if (evt.type === 'progress') {
+    const isSearch = evt.message && evt.message.startsWith('Company search');
+    logLine(evt.message, isSearch ? 'search' : 'info');
+    if (evt.stage) setStageActive(evt.stage);
+
+  } else if (evt.type === 'profile_ready') {
+    _jobId          = evt.job_id;
+    _pendingProfile = evt.profile;
+
+    logLine('✓ Company research complete — review the profile below', 'success');
+    markPhase1Done();
+    showReviewCard(evt.profile, evt.source_note || '');
+
+  } else if (evt.type === 'error') {
+    logLine('ERROR: ' + evt.message, 'error');
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Review card
+// ---------------------------------------------------------------------------
+function showReviewCard(profile, sourceNote) {
+  // Populate editable fields
+  $('rev-name').value           = profile.name           || '';
+  $('rev-classification').value = profile.classification || '';
+  $('rev-hq').value             = profile.hq             || '';
+  $('rev-value-prop').value     = profile.value_proposition || '';
+  $('rev-technology').value     = profile.technology     || '';
+  $('rev-trl').value            = profile.trl             || '';
+  $('rev-key-themes').value     = (profile.key_themes || []).join(', ');
+  $('rev-op-geos').value        = (profile.operational_geographies || []).join(', ');
+
+  // Stage select
+  const stageEl = $('rev-stage');
+  const stages  = ['Pre-seed','Seed','Series A','Growth','unknown'];
+  const match   = stages.find(s => s.toLowerCase() === (profile.stage||'').toLowerCase());
+  stageEl.value = match || 'unknown';
+
+  // Source note
+  $('rev-source-note').textContent = sourceNote;
+
+  // Show section and scroll to it
+  const revSection = $('review-section');
+  revSection.classList.remove('hidden');
+  revSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+function collectReviewedProfile() {
+  // Start from Claude's original profile and overlay user edits
+  const profile = { ..._pendingProfile };
+
+  profile.name              = $('rev-name').value.trim()       || profile.name;
+  profile.classification    = $('rev-classification').value.trim() || profile.classification;
+  profile.stage             = $('rev-stage').value             || profile.stage;
+  profile.hq                = $('rev-hq').value.trim()         || profile.hq;
+  profile.value_proposition = $('rev-value-prop').value.trim() || profile.value_proposition;
+  profile.technology        = $('rev-technology').value.trim() || profile.technology;
+  profile.trl               = $('rev-trl').value.trim()        || profile.trl;
+
+  const themes = $('rev-key-themes').value.trim();
+  if (themes) profile.key_themes = themes.split(',').map(t => t.trim()).filter(Boolean);
+
+  const geos = $('rev-op-geos').value.trim();
+  if (geos) profile.operational_geographies = geos.split(',').map(g => g.trim()).filter(Boolean);
+
+  return profile;
+}
+
+// ---------------------------------------------------------------------------
+// Phase 2+3 — Find Grants
+// ---------------------------------------------------------------------------
+async function runPhase23() {
+  if (!_jobId || !_pendingProfile) return;
+
+  const profile = collectReviewedProfile();
+
+  // Hide review card, restart progress
+  $('review-section').classList.add('hidden');
+  resumeSpinner();
+  setStageActive(2);
+  $('btn-continue').disabled = true;
+
+  const body = {
+    job_id:  _jobId,
+    profile,
+    ..._pendingPrefs,
+  };
+
+  try {
+    const resp = await fetch('/analyse/continue', {
+      method:  'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body:    JSON.stringify(body),
+    });
+    if (!resp.ok) {
+      const err = await resp.json().catch(() => ({ detail: resp.statusText }));
+      throw new Error(err.detail || 'Server error');
+    }
+    await streamSSE(resp, handlePhase23Event);
+  } catch (err) {
+    logLine('ERROR: ' + err.message, 'error');
+    // Re-enable continue in case user wants to retry
+    $('btn-continue').disabled = false;
+    $('review-section').classList.remove('hidden');
+  }
+}
+
+function handlePhase23Event(evt) {
+  if (evt.type === 'progress') {
+    const isSearch = evt.message && (
+      evt.message.startsWith('Search ') || evt.message.startsWith('Research search')
+    );
+    logLine(evt.message, isSearch ? 'search' : 'info');
+    if (evt.stage) setStageActive(evt.stage);
+
+  } else if (evt.type === 'complete') {
+    _result = evt.result;
+    _jobId  = evt.job_id;
+    logLine('✓ Analysis complete', 'success');
+    setStageActive(4);   // marks all 3 stages green
+    $('spinner').classList.add('hidden');
+    renderResults(_result);
+
+  } else if (evt.type === 'error') {
+    logLine('ERROR: ' + evt.message, 'error');
+    $('btn-continue').disabled = false;
+    $('review-section').classList.remove('hidden');
+  }
+}
+
+// ---------------------------------------------------------------------------
+// SSE stream reader (shared)
+// ---------------------------------------------------------------------------
+async function streamSSE(resp, handler) {
+  const reader = resp.body.getReader();
+  const dec    = new TextDecoder();
+  let buf = '';
+  while (true) {
+    const { done, value } = await reader.read();
+    if (done) break;
+    buf += dec.decode(value, { stream: true });
+    const lines = buf.split('\n');
+    buf = lines.pop();
+    for (const line of lines) {
+      if (!line.startsWith('data: ')) continue;
+      try { handler(JSON.parse(line.slice(6))); }
+      catch (_) {}
+    }
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Render results
+// ---------------------------------------------------------------------------
+function renderResults(result) {
+  const rs = $('results-section');
+  rs.classList.remove('hidden');
+  renderCompanyCard(result.company_profile || {});
+  renderExecSummary(result.executive_summary || {});
+  renderTable(result.opportunities || []);
+  renderRecommendations(result.strategic_recommendations || {});
+  renderWatchlist(result.strategic_watchlist || []);
+  rs.scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+function renderWatchlist(items) {
+  const section = $('watchlist-section');
+  const tbody   = $('watchlist-body');
+  const countEl = $('watchlist-count');
+
+  if (!items || items.length === 0) {
+    section.classList.add('hidden');
+    return;
+  }
+
+  countEl.textContent = `${items.length} item${items.length !== 1 ? 's' : ''}`;
+
+  function fmtSlug(s) {
+    return (s || '').replace(/_/g, ' ');
+  }
+
+  tbody.innerHTML = items.map((item, idx) => `
+    <tr class="border-b border-amber-100 ${idx % 2 === 0 ? 'bg-amber-50/30' : ''}">
+      <td class="px-3 py-3 font-medium max-w-[180px]">
+        <div class="line-clamp-2">${esc(item.name)}</div>
+        <div class="text-xs text-slate-400 mt-0.5">${esc(item.geography)}</div>
+      </td>
+      <td class="px-3 py-2 text-xs text-slate-600">${esc(item.managing_body)}</td>
+      <td class="px-3 py-2 text-xs">
+        <span class="bg-amber-100 text-amber-800 px-2 py-0.5 rounded text-xs">${esc(fmtSlug(item.opportunity_type))}</span>
+      </td>
+      <td class="px-3 py-2 text-xs text-slate-500">${esc(fmtSlug(item.application_route))}</td>
+      <td class="px-3 py-2 text-xs text-slate-700 max-w-[200px]">${esc(item.thematic_relevance)}</td>
+      <td class="px-3 py-2 text-xs text-slate-600 max-w-[160px]">${esc(item.why_watchlist)}</td>
+      <td class="px-3 py-2 text-xs text-slate-600 max-w-[160px]">${esc(item.what_would_unlock)}</td>
+    </tr>`).join('');
+
+  section.classList.remove('hidden');
+}
+
+function renderCompanyCard(profile) {
+  $('company-card').innerHTML = `
+    <div class="flex items-start justify-between gap-4">
+      <div>
+        <h2 class="text-xl font-bold">${esc(profile.name)}</h2>
+        <p class="text-sm text-slate-500 mt-0.5">${esc(profile.classification)} · ${esc(profile.stage)} · TRL ${esc(profile.trl)}</p>
+      </div>
+      <span class="shrink-0 text-xs bg-slate-100 text-slate-600 px-3 py-1 rounded-full">${esc(profile.hq)}</span>
+    </div>
+    <p class="text-sm text-slate-700 mt-3">${esc(profile.value_proposition)}</p>
+    <div class="flex flex-wrap gap-2 mt-3">
+      ${(profile.key_themes || []).map(t => `<span class="text-xs bg-blue-50 text-blue-700 px-2 py-0.5 rounded">${esc(t)}</span>`).join('')}
+    </div>
+    <div class="mt-3 text-xs text-slate-500 space-y-0.5">
+      <div><span class="font-medium">Operational geographies:</span> ${esc((profile.operational_geographies||[]).join(', ') || 'unknown')}</div>
+      <div><span class="font-medium">Secondary benefits:</span> ${esc((profile.secondary_benefits||[]).join(', ') || '—')}</div>
+    </div>
+  `;
+}
+
+function renderExecSummary(summary) {
+  const rows = [
+    ['Company overview',      summary.company_overview],
+    ['Strongest themes',      summary.strongest_themes],
+    ['Strongest geographies', summary.strongest_geographies],
+    ['Key constraints',       summary.key_constraints],
+  ];
+  $('exec-summary').innerHTML = `
+    <h2 class="text-lg font-semibold mb-4">Executive Summary</h2>
+    <dl class="space-y-3">
+      ${rows.map(([k,v]) => `
+        <div class="grid grid-cols-[180px_1fr] gap-2 text-sm">
+          <dt class="font-medium text-slate-600">${esc(k)}</dt>
+          <dd class="text-slate-800">${esc(v)}</dd>
+        </div>`).join('')}
+    </dl>`;
+}
+
+function filteredSorted(opps) {
+  let list = _tierFilter === 'all' ? opps : opps.filter(o => o.priority_tier === _tierFilter);
+  list = [...list].sort((a, b) => {
+    let av = a[_sortCol], bv = b[_sortCol];
+    if (typeof av === 'number' && typeof bv === 'number') return _sortAsc ? av - bv : bv - av;
+    av = String(av||'').toLowerCase(); bv = String(bv||'').toLowerCase();
+    return _sortAsc ? av.localeCompare(bv) : bv.localeCompare(av);
+  });
+  return list;
+}
+
+function renderTable(opps) {
+  const tbody = $('opp-body');
+  const list  = filteredSorted(opps);
+  tbody.innerHTML = list.map((opp, idx) => `
+    <tr data-idx="${idx}" class="border-b border-slate-100 hover:bg-slate-50 cursor-pointer transition-colors ${idx%2===0?'':'bg-slate-50/50'}">
+      <td class="px-3 py-3 font-medium max-w-[200px]">
+        <div class="line-clamp-2">${esc(opp.name)}</div>
+        ${opp.link_status === 'verified' ? '<div class="text-xs text-green-600 mt-0.5">✓ link verified</div>' : opp.link_status === 'broken' ? '<div class="text-xs text-red-500 mt-0.5">✗ link broken</div>' : ''}
+      </td>
+      <td class="px-3 py-2 text-slate-600 text-xs">${esc(opp.managing_body)}</td>
+      <td class="px-3 py-2 text-slate-600 text-xs">${esc(opp.geography)}</td>
+      <td class="px-3 py-2 font-bold text-center">${typeof opp.priority_score === 'number' ? opp.priority_score.toFixed(2) : esc(opp.priority_score)}</td>
+      <td class="px-3 py-2">${scoreDots(opp.thematic_fit_score)}</td>
+      <td class="px-3 py-2">${scoreDots(opp.strategic_value_score)}</td>
+      <td class="px-3 py-2">${scoreDots(opp.ease_score)}</td>
+      <td class="px-3 py-2"><span class="text-xs px-2 py-0.5 rounded-full font-medium ${tierClass(opp.priority_tier)}">${esc(opp.priority_tier)}</span></td>
+      <td class="px-3 py-2 text-xs text-slate-600">${esc(opp.max_funding)}</td>
+      <td class="px-3 py-2 text-xs text-slate-600">${esc(opp.status)}</td>
+    </tr>`).join('');
+
+  tbody.querySelectorAll('tr').forEach(row => {
+    row.addEventListener('click', () => showDetail(list[parseInt(row.dataset.idx)]));
+  });
+}
+
+function showDetail(opp) {
+  const panel = $('detail-panel');
+
+  // Build the application link element with a verification status badge
+  const hasLink = opp.application_link && opp.application_link !== 'unknown';
+  const linkEl  = hasLink
+    ? `<a href="${esc(opp.application_link)}" target="_blank" class="text-blue-600 underline text-sm break-all">${esc(opp.application_link)}</a>`
+    : '<span class="text-slate-400 text-sm">unknown</span>';
+
+  const linkStatusBadge = opp.link_status === 'verified'
+    ? '<span class="text-xs text-green-700 bg-green-50 border border-green-200 px-2 py-0.5 rounded-full">✓ verified</span>'
+    : opp.link_status === 'broken'
+    ? '<span class="text-xs text-red-700 bg-red-50 border border-red-200 px-2 py-0.5 rounded-full">✗ broken — search manually</span>'
+    : hasLink
+    ? '<span class="text-xs text-slate-400 bg-slate-50 border border-slate-200 px-2 py-0.5 rounded-full">not checked</span>'
+    : '';
+
+  const ltBadge = linkTypeBadge(opp.link_type);
+  const link = `<span class="flex flex-wrap items-center gap-1.5 mt-0.5">${linkEl}${linkStatusBadge}${ltBadge}</span>`;
+
+  panel.innerHTML = `
+    <div class="flex items-start justify-between gap-4">
+      <h3 class="text-lg font-bold">${esc(opp.name)}</h3>
+      <span class="shrink-0 text-xs px-3 py-1 rounded-full font-semibold ${tierClass(opp.priority_tier)}">${esc(opp.priority_tier)}</span>
+    </div>
+    ${(opp.reason_for_inclusion || opp.reason_for_caution) ? `
+    <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+      ${opp.reason_for_inclusion ? `
+      <div class="bg-green-50 border border-green-200 rounded-lg px-4 py-3 text-sm text-green-800">
+        <span class="font-semibold">Why this fits: </span>${esc(opp.reason_for_inclusion)}
+      </div>` : ''}
+      ${opp.reason_for_caution ? `
+      <div class="bg-amber-50 border border-amber-200 rounded-lg px-4 py-3 text-sm text-amber-800">
+        <span class="font-semibold">Caution: </span>${esc(opp.reason_for_caution)}
+      </div>` : ''}
+    </div>` : ''}
+    <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 text-sm">
+      <div class="bg-slate-50 rounded-lg p-3">
+        <div class="text-xs text-slate-500 mb-1">Priority Score</div>
+        <div class="text-2xl font-bold">${typeof opp.priority_score === 'number' ? opp.priority_score.toFixed(2) : opp.priority_score}</div>
+      </div>
+      <div class="bg-slate-50 rounded-lg p-3">
+        <div class="text-xs text-slate-500 mb-1">Max Funding</div>
+        <div class="font-semibold">${esc(opp.max_funding)}</div>
+        <div class="text-xs text-slate-400">${esc(opp.funding_confidence)} confidence</div>
+      </div>
+      <div class="bg-slate-50 rounded-lg p-3">
+        <div class="text-xs text-slate-500 mb-1">Status</div>
+        <div class="font-semibold">${esc(opp.status)}</div>
+        <div class="text-xs text-slate-400">${esc(opp.recurrence)}</div>
+      </div>
+      <div class="bg-slate-50 rounded-lg p-3">
+        <div class="text-xs text-slate-500 mb-1">Deadline</div>
+        <div class="font-semibold">${esc(opp.deadline)}</div>
+      </div>
+    </div>
+    <dl class="space-y-3 text-sm">
+      ${[
+          ['Managing body',       esc(opp.managing_body)],
+          ['Geography',           esc(opp.geography)],
+          ['Applicant route',     (() => {
+            const apt = (opp.applicant_type_match || 'direct').toLowerCase();
+            if (apt === 'partner') return '<span class="font-semibold text-amber-700">Partner route only</span><span class="text-slate-500"> — startup cannot be lead applicant; must participate under an eligible lead organisation</span>';
+            if (apt === 'ineligible') return '<span class="font-semibold text-red-700">Ineligible</span>';
+            return '<span class="text-slate-700">Direct applicant</span>';
+          })()],
+          ['Funding type',        esc(opp.funding_type)],
+          ['Application timing',  timingBadge(opp.application_timing) || esc(opp.application_timing || '—')],
+          ['Application link',    link],
+        ].map(([k, v]) => `
+        <div class="grid grid-cols-[160px_1fr] gap-2 items-start">
+          <dt class="font-medium text-slate-500 pt-0.5">${k}</dt>
+          <dd class="text-slate-800">${v}</dd>
+        </div>`).join('')}
+    </dl>
+    <div class="space-y-3 text-sm">
+      ${[['Thematic fit', opp.thematic_fit_score, opp.thematic_fit_explanation],
+         ['Strategic value', opp.strategic_value_score, opp.strategic_value_explanation],
+         ['Ease of application', opp.ease_score, opp.ease_explanation]].map(([label, score, expl]) => `
+        <div>
+          <div class="flex items-center gap-3 mb-1">
+            <span class="font-medium text-slate-700 w-44">${esc(label)}</span>
+            ${scoreDots(score)}
+            <span class="text-slate-500 text-xs">${score}/5</span>
+          </div>
+          <p class="text-slate-600 ml-0.5">${esc(expl)}</p>
+        </div>`).join('')}
+    </div>
+    ${opp.notes ? `<div class="bg-amber-50 border border-amber-200 rounded-lg px-4 py-3 text-sm text-amber-800">
+      <span class="font-semibold">Note: </span>${esc(opp.notes)}</div>` : ''}
+  `;
+  panel.classList.remove('hidden');
+  panel.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+}
+
+function renderRecommendations(recs) {
+  const items = [
+    ['Best fit strategy',  recs.best_fit_strategy],
+    ['Best geographies',   recs.best_geographies],
+    ['Strongest pathways', recs.strongest_pathways],
+    ['Key partnerships',   recs.key_partnerships],
+    ['Capability gaps',    recs.capability_gaps],
+    ['Key risks',          recs.key_risks],
+  ];
+  $('rec-section').innerHTML = `
+    <h2 class="text-lg font-semibold mb-4">Strategic Recommendations</h2>
+    <dl class="space-y-4">
+      ${items.map(([k,v]) => `
+        <div class="grid grid-cols-[180px_1fr] gap-3 text-sm">
+          <dt class="font-semibold text-slate-700 pt-0.5">${esc(k)}</dt>
+          <dd class="text-slate-700 leading-relaxed">${esc(v)}</dd>
+        </div>`).join('')}
+    </dl>`;
+}
+
+// ---------------------------------------------------------------------------
+// Sorting + tier filters
+// ---------------------------------------------------------------------------
+document.querySelectorAll('th[data-sort]').forEach(th => {
+  th.addEventListener('click', () => {
+    const col = th.dataset.sort;
+    if (_sortCol === col) { _sortAsc = !_sortAsc; }
+    else { _sortCol = col; _sortAsc = false; }
+    if (_result) renderTable(_result.opportunities || []);
+  });
+});
+
+document.querySelectorAll('.tier-filter').forEach(btn => {
+  btn.addEventListener('click', () => {
+    _tierFilter = btn.dataset.tier;
+    document.querySelectorAll('.tier-filter').forEach(b => b.classList.remove('ring-2','ring-offset-1','ring-slate-400'));
+    btn.classList.add('ring-2','ring-offset-1','ring-slate-400');
+    if (_result) renderTable(_result.opportunities || []);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Download XLSX
+// ---------------------------------------------------------------------------
+$('btn-download').addEventListener('click', async () => {
+  if (!_jobId) return;
+  try {
+    const resp = await fetch('/download', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ job_id: _jobId }),
+    });
+    if (!resp.ok) throw new Error('Download failed');
+    const blob = await resp.blob();
+    const a    = document.createElement('a');
+    a.href     = URL.createObjectURL(blob);
+    const name = _result?.company_profile?.name || 'grant-analysis';
+    a.download = `${name.replace(/\s+/g,'-').toLowerCase()}-grants.xlsx`;
+    a.click();
+  } catch (err) {
+    alert('Download error: ' + err.message);
+  }
+});
+
+// ---------------------------------------------------------------------------
+// Wire up buttons
+// ---------------------------------------------------------------------------
+$('btn-run').addEventListener('click', runPhase1);
+$('url').addEventListener('keydown', e => { if (e.key === 'Enter') runPhase1(); });
+$('btn-continue').addEventListener('click', runPhase23);
+$('btn-back').addEventListener('click', () => {
+  $('review-section').classList.add('hidden');
+  $('progress-section').classList.add('hidden');
+  $('btn-run').disabled = false;
+  clearError();
+});
+
+const installBanner = $('install-banner');
+const installButton = $('btn-install-app');
+let deferredInstallPrompt = null;
+
+window.addEventListener('beforeinstallprompt', event => {
+  event.preventDefault();
+  deferredInstallPrompt = event;
+  installBanner.classList.remove('hidden');
+  installBanner.classList.add('active');
+});
+
+installButton?.addEventListener('click', async () => {
+  if (!deferredInstallPrompt) return;
+  installBanner.classList.add('hidden');
+  installBanner.classList.remove('active');
+  deferredInstallPrompt.prompt();
+  const choice = await deferredInstallPrompt.userChoice;
+  if (choice.outcome === 'accepted') {
+    logLine('Install accepted — open the app from Chrome any time.', 'success');
+  } else {
+    logLine('Install dismissed. You can install it later from Chrome.', 'info');
+  }
+  deferredInstallPrompt = null;
+});
+
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('/sw.js')
+    .then(() => console.log('Service worker registered.'))
+    .catch(err => console.warn('Service worker registration failed:', err));
+}
+
+</script>
+</body>
+</html>

@@ -1,0 +1,162 @@
+
+================================================================
+  Running: Thermify  (https://thermify.cloud/)
+  Notes:   Wales-registered: 39a Vale Business Park, Llandow, Cowbridge, Wales CF71 7PF. Distributed edge-compute-as-heating hardwa...
+================================================================
+
+[Phase 1] Company research…
+  Fetching startup website…
+  Analysing company information…
+  Researching company externally (up to 5 searches)…
+  Company search 1: "Thermify cloud data centre home heating news 2024"
+  Company search 2: "Thermify cloud funding investment crowdfunding round"
+  Company search 3: "Thermify HeatHub technology how it works data centre waste heat"
+  Company search 4: "Thermify cloud pilots partnerships customers case studies"
+  Company search 5: "Thermify cloud Crunchbase LinkedIn company profile"
+  [OK] Profile: Thermify | TRL: TRL 7-8 — live pilot installs demonstrated in real-world domestic settings (Essex household case study featured on BBC); partnership with SPECIFIC IKC for technical validation; £2.5m contracted revenue reported, indicating early commercial deployment. | HQ: Llandow, Wales, UK
+
+[Phase 2+3] Grant discovery and scoring…
+  Searching for grant opportunities (up to 20 searches)…
+  Search 1/20: "Innovate UK Smart Grant 2025 energy technology waste heat recovery SME apply open"
+  Search 2/20: "UK Research Innovation UKRI net zero heating decarbonisation distributed computing grant 2025"
+  Search 3/20: "Innovate UK Energy Catalyst Round Wales climate tech startup grant 2025 open"
+  Search 4/20: "Welsh Government Smart Innovation Fund energy technology SME grant 2025 apply"
+  Search 5/20: "Horizon Europe EIC Accelerator 2025 energy efficiency waste heat recovery climate tech apply"
+  Search 6/20: "EIT InnoEnergy startup funding 2025 distributed energy heat recovery decarbonisation grant"
+  Search 7/20: "Horizon Europe MSCA or EIC Pathfinder 2025 circular energy economy distributed data centre heating"
+  Search 8/20: "UK Department for Energy Security Net Zero DESNZ heat pump boiler replacement innovation grant 2025"
+  Search 9/20: "Ofgem innovation fund 2025 fuel poverty affordable heating low carbon technology SME"
+  Search 10/20: "Innovate UK Sustainable Innovation Fund heat decarbonisation buildings green technology 2025"
+  Search 11/20: "Nesta challenge prize 2025 home heating decarbonisation energy poverty UK open"
+  Search 12/20: "Xprize or UK government challenge prize 2025 green computing waste heat reuse energy innovation"
+  Search 13/20: "Clean Growth Fund UK climate tech seed investment grant equity-free accelerator 2025"
+  Search 14/20: "Carbon13 Zinc or Greentown Labs accelerator 2025 energy tech climate startup Wales UK grant funding"
+  Search 15/20: "Esmee Fairbairn Foundation or Joseph Rowntree Foundation grant 2025 fuel poverty affordable clean energy innovation"
+  Search 16/20: "Bloomberg Philanthropies or Bezos Earth Fund 2025 climate tech home heating decarbonisation grant"
+  Search 17/20: "Welsh Government Development Bank of Wales energy innovation grant 2025 SME seed stage apply"
+  Search 18/20: "Interreg Europe or UK Shared Prosperity Fund 2025 Wales energy technology low carbon heating consortium"
+  Search 19/20: "UK Catapult Energy Systems or Connected Places innovation funding 2025 distributed heat data centre integration"
+  Search 20/20: "British Business Bank Deep Tech Investment Programme 2025 climate energy hardware startup Wales SME"
+  Discovery complete — 14 opportunities found. Shortlisting top 14 for deep research…
+  Generating research queries for shortlisted grants…
+  Executing 42 targeted research searches…
+  Research search 1/42: "Innovate UK Smart Grants 2025 open round eligibility funding amount deadline application requirements UKRI"
+  Research search 2/42: "Innovate UK Smart Grants applicant experience success rate tips pitfalls blog forum review 2024 2025"
+  Research search 3/42: "Innovate UK Smart Grants apply application portal submission form open call 2025 site:apply-for-innovation-funding.service.gov.uk OR site:iuk.ktn-uk.org"
+  Research search 4/42: "Innovate UK Growth Catalyst late-stage startups clean energy climate technologies eligibility funding criteria 2025 UKRI"
+  Research search 5/42: "Innovate UK Growth Catalyst clean energy startups applicant review experience success rate independent commentary"
+  Research search 6/42: "Innovate UK Growth Catalyst clean energy climate technologies apply application portal submit call for proposals 2025"
+  Research search 7/42: "Innovate UK Investor Partnerships clean energy climate technologies eligibility funding amount requirements 2025 UKRI"
+  Research search 8/42: "Innovate UK Investor Partnerships clean energy applicant experience review blog forum testimonial independent commentary"
+  Research search 9/42: "Innovate UK Investor Partnerships clean energy climate technologies application form portal submit open call 2025"
+  Research search 10/42: "EIC Accelerator Open 2025 full application eligibility funding amount deadline requirements European Innovation Council UK associated country"
+  Research search 11/42: "EIC Accelerator 2025 applicant experience success rate pitfalls independent review blog forum testimonial UK startup"
+  Research search 12/42: "EIC Accelerator Open 2025 apply full application portal submission form EIC portal site:eic.ec.europa.eu"
+  Research search 13/42: "UK Shared Prosperity Fund Wales green economy innovation eligibility funding criteria deadline Welsh Government 2025"
+  Research search 14/42: "UK Shared Prosperity Fund Wales green economy applicant experience review independent commentary blog forum 2024 2025"
+  Research search 15/42: "UK Shared Prosperity Fund Wales green economy innovation apply application form portal open call submit"
+  Research search 16/42: "Innovate UK Energy Catalyst Round 10 2025 eligibility funding amount deadline application requirements UKRI domestic"
+  Research search 17/42: "Innovate UK Energy Catalyst applicant experience success rate tips pitfalls blog review round 10 2024 2025"
+  Research search 18/42: "Innovate UK Energy Catalyst apply application portal submit open call round 10 2025 site:apply-for-innovation-funding.service.gov.uk"
+  Research search 19/42: "Nesta Sustainable Future Challenge Prize home heating decarbonisation eligibility prize amount deadline requirements 2025"
+  Research search 20/42: "Nesta Sustainable Future Challenge Prize home heating decarbonisation applicant experience review independent commentary blog"
+  Research search 21/42: "Nesta Sustainable Future Challenge home heating decarbonisation apply application form portal submit entry 2025"
+  Research search 22/42: "Carbon13 Venture Builder Programme eligibility funding equity support criteria requirements 2025"
+  Research search 23/42: "Carbon13 Venture Builder Programme applicant founder experience review testimonial blog forum independent commentary"
+  Research search 24/42: "Carbon13 Venture Builder Programme apply application form portal open call submit 2025 site:carbon13.vc"
+  Research search 25/42: "SPECIFIC IKC Swansea University collaborative R&D grants Wales UKRI eligibility funding amount criteria requirements"
+  Research search 26/42: "SPECIFIC IKC innovation funding collaborative R&D grants applicant experience review blog independent commentary Wales"
+  Research search 27/42: "SPECIFIC IKC innovation funding collaborative R&D apply application form portal submit open call Wales"
+  Research search 28/42: "Warm Homes Fund innovative finance low-carbon heating call for evidence future programme UK Government DESNZ eligibility criteria 2025"
+  Research search 29/42: "Warm Homes Fund low-carbon heating innovative finance independent review commentary news blog forum 2024 2025"
+  Research search 30/42: "Warm Homes Fund low-carbon heating apply application portal call for evidence submit proposals DESNZ 2025"
+  Research search 31/42: "EIC Pathfinder Open 2025 eligibility funding amount deadline requirements European Innovation Council UK associated country Horizon Europe"
+  Research search 32/42: "EIC Pathfinder Open 2025 applicant experience success rate pitfalls review blog forum independent commentary UK"
+  Research search 33/42: "EIC Pathfinder Open 2025 apply application portal submission form site:eic.ec.europa.eu open call"
+  Research search 34/42: "Boiler Upgrade Scheme supply chain technology integration track eligibility funding criteria requirements DESNZ 2025"
+  Research search 35/42: "Boiler Upgrade Scheme supply chain technology integration applicant experience independent review commentary blog news 2024 2025"
+  Research search 36/42: "Boiler Upgrade Scheme supply chain technology integration apply application form portal submit open call DESNZ"
+  Research search 37/42: "Ofgem Strategic Innovation Fund SIF net zero buildings heating eligibility funding amount deadline requirements Energy Networks Association 2025"
+  Research search 38/42: "Ofgem Strategic Innovation Fund SIF net zero buildings heating applicant experience review blog independent commentary success rate"
+  Research search 39/42: "Ofgem Strategic Innovation Fund SIF net zero buildings heating apply application portal submit open call 2025 site:energynetworks.org"
+  Research search 40/42: "Investment Fund for Wales equity investment strand eligibility up to £5m criteria requirements British Business Bank Development Bank of Wales 2025"
+  Research search 41/42: "Investment Fund for Wales equity investment applicant experience review independent commentary blog forum testimonial startup"
+  Research search 42/42: "Investment Fund for Wales equity investment strand apply application portal submit form Development Bank of Wales 2025"
+  Applying full scoring rubric to all 14 shortlisted grants… (this step takes 2–3 minutes)
+  Scoring in progress… (609 characters generated so far)
+  Scoring in progress… (1,224 characters generated so far)
+  Scoring in progress… (1,873 characters generated so far)
+  Scoring in progress… (2,548 characters generated so far)
+  Scoring in progress… (3,196 characters generated so far)
+  Scoring in progress… (3,807 characters generated so far)
+  Scoring in progress… (4,441 characters generated so far)
+  Scoring in progress… (5,042 characters generated so far)
+  Scoring in progress… (5,682 characters generated so far)
+  Scoring in progress… (6,347 characters generated so far)
+  Scoring in progress… (7,029 characters generated so far)
+  Scoring in progress… (7,729 characters generated so far)
+  Scoring in progress… (8,385 characters generated so far)
+  Scoring in progress… (9,094 characters generated so far)
+  Scoring in progress… (9,741 characters generated so far)
+  Scoring in progress… (10,372 characters generated so far)
+  Scoring in progress… (10,996 characters generated so far)
+  Scoring in progress… (11,654 characters generated so far)
+  Scoring in progress… (12,257 characters generated so far)
+  Scoring in progress… (12,928 characters generated so far)
+  Scoring in progress… (13,562 characters generated so far)
+  Scoring in progress… (14,181 characters generated so far)
+  Scoring in progress… (14,860 characters generated so far)
+  Scoring in progress… (15,520 characters generated so far)
+  Scoring in progress… (16,139 characters generated so far)
+  Scoring in progress… (16,870 characters generated so far)
+  Scoring in progress… (17,512 characters generated so far)
+  Scoring in progress… (18,122 characters generated so far)
+  Scoring in progress… (18,739 characters generated so far)
+  Scoring in progress… (19,366 characters generated so far)
+  Scoring in progress… (20,194 characters generated so far)
+  Scoring in progress… (20,844 characters generated so far)
+  Scoring in progress… (21,469 characters generated so far)
+  Scoring in progress… (22,122 characters generated so far)
+  Scoring in progress… (22,869 characters generated so far)
+  Scoring in progress… (23,486 characters generated so far)
+  Scoring in progress… (24,224 characters generated so far)
+  Scoring in progress… (24,855 characters generated so far)
+  Scoring in progress… (25,503 characters generated so far)
+  Scoring in progress… (26,133 characters generated so far)
+  Scoring in progress… (26,733 characters generated so far)
+  Scoring in progress… (27,374 characters generated so far)
+  Scoring in progress… (28,027 characters generated so far)
+  Checking 8 opportunities for confirmed application processes…
+  Verifying 11 application links…
+  [OK] Complete: 6 main recommendations, 5 watchlist items
+
+  Saved -> eval\results\thermify_20260530_100452.json
+
+================================================================
+  SCORE: Thermify  ->  5/6 (83.3%)
+  Main recommendations: 6  |  Watchlist: 5
+  [WARN]  1 false positive(s) -- grants that should have been excluded
+================================================================
+
+  Ground-truth checks:
+    [PASS]  [must appear in watchlist or main]  'Ofgem'  -> matched: "Ofgem Strategic Innovation Fund (SIF) — Net Zero Buildings & Heating"
+    [PASS]  [must appear in watchlist or main]  'Innovate UK'  -> matched: "Innovate UK Smart Grants — current/next open round"
+    [PASS]  [must appear in watchlist or main]  'EIC Accelerator'  -> matched: "EIC Accelerator Open 2025 — Full Application"
+    [PASS]  [must appear in watchlist or main]  'SMART'  -> matched: "Innovate UK Smart Grants — current/next open round"
+    [PASS]  [must not appear anywhere]  'Energy Catalyst'
+    [FAIL]  [must not appear anywhere]  'EIC Pathfinder'  -> matched: "EIC Pathfinder Open 2025"
+
+  Main recommendations (6):
+    • [Must Pursue]  Innovate UK Smart Grants — current/next open round  (fit=5, score=4.35, timing=open_now, applicant=direct)
+    • [Must Pursue]  Innovate UK Investor Partnerships: Clean Energy and Climate Technologies  (fit=5, score=4.45, timing=recurring_uncertain, applicant=direct)
+    • [Big Bet]  EIC Accelerator Open 2025 — Full Application  (fit=4, score=4.05, timing=open_now, applicant=direct)
+    • [Prepare for Next Window]  Innovate UK Growth Catalyst for Late-Stage Startups: Clean Energy and Climate Technologies  (fit=5, score=4.25, timing=recurring_uncertain, applicant=direct)
+    • [Prepare for Next Window]  UK Shared Prosperity Fund — Wales: Green Economy & Innovation (via Welsh Government)  (fit=4, score=3.5, timing=recurring_uncertain, applicant=direct)
+    • [Low Priority]  EIC Pathfinder Open 2025  (fit=2, score=2.15, timing=known_future_window, applicant=direct)
+
+  Strategic watchlist (5):
+    • Ofgem Strategic Innovation Fund (SIF) — Net Zero Buildings & Heating  — Startup cannot be lead applicant or direct funding recipient for this programme.
+    • Carbon13 Venture Builder Programme  — Research evidence for Carbon13 was insufficiently specific to confirm current ap
+    • Nesta Sustainable Future Challenge Prize — Home Heating Decarbonisation  — No specific open prize competition was confirmed in the research evidence — only
+    • SPECIFIC IKC Innovation Funding — collaborative R&D grants (Wales/UKRI)  — No confirmed specific application process found in research evidence. Search res
+    • Warm Homes Fund — Innovative Finance for Low-Carbon Heating  — No confirmed specific application process found in research evidence. No applica

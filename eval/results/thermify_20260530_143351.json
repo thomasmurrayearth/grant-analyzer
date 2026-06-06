@@ -1,0 +1,220 @@
+{
+  "result": {
+    "executive_summary": {
+      "company_overview": "Thermify is a UK-based deep tech energy startup developing the HeatHub \u2014 distributed edge computing hardware installed in residential homes that processes cloud workloads for business customers and captures the resulting waste heat to replace domestic gas boilers. At TRL 6-7 with early pilot deployments, the company is EIS-eligible and has raised crowdfunding on Seedrs/Republic, holding patents on its full boiler-replacement architecture. Its dual-revenue model (cloud compute fees offset homeowner heating costs) makes it genuinely novel in both the energy and data centre sectors.",
+      "strongest_themes": "Residential decarbonisation and heat system innovation are the most fundable themes for Thermify, fitting squarely within UK net zero and green innovation mandates. The waste heat recovery and circular energy use angle also aligns with distributed energy resource and demand flexibility agendas. The deeptech/patented-hardware angle opens doors to Innovate UK and EIC instruments targeting breakthrough innovations.",
+      "strongest_geographies": "The UK is Thermify's primary and natural funding geography, with Innovate UK, Ofgem innovation programmes, and UKRI providing the most accessible and relevant routes. EU access via Horizon Europe and EIC Accelerator is potentially transformational but is contingent on UK association status being confirmed \u2014 this should be verified urgently as it is a binary eligibility gate.",
+      "key_constraints": "Three structural constraints limit grant access: (1) Thermify's UK-only deployment means all ODA-focused funds (Energy Catalyst, most international climate funds) are out of scope; (2) several of the most relevant UK energy innovation funds (Ofgem SIF, NIA) require a licensed network operator as lead applicant, locking Thermify into a partner-only role requiring active DNO/GDN engagement; (3) the Innovate UK Smart Grants pause from January 2025 creates near-term uncertainty for the most obvious UK direct route."
+    },
+    "opportunities": [
+      {
+        "name": "Innovate UK Smart Grants \u2014 current/forthcoming open rounds",
+        "managing_body": "Innovate UK / UKRI",
+        "geography": "United Kingdom",
+        "opportunity_type": "direct_grant",
+        "application_route": "direct_startup_application",
+        "has_application_process": true,
+        "trl_match": true,
+        "geography_match": true,
+        "applicant_type_match": "direct",
+        "application_timing": "recurring_uncertain",
+        "status": "Recurring \u2014 paused from January 2025, monitor for resumption",
+        "application_link": "https://apply-for-innovation-funding.service.gov.uk/competition/search",
+        "link_type": "application_portal",
+        "funding_type": "Grant",
+        "max_funding": "Up to \u00a32m+ (industrial R&D stream)",
+        "funding_confidence": "Medium",
+        "thematic_fit_score": 3,
+        "thematic_fit_explanation": "Thermify's patented distributed compute-as-heat hardware at TRL 6-7 is precisely the type of game-changing deeptech R&D Smart Grants fund, with strong alignment to energy and net zero themes. Score capped at 3 because Smart Grants is a programme umbrella with no confirmed currently open window following the January 2025 pause announced in the research evidence.",
+        "strategic_value_score": 4,
+        "strategic_value_explanation": "An Innovate UK Smart Grant award is a high-credibility signal for follow-on investors, opens the door to further UKRI funding, and provides tangible non-dilutive capital to accelerate pilot expansion \u2014 well-recognised in the UK deeptech ecosystem.",
+        "ease_score": 3,
+        "ease_explanation": "Solo SME application via the Innovation Funding Service portal with a standard technical proposal and business case; no consortium required, though the proposal process is thorough and competitive.",
+        "priority_score": 3.35,
+        "priority_tier": "Prepare for Next Window",
+        "deadline": "Unknown \u2014 monitor IFS portal for resumption of Smart Grants or equivalent themed competition",
+        "recurrence": "Annual (historically quarterly windows)",
+        "notes": "Research evidence explicitly states Innovate UK is pausing Smart Grants from January 2025 \u2014 applicants should monitor the IFS portal for any resumption or replacement themed competition in the energy/net zero space. Also check for active UKRI-themed competitions (e.g. Net Zero Living, Industrial Decarbonisation) that may serve as near-term substitutes.  Application window not currently open \u2014 this is a well-established recurring programme. Monitor for next round opening.",
+        "reason_for_inclusion": "Thermify's patented boiler-replacement hardware at TRL 6-7 is a textbook Smart Grants candidate \u2014 a UK SME with a breakthrough deeptech product addressing a major net zero challenge at the proof-of-concept to early commercialisation stage.",
+        "reason_for_caution": "The programme is confirmed as paused from January 2025 and there is no confirmed reopening date \u2014 Thermify should not rely on this as an imminent funding route and must actively monitor for a reopening or successor competition.",
+        "link_status": "verified"
+      },
+      {
+        "name": "EIC Accelerator Open 2025",
+        "managing_body": "European Innovation Council (EIC) / European Commission",
+        "geography": "EU Member States + Associated Countries",
+        "opportunity_type": "blended_finance",
+        "application_route": "direct_startup_application",
+        "has_application_process": true,
+        "trl_match": true,
+        "geography_match": "unknown",
+        "applicant_type_match": "direct",
+        "application_timing": "recurring_uncertain",
+        "status": "Recurring \u2014 UK eligibility must be confirmed",
+        "application_link": "https://eic.ec.europa.eu/eic-funding-opportunities/eic-accelerator_en",
+        "link_type": "programme_page",
+        "funding_type": "Blended",
+        "max_funding": "Up to \u20ac2.5m grant + up to \u20ac15m equity",
+        "funding_confidence": "Low",
+        "thematic_fit_score": 3,
+        "thematic_fit_explanation": "Thermify's patented dual-use compute-and-heat architecture is a compelling deeptech breakthrough targeting climate and energy transitions \u2014 two EIC Accelerator priority areas \u2014 and TRL 6-7 sits squarely in the programme's sweet spot. Score held at 3 (not 4) because UK eligibility under Horizon Europe association is unconfirmed and represents a binary hard gate.",
+        "strategic_value_score": 4,
+        "strategic_value_explanation": "EIC Accelerator offers transformational blended finance (grant + equity) and confers significant European market credibility, investor visibility via EIC's portfolio, and access to a pan-European deep tech ecosystem \u2014 highly valuable for a seed-stage UK company seeking to scale.",
+        "ease_score": 2,
+        "ease_explanation": "Multi-stage process (short application, full proposal, in-person jury interview) with a reported acceptance rate below 5%; known to be highly resource-intensive and competitive, requiring polished investor-grade materials.",
+        "priority_score": 3.15,
+        "priority_tier": "Prepare for Next Window",
+        "deadline": "Multiple cut-off dates per year \u2014 verify current schedule at EIC portal",
+        "recurrence": "Annual (multiple cut-offs)",
+        "notes": "CRITICAL: UK association to Horizon Europe determines eligibility \u2014 this must be verified at the EIC portal before any preparation investment. As of late 2024/2025, UK was associated to Horizon Europe under the deal signed in September 2023, making UK startups generally eligible; however this should be reconfirmed at time of application. The equity component makes this blended finance rather than pure grant.",
+        "reason_for_inclusion": "Thermify holds patents on a breakthrough hardware architecture that genuinely disrupts both the domestic heating and cloud computing markets simultaneously \u2014 the kind of category-defining deeptech innovation EIC Accelerator is explicitly designed to back.",
+        "reason_for_caution": "UK eligibility under Horizon Europe association must be verified as a first step before any preparation investment, and even if eligible, the sub-5% acceptance rate and demanding multi-stage process make this a long-odds, high-effort bet.",
+        "link_status": "verified"
+      }
+    ],
+    "strategic_recommendations": {
+      "best_fit_strategy": "Pursue a two-track strategy: (1) actively engage one or two UK Distribution Network Operators or Gas Distribution Networks as prospective lead partners for Ofgem SIF and NIA applications \u2014 Thermify's distributed residential nodes can be compellingly framed as a demand-side flexibility and network decarbonisation asset; (2) monitor and prepare a strong Innovate UK application (Smart Grants or themed competition via IFS) as the primary direct-funding route once the post-pause landscape clarifies. In parallel, verify UK eligibility for EIC Accelerator as a high-stakes parallel bet.",
+      "best_geographies": "United Kingdom (primary \u2014 most natural fit and least eligibility risk); EU via Horizon/EIC (high upside but binary eligibility gate on UK association must be confirmed before investing significant preparation time).",
+      "strongest_pathways": "1. Innovate UK Smart Grants or themed net-zero competition via IFS \u2014 most direct UK route once programme resumes; 2. Ofgem SIF as named technology partner under a licensed DNO/GDN lead \u2014 highest potential ticket size and strongest thematic alignment; 3. EIC Accelerator if UK association is confirmed \u2014 transformational funding scale for a patented deeptech breakthrough at TRL 6-7.",
+      "key_partnerships": "A licensed UK Distribution Network Operator (e.g. UK Power Networks, National Grid Electricity Distribution, SP Energy Networks) or a Gas Distribution Network (e.g. Cadent, SGN) as lead partner for Ofgem SIF/NIA applications. A UK university with expertise in heat exchange systems, edge computing, or distributed energy (e.g. Loughborough, Sheffield, Imperial) as KTP or Horizon consortium academic partner. A local authority or housing association as a co-delivery partner for social housing and fuel poverty framing.",
+      "capability_gaps": "Thermify needs to build a documented evidence base of measurable carbon savings and bill reductions from the Essex pilot before major grant applications \u2014 funders will require quantified impact data. A techno-economic model demonstrating grid flexibility benefits would be critical for Ofgem-route applications. The company should also formalise its IP position summary and any performance benchmarks versus incumbent gas boilers for use in grant narratives.",
+      "key_risks": "UK association to Horizon Europe/EIC remains unresolved and could eliminate the highest-value EU routes entirely. The Innovate UK Smart Grants pause creates near-term uncertainty for the most accessible UK direct route. Ofgem-route applications depend entirely on Thermify's ability to identify and engage a willing licensed network operator \u2014 a relationship-building task that can take 6-18 months. The company's seed stage and limited pilot data may make it hard to compete against more commercially mature applicants in competitive rounds."
+    },
+    "company_profile": {
+      "name": "Thermify",
+      "classification": "Climate Tech / Energy Tech",
+      "value_proposition": "Thermify replaces domestic gas boilers by installing distributed edge computing hardware (HeatHub) in homes, capturing the waste heat from cloud computing workloads to provide on-demand heating and hot water at lower cost and carbon footprint.",
+      "technology": "Distributed micro data centre hardware ('HeatHub') installed in residential properties; compute tasks from business cloud customers are processed on the HeatHub units, and the waste heat generated is captured via a heat-exchange system to replace conventional boiler heating. Patents claimed on the full boiler-replacement architecture. Business customers access cloud compute via Thermify's distributed network.",
+      "primary_outcome": "Reduction in household heating carbon emissions and energy bills by replacing gas boilers with waste heat from distributed cloud computing nodes.",
+      "secondary_benefits": [
+        "Elimination of active cooling requirement for distributed data centre nodes, improving overall energy efficiency",
+        "Lower heating costs for low-income and vulnerable households",
+        "Environmentally friendly cloud compute option for business customers",
+        "Dual revenue model: cloud compute fees from businesses offset or reduce heating costs for homeowners"
+      ],
+      "hq": "United Kingdom",
+      "operational_geographies": [
+        "United Kingdom"
+      ],
+      "customer_geographies": [
+        "United Kingdom"
+      ],
+      "trl": "TRL 6-7 \u2014 early real-world pilots reported (Essex household case study cited in press, November 2025), hardware deployed in homes, but appears to be in limited early-adopter/pilot stage rather than full commercial rollout",
+      "stage": "Seed",
+      "funding_characteristics": [
+        "SME",
+        "crowdfunding (Seedrs/Republic)",
+        "EIS-eligible",
+        "deeptech",
+        "patented technology",
+        "early-stage"
+      ],
+      "key_themes": [
+        "Waste heat recovery",
+        "Distributed computing",
+        "Residential decarbonisation",
+        "Energy poverty alleviation",
+        "Circular energy use",
+        "Edge computing",
+        "Green data infrastructure"
+      ],
+      "website_summary": "Thermify is a UK energy technology company that installs internet-connected computing hardware (the HeatHub) in homes to replace gas boilers. The units process cloud computing workloads for business customers and capture the resulting waste heat to provide residential heating and hot water on demand. By using energy twice \u2014 once for compute, once for heat \u2014 Thermify aims to lower both carbon emissions and household energy bills.",
+      "external_findings": "Thermify is running an EIS-eligible crowdfunding campaign on Seedrs/Republic and has attracted independent press coverage including a real-world pilot case study of an Essex household reporting significantly reduced heating bills (November 2025). The company holds patents on its full boiler-replacement architecture and positions the HeatHub as the first internet-connected compute device capable of completely replacing a domestic gas boiler; PitchBook has a company profile on file, confirming early-stage venture status.",
+      "_source_url": "https://thermify.cloud/"
+    },
+    "strategic_watchlist": [
+      {
+        "name": "Ofgem Strategic Innovation Fund (SIF)",
+        "managing_body": "Ofgem",
+        "geography": "United Kingdom",
+        "opportunity_type": "",
+        "application_route": "",
+        "application_timing": "timing_unknown",
+        "status": "Recurring",
+        "application_link": "https://www.ofgem.gov.uk/energy-regulation/technology-and-innovation/innovation/apply-strategic-innovation-fund-sif",
+        "link_type": "unknown",
+        "funding_type": "Grant",
+        "max_funding": "unknown",
+        "thematic_relevance": "",
+        "why_watchlist": "This programme was researched and shortlisted but was not included in the scored output. It likely requires a licensed or regulated entity (e.g. network operator, NHS trust, housing association, or local authority) as lead applicant. The startup may be able to participate as a named technology partner under an eligible lead. Verify current eligibility and identify a suitable lead organisation.",
+        "what_would_unlock": "Identify a licensed or regulated organisation (network operator, NHS trust, housing association, or local authority) willing to act as lead applicant, with the startup named as the technology partner.",
+        "_rescued_by_safety_net": true,
+        "link_status": "verified"
+      },
+      {
+        "name": "Ofgem Network Innovation Allowance (NIA)",
+        "managing_body": "Ofgem",
+        "geography": "United Kingdom",
+        "opportunity_type": "",
+        "application_route": "",
+        "application_timing": "timing_unknown",
+        "status": "Recurring",
+        "application_link": "https://www.ofgem.gov.uk/network-innovation-allowance-nia",
+        "link_type": "unknown",
+        "funding_type": "Grant",
+        "max_funding": "unknown",
+        "thematic_relevance": "",
+        "why_watchlist": "This programme was researched and shortlisted but was not included in the scored output. It likely requires a licensed or regulated entity (e.g. network operator, NHS trust, housing association, or local authority) as lead applicant. The startup may be able to participate as a named technology partner under an eligible lead. Verify current eligibility and identify a suitable lead organisation.",
+        "what_would_unlock": "Identify a licensed or regulated organisation (network operator, NHS trust, housing association, or local authority) willing to act as lead applicant, with the startup named as the technology partner.",
+        "_rescued_by_safety_net": true,
+        "link_status": "verified"
+      }
+    ]
+  },
+  "findings": {
+    "case_id": "thermify",
+    "company": "Thermify",
+    "n_main": 2,
+    "n_watch": 2,
+    "checks": [
+      {
+        "rule": "must_appear_in_main",
+        "pattern": "Innovate UK",
+        "result": "PASS",
+        "matched": "Innovate UK Smart Grants \u2014 current/forthcoming open rounds"
+      },
+      {
+        "rule": "must_appear_in_main",
+        "pattern": "SMART",
+        "result": "PASS",
+        "matched": "Innovate UK Smart Grants \u2014 current/forthcoming open rounds"
+      },
+      {
+        "rule": "must_appear_in_watchlist_or_main",
+        "pattern": "Ofgem",
+        "result": "PASS",
+        "matched": "Ofgem Strategic Innovation Fund (SIF)"
+      },
+      {
+        "rule": "must_appear_in_watchlist_or_main",
+        "pattern": "EIC Accelerator",
+        "result": "PASS",
+        "matched": "EIC Accelerator Open 2025"
+      },
+      {
+        "rule": "must_appear_in_watchlist_or_main",
+        "pattern": "KTP",
+        "result": "FAIL",
+        "matched": null
+      },
+      {
+        "rule": "must_not_appear_anywhere",
+        "pattern": "Energy Catalyst",
+        "result": "PASS",
+        "matched": null
+      },
+      {
+        "rule": "must_not_appear_anywhere",
+        "pattern": "EIC Pathfinder",
+        "result": "PASS",
+        "matched": null
+      }
+    ],
+    "pass": 6,
+    "fail": 1,
+    "fp_count": 0,
+    "fn_count": 1,
+    "score": "6/7",
+    "pct": 85.7
+  }
+}

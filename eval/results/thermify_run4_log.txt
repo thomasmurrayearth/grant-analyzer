@@ -1,0 +1,48 @@
+Traceback (most recent call last):
+  File "C:\Users\thoma\grant-analyzer\eval\run_eval.py", line 380, in main
+    result   = await run_pipeline(case)
+               ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\thoma\grant-analyzer\eval\run_eval.py", line 172, in run_pipeline
+    raise RuntimeError(f"Phase 2+3 error: {event['message']}")
+RuntimeError: Phase 2+3 error: [grant discovery] Error code: 400 - {'type': 'error', 'error': {'type': 'invalid_request_error', 'message': 'Your credit balance is too low to access the Anthropic API. Please go to Plans & Billing to upgrade or purchase credits.'}, 'request_id': 'req_011CbYoX5kJcQ8CyHvNThh8j'}
+
+================================================================
+  Running: Thermify  (https://thermify.cloud/)
+  Notes:   Wales-registered: 39a Vale Business Park, Llandow, Cowbridge, Wales CF71 7PF. Distributed edge-compute-as-heating hardwa...
+================================================================
+
+[Phase 1] Company research…
+  Fetching startup website…
+  Analysing company information…
+  Researching company externally (up to 5 searches)…
+  Company search 1: "Thermify cloud computing heat homes data centre news 2024"
+  Company search 2: "Thermify funding investment crowdfunding round"
+  Company search 3: "Thermify HeatHub technology how it works waste heat recovery"
+  Company search 4: "Thermify pilots partnerships customers case studies"
+  Company search 5: "Thermify cloud Crunchbase LinkedIn company profile"
+  [OK] Profile: Thermify | TRL: TRL 6-7 — piloted in real homes (e.g. social housing in Essex via UKPN SHIELD project); technology demonstrated in operational environment but not yet at commercial scale deployment | HQ: Llandow, Wales, United Kingdom
+
+[Phase 2+3] Grant discovery and scoring…
+  Searching for grant opportunities (up to 20 searches)…
+  Search 1/20: "Innovate UK open grant competitions SME innovation apply 2025 2026"
+  Search 2/20: "Innovate UK Knowledge Transfer Partnership KTP open call UK SME university 2025 2026"
+  Search 3/20: "Welsh Government SMART FIS innovation grant SME apply Wales 2025 2026"
+  Search 4/20: "Business Wales Smart innovation support grant apply 2025 2026"
+  Search 5/20: "Ofgem Strategic Innovation Fund SIF open call apply 2025 2026"
+  Search 6/20: "EIC Accelerator open call apply EU climate deep tech SME 2025 2026"
+  Search 7/20: "UKRI Net Zero Innovation Portfolio residential heat decarbonisation grant open apply 2025"
+  Search 8/20: "Homes England retrofit decarbonisation innovation fund SME grant apply 2025 2026"
+  Search 9/20: "DESNZ Department Energy Security Net Zero edge computing heat recovery grant UK SME 2025"
+  Search 10/20: "UK Research Innovation EPSRC energy efficiency distributed computing heat reuse grant open call 2025"
+  Search 11/20: "Horizon Europe EIC Pathfinder waste heat recovery residential decarbonisation open call 2025 2026"
+  Search 12/20: "Horizon Europe MSCA or KA2 edge data centre circular energy heat reuse SME consortium apply 2025"
+  Search 13/20: "EIT InnoEnergy accelerator grant residential heating decarbonisation deeptech startup apply 2025"
+  Search 14/20: "LHEES Scotland local heat energy efficiency strategy innovation fund grant SME apply 2025"
+  Search 15/20: "Social Housing Decarbonisation Fund wave 3 innovation pilot grant UK apply 2025 2026"
+  Search 16/20: "Ofgem Network Innovation Competition NIC residential edge computing waste heat project UK 2025"
+  Search 17/20: "Fuel poverty innovation challenge prize UK waste heat boiler replacement open 2025"
+  Search 18/20: "Nesta sustainable future challenge prize energy poverty heat innovation open apply 2025 2026"
+  Search 19/20: "Bethnal Green Ventures climate tech accelerator grant equity-free energy startup apply 2025"
+  Search 20/20: "Aster Growth or Shell Foundation energy access innovation grant fuel poverty heat SME 2025"
+
+  ERROR running Thermify: Phase 2+3 error: [grant discovery] Error code: 400 - {'type': 'error', 'error': {'type': 'invalid_request_error', 'message': 'Your credit balance is too low to access the Anthropic API. Please go to Plans & Billing to upgrade or purchase credits.'}, 'request_id': 'req_011CbYoX5kJcQ8CyHvNThh8j'}

@@ -1,0 +1,11 @@
+fastapi>=0.115.0
+uvicorn[standard]>=0.30.0
+anthropic>=0.40.0
+httpx>=0.27.0
+beautifulsoup4>=4.12.3
+ddgs>=7.0.0
+openpyxl>=3.1.5
+python-multipart>=0.0.9
+pypdf>=3.0.0
+python-docx>=0.8.11
+supabase>=2.0.0

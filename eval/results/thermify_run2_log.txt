@@ -1,0 +1,166 @@
+
+================================================================
+  Running: Thermify  (https://thermify.cloud/)
+  Notes:   Wales-registered: 39a Vale Business Park, Llandow, Cowbridge, Wales CF71 7PF. Distributed edge-compute-as-heating hardwa...
+================================================================
+
+[Phase 1] Company research…
+  Fetching startup website…
+  Analysing company information…
+  Researching company externally (up to 5 searches)…
+  Company search 1: "Thermify cloud data centre heat homes news 2024"
+  Company search 2: "Thermify funding investment crowdfunding round"
+  Company search 3: "Thermify HeatHub technology how it works data centre waste heat"
+  Company search 4: "Thermify cloud pilots partnerships customers case studies"
+  Company search 5: "Thermify cloud LinkedIn Crunchbase startup profile"
+  [OK] Profile: Thermify | TRL: TRL 6-7 — live pilot installs have been completed (including an Essex household), social housing pilots are underway, and the company reports £2.5m in contracted revenue, indicating working prototypes in operational environments with early commercial deployments | HQ: Wales, United Kingdom
+
+[Phase 2+3] Grant discovery and scoring…
+  Searching for grant opportunities (up to 20 searches)…
+  Search 1/20: "Innovate UK Knowledge Transfer Partnership KTP open call UK SME university 2025 2026"
+  Search 2/20: "Innovate UK smart energy systems grant 2025 waste heat recovery SME apply"
+  Search 3/20: "UK Research Innovation UKRI net zero heating decarbonisation deeptech grant 2025 open"
+  Search 4/20: "Wales smart energy cleantech R&D grant 2025 SME Thermify edge computing fuel poverty"
+  Search 5/20: "Innovate UK edge computing distributed data centre energy efficiency grant 2024 2025 open"
+  Search 6/20: "Horizon Europe EIC Accelerator 2025 waste heat recovery distributed computing cleantech apply"
+  Search 7/20: "EIC Pathfinder 2025 edge computing energy reuse decarbonisation SME open call"
+  Search 8/20: "EIT InnoEnergy 2025 residential heating decarbonisation startup funding apply"
+  Search 9/20: "UK Department for Energy Security Net Zero DESNZ heat pump boiler replacement innovation fund 2025"
+  Search 10/20: "Ofgem innovation funding 2025 fuel poverty low carbon heating technology grant SME"
+  Search 11/20: "Social Housing Decarbonisation Fund UK 2025 innovative heating technology pilot grant apply"
+  Search 12/20: "UK Industrial Energy Transformation Fund IETF 2025 data centre waste heat recovery SME grant"
+  Search 13/20: "Carbon Trust innovation award 2025 waste heat reuse distributed computing UK cleantech"
+  Search 14/20: "Nesta challenge prize 2025 net zero home heating innovation UK open"
+  Search 15/20: "UK energy innovation competition 2025 fuel poverty low carbon heating edge computing prize apply"
+  Search 16/20: "Bethnal Green Ventures cleantech social impact accelerator 2025 equity free grant UK apply"
+  Search 17/20: "Sustainable Futures accelerator Wales cleantech deeptech 2025 grant incubator open"
+  Search 18/20: "Nominet Trust philanthropic fund 2025 digital technology social impact fuel poverty UK apply"
+  Search 19/20: "Joseph Rowntree Foundation innovation grant 2025 fuel poverty energy bills UK low income households"
+  Search 20/20: "Development Bank of Wales SME cleantech deeptech funding grant 2025 early stage apply"
+  Discovery complete — 12 opportunities found. Shortlisting top 12 for deep research…
+  Generating research queries for shortlisted grants…
+  Executing 36 targeted research searches…
+  Research search 1/36: "Knowledge Transfer Partnership KTP 2025 2026 Round 3 Innovate UK eligibility funding amount deadline application requirements"
+  Research search 2/36: "Knowledge Transfer Partnership KTP applicant experience review success rate pitfalls blog forum testimonial SME startup"
+  Research search 3/36: "Knowledge Transfer Partnership KTP 2025 2026 Round 3 Innovate UK application portal submit apply online form"
+  Research search 4/36: "Innovate UK MSI SME Resource Energy Efficiency Industrial Research grant eligibility funding amount deadline criteria 2024 2025"
+  Research search 5/36: "Innovate UK MSI SME Resource Energy Efficiency Industrial Research applicant review experience blog forum success rate"
+  Research search 6/36: "Innovate UK MSI SME Resource Energy Efficiency Industrial Research apply application portal submission form open call"
+  Research search 7/36: "Innovate UK MSI SME Resource Energy Efficiency Feasibility Studies grant eligibility funding amount deadline requirements"
+  Research search 8/36: "Innovate UK MSI SME Resource Energy Efficiency Feasibility Studies applicant experience review pitfalls success rate forum"
+  Research search 9/36: "Innovate UK MSI SME Resource Energy Efficiency Feasibility Studies apply application portal submit online form call for proposals"
+  Research search 10/36: "EIC Accelerator Open 2025 European Innovation Council eligibility funding amount grant equity deadline application requirements"
+  Research search 11/36: "EIC Accelerator Open 2025 applicant experience review success rate pitfalls blog testimonial startup forum independent commentary"
+  Research search 12/36: "EIC Accelerator Open 2025 apply application portal submission form EIC online platform call for proposals"
+  Research search 13/36: "SMART Innovation Funding Wales Business Wales Welsh Government eligibility criteria funding amount deadline application process 2024 2025"
+  Research search 14/36: "SMART Innovation Funding Wales applicant review experience blog forum testimonial success rate pitfalls SME startup"
+  Research search 15/36: "SMART Innovation Funding Wales apply application form portal submit Business Wales open call"
+  Research search 16/36: "Innovate UK Net Zero Living Pilot Places Programme eligibility funding amount deadline application requirements 2024 2025"
+  Research search 17/36: "Innovate UK Net Zero Living Pilot Places Programme applicant experience review blog forum success rate commentary"
+  Research search 18/36: "Innovate UK Net Zero Living Pilot Places Programme apply application portal submit online form call for proposals"
+  Research search 19/36: "EIC Pathfinder Open 2025 2026 European Innovation Council eligibility funding amount deadline application requirements criteria"
+  Research search 20/36: "EIC Pathfinder Open 2025 2026 applicant experience review success rate pitfalls blog testimonial forum independent commentary"
+  Research search 21/36: "EIC Pathfinder Open 2025 2026 apply application portal submission form EIC Funding and Tenders call for proposals"
+  Research search 22/36: "Industrial Energy Transformation Fund IETF Phase 3 DESNZ eligibility funding amount deadline application requirements criteria UK"
+  Research search 23/36: "Industrial Energy Transformation Fund IETF Phase 3 applicant experience review blog forum success rate pitfalls testimonial"
+  Research search 24/36: "Industrial Energy Transformation Fund IETF Phase 3 apply application portal submit online form open call DESNZ"
+  Research search 25/36: "Ofgem Strategic Innovation Fund SIF Network Innovation eligibility criteria funding amount deadline application requirements DNO GDN"
+  Research search 26/36: "Ofgem Strategic Innovation Fund SIF Network Innovation applicant experience review blog forum success rate pitfalls commentary"
+  Research search 27/36: "Ofgem Strategic Innovation Fund SIF apply application portal submit online form call for proposals network innovation"
+  Research search 28/36: "Warm Homes Social Housing Fund formerly Social Housing Decarbonisation Fund DESNZ Homes England eligibility funding amount deadline application requirements England Wales"
+  Research search 29/36: "Warm Homes Social Housing Fund Social Housing Decarbonisation Fund applicant experience review blog forum success rate pitfalls testimonial"
+  Research search 30/36: "Warm Homes Social Housing Fund apply application portal submit online form call for proposals Homes England DESNZ"
+  Research search 31/36: "Clean Futures Accelerator Connected Places Catapult eligibility funding amount deadline application requirements criteria UK"
+  Research search 32/36: "Clean Futures Accelerator Connected Places Catapult applicant experience review blog forum testimonial success rate pitfalls startup"
+  Research search 33/36: "Clean Futures Accelerator Connected Places Catapult apply application portal submit online form open call"
+  Research search 34/36: "Horizon Europe EIC Work Programme 2026 Climate Energy Challenges eligibility funding amount deadline application requirements"
+  Research search 35/36: "Horizon Europe EIC Work Programme 2026 Climate Energy Challenges applicant experience review blog forum success rate pitfalls commentary"
+  Research search 36/36: "Horizon Europe EIC Work Programme 2026 Climate Energy Challenges apply application portal Funding Tenders submit call for proposals"
+  Applying full scoring rubric to all 12 shortlisted grants… (this step takes 2–3 minutes)
+  Scoring in progress… (611 characters generated so far)
+  Scoring in progress… (1,230 characters generated so far)
+  Scoring in progress… (1,842 characters generated so far)
+  Scoring in progress… (2,486 characters generated so far)
+  Scoring in progress… (3,139 characters generated so far)
+  Scoring in progress… (3,768 characters generated so far)
+  Scoring in progress… (4,384 characters generated so far)
+  Scoring in progress… (5,057 characters generated so far)
+  Scoring in progress… (5,690 characters generated so far)
+  Scoring in progress… (6,349 characters generated so far)
+  Scoring in progress… (6,954 characters generated so far)
+  Scoring in progress… (7,611 characters generated so far)
+  Scoring in progress… (8,239 characters generated so far)
+  Scoring in progress… (8,879 characters generated so far)
+  Scoring in progress… (9,503 characters generated so far)
+  Scoring in progress… (10,143 characters generated so far)
+  Scoring in progress… (10,793 characters generated so far)
+  Scoring in progress… (11,413 characters generated so far)
+  Scoring in progress… (12,096 characters generated so far)
+  Scoring in progress… (12,769 characters generated so far)
+  Scoring in progress… (13,370 characters generated so far)
+  Scoring in progress… (13,972 characters generated so far)
+  Scoring in progress… (14,582 characters generated so far)
+  Scoring in progress… (15,288 characters generated so far)
+  Scoring in progress… (16,028 characters generated so far)
+  Scoring in progress… (16,668 characters generated so far)
+  Scoring in progress… (17,329 characters generated so far)
+  Scoring in progress… (18,051 characters generated so far)
+  Scoring in progress… (18,747 characters generated so far)
+  Scoring in progress… (19,393 characters generated so far)
+  Scoring in progress… (20,102 characters generated so far)
+  Scoring in progress… (20,742 characters generated so far)
+  Scoring in progress… (21,371 characters generated so far)
+  Scoring in progress… (21,998 characters generated so far)
+  Scoring in progress… (22,624 characters generated so far)
+  Scoring in progress… (23,271 characters generated so far)
+  Scoring in progress… (23,984 characters generated so far)
+  Scoring in progress… (24,621 characters generated so far)
+  Scoring in progress… (25,239 characters generated so far)
+  Scoring in progress… (25,876 characters generated so far)
+  Scoring in progress… (26,517 characters generated so far)
+  Scoring in progress… (27,226 characters generated so far)
+  Scoring in progress… (27,875 characters generated so far)
+  Scoring in progress… (28,521 characters generated so far)
+  Scoring in progress… (29,231 characters generated so far)
+  Scoring in progress… (29,873 characters generated so far)
+  Scoring in progress… (30,475 characters generated so far)
+  Scoring in progress… (31,085 characters generated so far)
+  Scoring in progress… (31,726 characters generated so far)
+  Scoring in progress… (32,345 characters generated so far)
+  Scoring in progress… (33,015 characters generated so far)
+  Checking 9 opportunities for confirmed application processes…
+  Verifying 11 application links…
+  [OK] Complete: 9 main recommendations, 2 watchlist items
+
+  Saved -> eval\results\thermify_20260530_102011.json
+
+================================================================
+  SCORE: Thermify  ->  5/7 (71.4%)
+  Main recommendations: 9  |  Watchlist: 2
+  [WARN]  1 false positive(s) -- grants that should have been excluded
+  [WARN]  1 false negative(s) -- grants that should have appeared
+================================================================
+
+  Ground-truth checks:
+    [FAIL]  [must appear in main]  'Innovate UK'
+    [PASS]  [must appear in main]  'SMART'  -> matched: "SMART Innovation Funding — Wales"
+    [PASS]  [must appear in watchlist or main]  'Ofgem'  -> matched: "Ofgem Strategic Innovation Fund (SIF) — Network Innovation"
+    [PASS]  [must appear in watchlist or main]  'EIC Accelerator'  -> matched: "EIC Accelerator Open 2025"
+    [PASS]  [must appear in watchlist or main]  'KTP'  -> matched: "Knowledge Transfer Partnership (KTP): 2025–2026 Round 3"
+    [PASS]  [must not appear anywhere]  'Energy Catalyst'
+    [FAIL]  [must not appear anywhere]  'EIC Pathfinder'  -> matched: "EIC Pathfinder Open 2025/2026"
+
+  Main recommendations (9):
+    • [Prepare for Next Window]  SMART Innovation Funding — Wales  (fit=5, score=4.1, timing=recurring_uncertain, applicant=direct)
+    • [Must Pursue]  Knowledge Transfer Partnership (KTP): 2025–2026 Round 3  (fit=4, score=3.75, timing=open_now, applicant=direct)
+    • [Big Bet]  EIC Accelerator Open 2025  (fit=4, score=3.95, timing=open_now, applicant=direct)
+    • [Must Pursue]  MSI: SME Resource and Energy Efficiency – Industrial Research  (fit=4, score=3.55, timing=open_now, applicant=direct)
+    • [Quick Win]  MSI: SME Resource and Energy Efficiency – Feasibility Studies  (fit=3, score=3.2, timing=recurring_uncertain, applicant=direct)
+    • [Prepare for Next Window]  Clean Futures Accelerator — Connected Places Catapult  (fit=4, score=3.95, timing=recurring_uncertain, applicant=direct)
+    • [Prepare for Next Window]  EIC Pathfinder Open 2025/2026  (fit=3, score=3.05, timing=known_future_window, applicant=direct)
+    • [Prepare for Next Window]  Industrial Energy Transformation Fund (IETF) Phase 3  (fit=3, score=2.75, timing=recurring_uncertain, applicant=direct)
+    • [Prepare for Next Window]  Horizon Europe EIC Work Programme 2026 — Climate & Energy Challenges  (fit=3, score=2.95, timing=known_future_window, applicant=direct)
+
+  Strategic watchlist (2):
+    • Ofgem Strategic Innovation Fund (SIF) — Network Innovation  — Startup cannot be lead applicant or direct funding recipient for this programme.
+    • Warm Homes: Social Housing Fund (formerly Social Housing Decarbonisation Fund)  — Startup cannot be lead applicant or direct funding recipient for this programme.

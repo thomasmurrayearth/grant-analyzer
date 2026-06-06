@@ -1,0 +1,144 @@
+
+================================================================
+  Running: Thermify  (https://thermify.cloud/)
+  Notes:   Wales-registered: 39a Vale Business Park, Llandow, Cowbridge, Wales CF71 7PF. Distributed edge-compute-as-heating hardwa...
+================================================================
+
+[Phase 1] Company research…
+  Fetching startup website…
+  Analysing company information…
+  Researching company externally (up to 5 searches)…
+  Company search 1: "Thermify cloud data centre heat homes news 2024"
+  Company search 2: "Thermify funding investment crowdfunding round"
+  Company search 3: "Thermify HeatHub technology data centre waste heat residential"
+  Company search 4: "Thermify pilots partnerships customers case studies"
+  Company search 5: "Thermify cloud LinkedIn Crunchbase startup profile"
+  [OK] Profile: Thermify | TRL: TRL 7 — first pilot installation completed in an Essex home (BBC-covered trial), with social housing pilots announced; product is operational in real-world conditions but not yet at full commercial scale | HQ: Llandow, Wales, UK
+
+[Phase 2+3] Grant discovery and scoring…
+  Searching for grant opportunities (up to 20 searches)…
+  Search 1/20: "Innovate UK open grant competitions SME innovation apply 2025 2026"
+  Search 2/20: "Innovate UK Knowledge Transfer Partnership KTP open call UK SME university 2025 2026"
+  Search 3/20: "Welsh Government SMART FIS innovation grant SME apply Wales 2025 2026"
+  Search 4/20: "Business Wales Smart innovation support grant apply 2025 2026"
+  Search 5/20: "Ofgem Strategic Innovation Fund SIF open call apply 2025 2026"
+  Search 6/20: "EIC Accelerator open call apply EU climate deep tech SME 2025 2026"
+  Search 7/20: "UKRI Net Zero Innovation Portfolio heat decarbonisation grant SME open apply 2025 2026"
+  Search 8/20: "Innovate UK edge computing distributed infrastructure energy efficiency grant UK SME 2025"
+  Search 9/20: "UK Research Innovation waste heat recovery residential decarbonisation R&D grant 2025 2026"
+  Search 10/20: "DESNZ Heat Network Investment Project HNIP residential heat innovation fund SME apply 2025 2026"
+  Search 11/20: "Horizon Europe energy efficiency buildings waste heat recovery SME grant open call 2025 2026"
+  Search 12/20: "EIT InnoEnergy startup funding climate hardware heat decarbonisation apply 2025 2026"
+  Search 13/20: "Horizon Europe Cluster 5 energy systems distributed edge computing net zero grant 2025"
+  Search 14/20: "Ofgem Network Innovation Competition NIC waste heat data centre residential heating 2025 2026"
+  Search 15/20: "Social Housing Decarbonisation Fund SHDF wave grant pilot innovation apply UK 2025 2026"
+  Search 16/20: "Fuel poverty innovation fund low income household heat decarbonisation grant UK 2025 2026"
+  Search 17/20: "NESTA climate tech challenge prize waste heat energy innovation open competition 2025"
+  Search 18/20: "UK heat pump boiler replacement innovation challenge prize competition SME apply 2025 2026"
+  Search 19/20: "Greentech Capital climate hardware seed accelerator grant equity free UK 2025 2026"
+  Search 20/20: "Bethnal Green Ventures climate tech accelerator grant funded UK energy startup apply 2025"
+  Discovery complete — 8 opportunities found. Shortlisting top 8 for deep research…
+  Generating research queries for shortlisted grants…
+  Executing 24 targeted research searches…
+  Research search 1/24: "Ofgem Strategic Innovation Fund SIF Cycle 5 eligibility funding amount application deadline 2025"
+  Research search 2/24: "Ofgem Strategic Innovation Fund SIF applicant experience review success rate pitfalls blog forum"
+  Research search 3/24: "Ofgem Strategic Innovation Fund SIF Cycle 5 apply application portal submit call for proposals 2025"
+  Research search 4/24: "EIC Accelerator Open 2025 2026 eligibility criteria funding amount application deadline European Innovation Council"
+  Research search 5/24: "EIC Accelerator Open 2025 applicant experience testimonial success rate pitfalls review forum blog"
+  Research search 6/24: "EIC Accelerator Open 2025 2026 apply application portal submit online form call for proposals EIC"
+  Research search 7/24: "Innovate UK Smart Grants 2025 current round eligibility funding amount application deadline UKRI"
+  Research search 8/24: "Innovate UK Smart Grants applicant experience review success rate tips pitfalls blog forum testimonial"
+  Research search 9/24: "Innovate UK Smart Grants 2025 apply application portal submit Innovate UK Funding Service open call"
+  Research search 10/24: "Innovate UK Net Zero Living Pilot Places 2025 2026 eligibility funding amount application deadline UKRI"
+  Research search 11/24: "Innovate UK Net Zero Living Pilot Places applicant experience review blog forum commentary 2025"
+  Research search 12/24: "Innovate UK Net Zero Living Pilot Places 2025 apply application portal submit call for proposals UKRI"
+  Research search 13/24: "Knowledge Transfer Partnership KTP 2025 2026 Round 4 eligibility funding amount application deadline Innovate UK"
+  Research search 14/24: "Knowledge Transfer Partnership KTP applicant experience review success rate pitfalls blog SME testimonial 2025"
+  Research search 15/24: "Knowledge Transfer Partnership KTP Round 4 2025 2026 apply application portal submit online form Innovate UK"
+  Research search 16/24: "Innovate UK MSI SME Resource Energy Efficiency Industrial Research eligibility funding amount deadline UKRI"
+  Research search 17/24: "Innovate UK MSI SME Resource Energy Efficiency Industrial Research applicant review experience commentary forum"
+  Research search 18/24: "MSI SME Resource Energy Efficiency Industrial Research apply application portal submit Innovate UK Funding Service"
+  Research search 19/24: "Warm Homes Local Grant UK eligibility criteria funding amount application deadline DESNZ local authority 2025"
+  Research search 20/24: "Warm Homes Local Grant UK review experience commentary local authority delivery pitfalls blog news 2025"
+  Research search 21/24: "Warm Homes Local Grant apply application portal submit local authority open call proposals 2025"
+  Research search 22/24: "Bethnal Green Ventures BGV Climate Tech Programme eligibility funding amount equity application deadline 2025"
+  Research search 23/24: "Bethnal Green Ventures BGV Climate Tech Programme founder experience review testimonial success rate blog forum"
+  Research search 24/24: "Bethnal Green Ventures BGV Climate Tech Programme apply application form submit open call 2025"
+  Applying full scoring rubric to all 8 shortlisted grants… (this step takes 2–3 minutes)
+  Scoring in progress… (608 characters generated so far)
+  Scoring in progress… (1,239 characters generated so far)
+  Scoring in progress… (1,976 characters generated so far)
+  Scoring in progress… (2,591 characters generated so far)
+  Scoring in progress… (3,215 characters generated so far)
+  Scoring in progress… (3,882 characters generated so far)
+  Scoring in progress… (4,483 characters generated so far)
+  Scoring in progress… (5,143 characters generated so far)
+  Scoring in progress… (5,759 characters generated so far)
+  Scoring in progress… (6,368 characters generated so far)
+  Scoring in progress… (7,013 characters generated so far)
+  Scoring in progress… (7,715 characters generated so far)
+  Scoring in progress… (8,345 characters generated so far)
+  Scoring in progress… (9,042 characters generated so far)
+  Scoring in progress… (9,660 characters generated so far)
+  Scoring in progress… (10,298 characters generated so far)
+  Scoring in progress… (10,923 characters generated so far)
+  Scoring in progress… (11,533 characters generated so far)
+  Scoring in progress… (12,136 characters generated so far)
+  Scoring in progress… (12,776 characters generated so far)
+  Scoring in progress… (13,425 characters generated so far)
+  Scoring in progress… (14,058 characters generated so far)
+  Scoring in progress… (14,712 characters generated so far)
+  Scoring in progress… (15,360 characters generated so far)
+  Scoring in progress… (15,962 characters generated so far)
+  Scoring in progress… (16,607 characters generated so far)
+  Scoring in progress… (17,272 characters generated so far)
+  Scoring in progress… (17,991 characters generated so far)
+  Scoring in progress… (18,633 characters generated so far)
+  Scoring in progress… (19,284 characters generated so far)
+  Scoring in progress… (20,091 characters generated so far)
+  Scoring in progress… (20,727 characters generated so far)
+  Scoring in progress… (21,350 characters generated so far)
+  Scoring in progress… (22,010 characters generated so far)
+  Scoring in progress… (22,691 characters generated so far)
+  Scoring in progress… (23,322 characters generated so far)
+  Scoring in progress… (24,004 characters generated so far)
+  Scoring in progress… (24,623 characters generated so far)
+  Scoring in progress… (25,262 characters generated so far)
+  Scoring in progress… (26,035 characters generated so far)
+  Scoring in progress… (26,692 characters generated so far)
+  Scoring in progress… (27,370 characters generated so far)
+  Scoring in progress… (28,016 characters generated so far)
+  Scoring in progress… (28,623 characters generated so far)
+  Scoring in progress… (29,331 characters generated so far)
+  Scoring in progress… (29,978 characters generated so far)
+  Scoring in progress… (30,607 characters generated so far)
+  Scoring in progress… (31,262 characters generated so far)
+  Checking 5 opportunities for confirmed application processes…
+  Verifying 5 application links…
+  [OK] Complete: 5 main recommendations, 0 watchlist items
+
+  Saved -> eval\results\thermify_20260530_103045.json
+
+================================================================
+  SCORE: Thermify  ->  6/7 (85.7%)
+  Main recommendations: 5  |  Watchlist: 0
+  [WARN]  1 false negative(s) -- grants that should have appeared
+================================================================
+
+  Ground-truth checks:
+    [PASS]  [must appear in main]  'Innovate UK'  -> matched: "Innovate UK Smart Grants — Programme Umbrella"
+    [PASS]  [must appear in main]  'SMART'  -> matched: "Innovate UK Smart Grants — Programme Umbrella"
+    [FAIL]  [must appear in watchlist or main]  'Ofgem'
+    [PASS]  [must appear in watchlist or main]  'EIC Accelerator'  -> matched: "EIC Accelerator Open 2025 / 2026"
+    [PASS]  [must appear in watchlist or main]  'KTP'  -> matched: "Knowledge Transfer Partnership (KTP) 2025–2026"
+    [PASS]  [must not appear anywhere]  'Energy Catalyst'
+    [PASS]  [must not appear anywhere]  'EIC Pathfinder'
+
+  Main recommendations (5):
+    • [Must Pursue]  EIC Accelerator Open 2025 / 2026  (fit=4, score=3.95, timing=open_now, applicant=direct)
+    • [Prepare for Next Window]  Innovate UK Smart Grants — Programme Umbrella  (fit=3, score=3.35, timing=recurring_uncertain, applicant=direct)
+    • [Prepare for Next Window]  Bethnal Green Ventures (BGV) Tech for Good Programme  (fit=3, score=3.2, timing=known_future_window, applicant=direct)
+    • [Prepare for Next Window]  Innovate UK Net Zero Living — Pilot Places  (fit=3, score=3.15, timing=recurring_uncertain, applicant=direct)
+    • [Prepare for Next Window]  Knowledge Transfer Partnership (KTP) 2025–2026  (fit=3, score=3.0, timing=recurring_uncertain, applicant=direct)
+
+  Strategic watchlist (0):

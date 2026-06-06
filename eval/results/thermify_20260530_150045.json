@@ -1,0 +1,309 @@
+{
+  "result": {
+    "executive_summary": {
+      "company_overview": "Thermify is a Welsh seed-stage climate-tech startup that has developed the patented HeatHub\u2122, a distributed micro data centre unit installed in or near homes to capture waste heat from cloud computing processors for domestic heating and hot water, replacing gas boilers. The business model is dual-sided: businesses pay for cloud processing capacity across the HeatHub network, effectively subsidising or eliminating homeowners' heating costs. A real-world pilot has been completed in Essex at TRL 6-7.",
+      "strongest_themes": "The strongest funding theme alignment is UK domestic heat decarbonisation \u2014 Thermify's core product is a direct gas boiler replacement, perfectly matching Innovate UK and DESNZ heat innovation priorities. Secondary alignment exists with digital infrastructure (edge computing, data centre efficiency) and circular energy use, which broadens the narrative for EIC Accelerator (green + digital transition) and Horizon Europe Cluster 5 (smart buildings). Waste heat recovery and fuel poverty reduction are compelling secondary benefit narratives for Welsh Government funding.",
+      "strongest_geographies": "The United Kingdom \u2014 particularly through Innovate UK/DESNZ programmes \u2014 is the primary and most accessible funding landscape given Thermify's Wales HQ, UK-only operations, and direct alignment with UK net zero heat policy. EU-associated country status opens the EIC Accelerator and Horizon Europe as high-value but more complex secondary geographies.",
+      "key_constraints": "Thermify's seed stage and single pilot deployment (TRL 6-7) means it lacks the commercial traction typically favoured by the most competitive programmes (EIC, Horizon). As a programme umbrella rather than specific open competitions, most Innovate UK routes require active monitoring of the IFS portal for relevant open calls. UK eligibility for EU-specific instruments (Innovation Fund) is uncertain post-Brexit. The dual-sector positioning (data centres + heat) is a strength narratively but may require careful framing to fit specific competition scopes."
+    },
+    "opportunities": [
+      {
+        "name": "EIC Accelerator Open 2025 \u2014 Horizon Europe",
+        "managing_body": "European Innovation Council (EIC)",
+        "geography": "UK (associated country under Horizon Europe)",
+        "opportunity_type": "blended_finance",
+        "application_route": "direct_startup_application",
+        "has_application_process": true,
+        "trl_match": true,
+        "geography_match": true,
+        "applicant_type_match": "direct",
+        "application_timing": "known_future_window",
+        "status": "Recurring",
+        "application_link": "https://eic.ec.europa.eu/eic-funding-opportunities/eic-accelerator/eic-accelerator-open_en",
+        "link_type": "programme_page",
+        "funding_type": "Blended",
+        "max_funding": "Up to \u20ac2.5m grant + up to \u20ac15m equity investment",
+        "funding_confidence": "High",
+        "thematic_fit_score": 4,
+        "thematic_fit_explanation": "EIC Accelerator explicitly targets deep-tech SMEs at the intersection of the green and digital transitions \u2014 Thermify's patented integration of distributed cloud computing with domestic waste-heat recovery is a textbook dual-transition proposition. UK association to Horizon Europe confirmed from 2024, making Thermify fully eligible as a UK SME.",
+        "strategic_value_score": 5,
+        "strategic_value_explanation": "Up to \u20ac17.5m in combined non-dilutive grant and equity investment would be transformational for a seed-stage company; EIC portfolio membership provides major investor signalling, European market access, and institutional credibility that is difficult to replicate from UK-only grants.",
+        "ease_score": 1,
+        "ease_explanation": "EIC Accelerator involves a two-stage competitive process (short application, full proposal, then jury interview) with a reported success rate of approximately 3-5% across all applicants; the resource burden for a seed-stage team is very high and the jury interview is particularly demanding.",
+        "priority_score": 3.75,
+        "priority_tier": "Big Bet",
+        "deadline": "Multiple cut-offs per year (typically March, June, October) \u2014 check EIC portal for 2025\u20132026 specific dates",
+        "recurrence": "Annual (multiple cut-offs)",
+        "notes": "Grant component (up to \u20ac2.5m) is non-dilutive; equity component (up to \u20ac15m) is optional. UK companies are eligible as associated country from 2024. Stage is seed with only one pilot \u2014 strengthening commercialisation evidence before applying will significantly improve success probability. Competition is extremely intense.",
+        "reason_for_inclusion": "Thermify's patented dual green-and-digital technology directly fits EIC Accelerator's core mandate to back breakthrough deep-tech SMEs at the green-digital nexus, and UK association to Horizon Europe makes the company fully eligible.",
+        "reason_for_caution": "The EIC Accelerator's ~3-5% success rate and demanding jury interview process represent a significant resource commitment for a seed-stage team with only one completed pilot; building a stronger commercialisation evidence base before applying is strongly advised.",
+        "link_status": "verified"
+      },
+      {
+        "name": "Horizon Europe Cluster 5 \u2014 HORIZON-CL5-2025-D4 (Buildings decarbonisation / heat systems topics)",
+        "managing_body": "European Commission / UKRI (for UK participants)",
+        "geography": "UK and EU (collaborative consortium)",
+        "opportunity_type": "direct_grant",
+        "application_route": "consortium_required",
+        "has_application_process": true,
+        "trl_match": true,
+        "geography_match": true,
+        "applicant_type_match": "direct",
+        "application_timing": "known_future_window",
+        "status": "Recurring",
+        "application_link": "https://ec.europa.eu/info/funding-tenders/opportunities/portal/screen/opportunities/calls-for-proposals",
+        "link_type": "programme_page",
+        "funding_type": "Grant",
+        "max_funding": "\u20ac2m\u2013\u20ac8m per project (shared across consortium)",
+        "funding_confidence": "Medium",
+        "thematic_fit_score": 4,
+        "thematic_fit_explanation": "Cluster 5 Destination 4 (Sustainable Smart Buildings) and Destination 3 (Decarbonised Energy Supply) align directly with HeatHub's function as a novel distributed heat source for domestic buildings, and the 2025 work programme calls are confirmed as launched.",
+        "strategic_value_score": 4,
+        "strategic_value_explanation": "Horizon Europe funding builds international consortium relationships, opens EU market channels, and carries significant institutional prestige that would strengthen Thermify's credibility with both investors and future grant applicants.",
+        "ease_score": 2,
+        "ease_explanation": "Consortium assembly across three countries, complex full proposal requirements, and the significant project management burden of a multi-partner EU project are very demanding for a seed-stage SME \u2014 success typically requires an experienced consortium coordinator.",
+        "priority_score": 3.6,
+        "priority_tier": "Big Bet",
+        "deadline": "2025 calls confirmed open \u2014 verify specific topic codes and deadlines on EU Funding & Tenders portal",
+        "recurrence": "Annual (work programme basis)",
+        "notes": "Requires minimum 3 organisations from 3 different eligible countries; UK participation confirmed under Horizon Europe association. Thermify should identify a UK university partner and at least one EU research/industry partner before pursuing this route. Specific topic codes under D4 and D3 must be confirmed on the EU portal.  Application window not currently open \u2014 this is a well-established recurring programme. Monitor for next round opening.",
+        "reason_for_inclusion": "HeatHub's function as a novel distributed heat source for decarbonising domestic buildings is directly aligned with Cluster 5's Destination 4 objectives on sustainable smart buildings and heat systems, and the 2025 work programme is confirmed active.",
+        "reason_for_caution": "Assembling a credible three-country consortium and managing a complex Horizon Europe proposal is a very significant undertaking for a seed-stage team \u2014 this route only becomes viable if Thermify can identify and commit experienced consortium partners in advance.",
+        "link_status": "verified"
+      }
+    ],
+    "strategic_recommendations": {
+      "best_fit_strategy": "Prioritise Innovate UK routes as the immediate core strategy \u2014 set up IFS portal alerts for heat decarbonisation, net zero heat, and building retrofit competitions, and be ready to apply as soon as a relevant window opens. Simultaneously, begin preparing a long-form EIC Accelerator application targeting the next known cut-off, as this represents the highest-value single opportunity despite its difficulty. Build consortium contacts with UK universities (e.g. Cardiff, Swansea) and European research institutes to unlock Horizon Europe. Contact Business Wales directly to identify any currently open Welsh innovation grants as a low-barrier entry point.",
+      "best_geographies": "United Kingdom (primary \u2014 Innovate UK, DESNZ, Welsh Government); European Union / associated country route (secondary \u2014 EIC Accelerator, Horizon Europe Cluster 5).",
+      "strongest_pathways": "1) Monitor and apply to Innovate UK Net Zero Heat and Domestic Retrofit competitions as they open \u2014 these are the highest-probability near-term routes. 2) Prepare EIC Accelerator application as a high-value parallel track with a known future window. 3) Engage Business Wales directly for Welsh SME innovation support as an immediate, low-burden first grant.",
+      "key_partnerships": "A partnership with a UK university (e.g. Cardiff University's School of Engineering or Swansea University's Energy Safety Research Institute) would unlock Horizon Europe consortium routes and strengthen Innovate UK applications. A housing association or local authority partner would open regulated-entity-led innovation programmes. An EU-based research or industry partner is required for Horizon Europe lead applications and would strengthen EIC Accelerator's pan-European ambition narrative.",
+      "capability_gaps": "Thermify needs: (1) a stronger commercialisation evidence base beyond a single pilot \u2014 data from multiple deployments will be critical for competitive grants; (2) robust lifecycle carbon analysis and independent verification of its 70% emissions reduction claim; (3) a more developed route-to-market and go-to-market plan for assessors evaluating commercial viability; (4) financial projections and an audited accounts baseline required by EIC and Horizon Europe applications.",
+      "key_risks": "1) Programme umbrella timing risk \u2014 most Innovate UK routes have no confirmed open window, creating uncertainty about when to deploy application effort. 2) EIC Accelerator's ~3-5% success rate means significant resource investment with low probability of success at seed stage. 3) Horizon Europe consortium assembly is burdensome for a small team. 4) The novel dual-sector framing (data centres + heat) may confuse assessors on grant panels focused narrowly on heat technology or narrowly on digital infrastructure \u2014 clear narrative discipline is essential."
+    },
+    "company_profile": {
+      "name": "Thermify",
+      "classification": "Climate Tech / Deeptech",
+      "value_proposition": "Thermify replaces domestic gas boilers with distributed micro data centres (HeatHubs) that use waste heat from cloud computing to warm homes and heat water, simultaneously providing cloud processing capacity for businesses.",
+      "technology": "Patented HeatHub\u2122 distributed micro data centre units installed in homes (e.g. garden sheds) where processors generate heat that is captured and used for home heating and hot water on demand, rather than expelled into the atmosphere; the network also provides cloud computing services to business clients who pay for data processing, effectively subsidising or eliminating heating costs for homeowners.",
+      "primary_outcome": "Reduction in domestic carbon emissions by replacing gas boilers with waste-heat recovery from distributed data processing; claimed 70% emissions reduction vs conventional cloud data centres.",
+      "secondary_benefits": [
+        "Reduction in household energy bills and alleviation of fuel poverty for low-income families",
+        "Elimination of active cooling energy waste inherent in centralised data centres",
+        "Provision of affordable green cloud computing infrastructure for businesses",
+        "Decentralisation and resilience of UK cloud computing infrastructure"
+      ],
+      "hq": "Wales, United Kingdom",
+      "operational_geographies": [
+        "United Kingdom"
+      ],
+      "customer_geographies": [
+        "United Kingdom"
+      ],
+      "trl": "TRL 6-7 \u2014 a live pilot has been completed with an Essex couple heating their home via a garden-shed HeatHub, demonstrating the system in a real-world environment; still described as pilot phase ahead of commercial rollout.",
+      "stage": "Seed",
+      "funding_characteristics": [
+        "SME",
+        "deeptech",
+        "crowdfunding via Seedrs/Republic Europe",
+        "EIS-eligible",
+        "patented technology",
+        "climate tech"
+      ],
+      "key_themes": [
+        "Waste heat recovery",
+        "Distributed data centres",
+        "Decarbonisation of home heating",
+        "Fuel poverty reduction",
+        "Circular energy use",
+        "Net zero infrastructure",
+        "Edge computing"
+      ],
+      "website_summary": "Thermify is a Welsh climate-tech startup that has developed the HeatHub\u2122, a patented micro data centre unit installed in or near homes that captures the heat generated by cloud computing processors and uses it to replace a gas boiler for home heating and hot water. Businesses pay Thermify to process data across the distributed HeatHub network, which funds low-to-no-cost heating for homeowners. The model aims to eliminate both the carbon cost of conventional data centre cooling and the emissions from domestic gas boilers in a single integrated system.",
+      "external_findings": "Thermify has completed a real-world pilot with a couple in Essex who became the first people in the UK to heat their home via a data centre in their garden shed, receiving coverage from Tom's Hardware, Solar Power Portal, and Techerati. The company is fundraising via Republic Europe (formerly Seedrs) under EIS, targeting retail and angel investors, and has a LinkedIn following of approximately 668 followers. A LinkedIn article attributed to the company claims its decentralised model cuts emissions by 70% compared to conventional cloud infrastructure, and the UK cloud market context is cited as a key growth driver.",
+      "_source_url": "https://thermify.cloud/"
+    },
+    "strategic_watchlist": [
+      {
+        "name": "Innovate UK Smart Grants \u2014 SME R&D Open Competition (programme umbrella; specific round to be confirmed)",
+        "managing_body": "Innovate UK / UKRI",
+        "geography": "United Kingdom",
+        "opportunity_type": "",
+        "application_route": "",
+        "application_timing": "timing_unknown",
+        "status": "Recurring",
+        "application_link": "https://apply-for-innovation-funding.service.gov.uk/competition/search",
+        "link_type": "unknown",
+        "funding_type": "Grant",
+        "max_funding": "unknown",
+        "thematic_relevance": "Thermify's patented deeptech HeatHub combining waste heat recovery and distributed cloud computing is a strong fit for Innovate UK's open R&D competitions targeting net zero and digital infrastructure innovation.",
+        "why_watchlist": "This programme was researched and shortlisted but was not included in the final scored output. Verify eligibility directly \u2014 it may have application requirements or eligibility constraints that the scoring model could not confidently resolve.",
+        "what_would_unlock": "Review the programme's eligibility criteria and application process directly to determine whether the startup can apply.",
+        "_rescued_by_safety_net": true,
+        "link_status": "verified"
+      },
+      {
+        "name": "Horizon Europe Cluster 5 \u2014 Call HORIZON-CL5-2025-D4 (Buildings decarbonisation / heat systems topics)",
+        "managing_body": "European Commission / UKRI (for UK participants)",
+        "geography": "UK and EU (collaborative)",
+        "opportunity_type": "",
+        "application_route": "",
+        "application_timing": "timing_unknown",
+        "status": "Recurring",
+        "application_link": "https://ec.europa.eu/info/funding-tenders/opportunities/portal/screen/opportunities/calls-for-proposals",
+        "link_type": "unknown",
+        "funding_type": "Grant",
+        "max_funding": "unknown",
+        "thematic_relevance": "Cluster 5 Destination 4 (Sustainable, Smart Buildings and Services) and Destination 3 (Decarbonised, Reliable and Competitive Energy Supply) are highly relevant to Thermify's waste heat recovery for domestic heating.",
+        "why_watchlist": "This programme was researched and shortlisted but was not included in the final scored output. Verify eligibility directly \u2014 it may have application requirements or eligibility constraints that the scoring model could not confidently resolve.",
+        "what_would_unlock": "Review the programme's eligibility criteria and application process directly to determine whether the startup can apply.",
+        "_rescued_by_safety_net": true,
+        "link_status": "verified"
+      },
+      {
+        "name": "EU Innovation Fund 2025 \u2014 Small-Scale Projects Call",
+        "managing_body": "European Commission (CINEA)",
+        "geography": "EU member states and EEA/associated countries (check UK eligibility)",
+        "opportunity_type": "",
+        "application_route": "",
+        "application_timing": "timing_unknown",
+        "status": "Open",
+        "application_link": "https://climate.ec.europa.eu/eu-action/eu-emissions-trading-system-eu-ets/innovation-fund_en",
+        "link_type": "unknown",
+        "funding_type": "Grant",
+        "max_funding": "unknown",
+        "thematic_relevance": "The EU Innovation Fund prioritises innovative low-carbon technologies and processes including energy-intensive industry decarbonisation and net zero manufacturing; waste heat recovery and circular energy use are explicitly supported themes.",
+        "why_watchlist": "This programme was researched and shortlisted but was not included in the final scored output. Verify eligibility directly \u2014 it may have application requirements or eligibility constraints that the scoring model could not confidently resolve.",
+        "what_would_unlock": "Review the programme's eligibility criteria and application process directly to determine whether the startup can apply.",
+        "_rescued_by_safety_net": true,
+        "link_status": "broken"
+      },
+      {
+        "name": "Business Wales \u2014 Smart Innovation Support (Welsh Government / ERDF successor)",
+        "managing_body": "Welsh Government / Business Wales",
+        "geography": "Wales, United Kingdom",
+        "opportunity_type": "",
+        "application_route": "",
+        "application_timing": "timing_unknown",
+        "status": "Recurring",
+        "application_link": "https://businesswales.gov.wales/topics-and-guidance/develop-innovative-ideas-organisations-products-or-services",
+        "link_type": "unknown",
+        "funding_type": "Grant",
+        "max_funding": "unknown",
+        "thematic_relevance": "Thermify is headquartered in Wales and Welsh Government innovation grants explicitly support Welsh SMEs developing novel technology, making this a natural funding route for R&D and demonstration activities.",
+        "why_watchlist": "This programme was researched and shortlisted but was not included in the final scored output. Verify eligibility directly \u2014 it may have application requirements or eligibility constraints that the scoring model could not confidently resolve.",
+        "what_would_unlock": "Review the programme's eligibility criteria and application process directly to determine whether the startup can apply.",
+        "_rescued_by_safety_net": true,
+        "link_status": "verified"
+      },
+      {
+        "name": "Innovate UK \u2014 Domestic Building Retrofit and Low Carbon Heat Technology Competitions",
+        "managing_body": "Innovate UK / UKRI",
+        "geography": "United Kingdom",
+        "opportunity_type": "",
+        "application_route": "",
+        "application_timing": "timing_unknown",
+        "status": "Recurring",
+        "application_link": "https://apply-for-innovation-funding.service.gov.uk/competition/search",
+        "link_type": "unknown",
+        "funding_type": "Grant",
+        "max_funding": "unknown",
+        "thematic_relevance": "Innovate UK runs periodic competitions on domestic heat technologies and retrofit; HeatHub as a gas boiler replacement technology is a direct fit.",
+        "why_watchlist": "This programme was researched and shortlisted but was not included in the final scored output. Verify eligibility directly \u2014 it may have application requirements or eligibility constraints that the scoring model could not confidently resolve.",
+        "what_would_unlock": "Review the programme's eligibility criteria and application process directly to determine whether the startup can apply.",
+        "_rescued_by_safety_net": true,
+        "link_status": "verified"
+      },
+      {
+        "name": "ARIA \u2014 Programmes open call (programme on energy and computing systems if launched)",
+        "managing_body": "Advanced Research and Invention Agency (ARIA)",
+        "geography": "United Kingdom",
+        "opportunity_type": "",
+        "application_route": "",
+        "application_timing": "timing_unknown",
+        "status": "Recurring",
+        "application_link": "https://www.aria.org.uk/",
+        "link_type": "unknown",
+        "funding_type": "Grant",
+        "max_funding": "unknown",
+        "thematic_relevance": "ARIA funds high-risk, high-reward research and invention with a remit similar to DARPA; Thermify's novel integration of distributed computing and domestic heat recovery is the type of unconventional deeptech ARIA is designed to back.",
+        "why_watchlist": "This programme was researched and shortlisted but was not included in the final scored output. Verify eligibility directly \u2014 it may have application requirements or eligibility constraints that the scoring model could not confidently resolve.",
+        "what_would_unlock": "Review the programme's eligibility criteria and application process directly to determine whether the startup can apply.",
+        "_rescued_by_safety_net": true,
+        "link_status": "verified"
+      },
+      {
+        "name": "Innovate UK \u2014 Net Zero Heat Innovation Programme",
+        "managing_body": "Innovate UK / DESNZ",
+        "geography": "United Kingdom",
+        "opportunity_type": "direct_grant",
+        "application_route": "direct_startup_application",
+        "application_timing": "recurring_uncertain",
+        "status": "Recurring",
+        "application_link": "https://apply-for-innovation-funding.service.gov.uk/competition/search",
+        "link_type": "programme_page",
+        "funding_type": "Grant",
+        "max_funding": "\u00a3100k\u2013\u00a32m per project",
+        "thematic_relevance": "DESNZ and Innovate UK jointly fund heat decarbonisation innovation, and HeatHub directly replaces gas boilers using a novel waste-heat mechanism that perfectly matches the programme's net zero heat objectives; thematic fit is capped at 3 as this is a programme umbrella with no specific confirmed open competition.",
+        "why_watchlist": "No confirmed specific application process found in research evidence. No search evidence was returned and the programme name is sufficiently specific that without corroborating evidence of a past or current open application round it cannot be confirmed as having a public application route; the generic competition search URL is not specific enough to validate it.",
+        "what_would_unlock": "Locate the specific application portal or open call page for this programme.",
+        "link_status": "verified"
+      }
+    ]
+  },
+  "findings": {
+    "case_id": "thermify",
+    "company": "Thermify",
+    "n_main": 2,
+    "n_watch": 7,
+    "checks": [
+      {
+        "rule": "must_appear_in_main",
+        "pattern": "Innovate UK",
+        "result": "FAIL",
+        "matched": null
+      },
+      {
+        "rule": "must_appear_in_main",
+        "pattern": "SMART",
+        "result": "FAIL",
+        "matched": null
+      },
+      {
+        "rule": "must_appear_in_watchlist_or_main",
+        "pattern": "Ofgem",
+        "result": "FAIL",
+        "matched": null
+      },
+      {
+        "rule": "must_appear_in_watchlist_or_main",
+        "pattern": "EIC Accelerator",
+        "result": "PASS",
+        "matched": "EIC Accelerator Open 2025 \u2014 Horizon Europe"
+      },
+      {
+        "rule": "must_appear_in_watchlist_or_main",
+        "pattern": "KTP",
+        "result": "FAIL",
+        "matched": null
+      },
+      {
+        "rule": "must_not_appear_anywhere",
+        "pattern": "Energy Catalyst",
+        "result": "PASS",
+        "matched": null
+      },
+      {
+        "rule": "must_not_appear_anywhere",
+        "pattern": "EIC Pathfinder",
+        "result": "PASS",
+        "matched": null
+      }
+    ],
+    "pass": 3,
+    "fail": 4,
+    "fp_count": 0,
+    "fn_count": 4,
+    "score": "3/7",
+    "pct": 42.9
+  }
+}
