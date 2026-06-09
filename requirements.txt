@@ -9,3 +9,4 @@ python-multipart>=0.0.9
 pypdf>=3.0.0
 python-docx>=0.8.11
 supabase>=2.0.0
+resend>=0.7.0

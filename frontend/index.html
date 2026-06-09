@@ -179,6 +179,16 @@
         </div>
       </details>
 
+      <!-- Email notification -->
+      <div>
+        <label class="block text-sm font-medium text-slate-700 mb-1">
+          Email <span class="text-slate-400 font-normal">(optional — we'll notify you when your results are ready)</span>
+        </label>
+        <input id="email" type="email" placeholder="your@email.com"
+               class="w-full border border-slate-300 rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#1E3A5F]" />
+        <p class="text-xs text-slate-400 mt-1">Analysis takes 7–10 minutes. You can safely lock your screen — we'll email you when it's done.</p>
+      </div>
+
       <div class="flex items-center gap-3">
         <button id="btn-run"
                 class="bg-[#1E3A5F] hover:bg-[#16305A] text-white font-semibold px-7 py-2.5 rounded-lg text-sm transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
@@ -198,9 +208,15 @@
 
   <!-- ── PROGRESS ───────────────────────────────────────────────────────────── -->
   <section id="progress-section" class="hidden bg-white rounded-2xl shadow-sm border border-slate-200 p-8">
-    <div class="flex items-center gap-3 mb-4">
+    <div class="flex items-center gap-3 mb-3">
       <div id="spinner" class="w-5 h-5 border-2 border-[#1E3A5F] border-t-transparent rounded-full animate-spin shrink-0"></div>
       <h2 id="progress-heading" class="text-lg font-semibold">Analysis in progress</h2>
+    </div>
+    <div class="flex items-center gap-2 mb-4 bg-green-50 border border-green-200 rounded-lg px-4 py-2.5 text-sm text-green-700">
+      <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+      </svg>
+      Safe to lock your screen — your analysis will keep running and you'll be notified when it's done.
     </div>
 
     <!-- Stage indicators -->
@@ -302,6 +318,17 @@
         </div>
       </div>
 
+    </div>
+
+    <!-- Auto-continue timer -->
+    <div id="timer-section" class="mb-4 bg-blue-50 border border-blue-200 rounded-lg px-4 py-3">
+      <div class="flex items-center justify-between mb-2">
+        <p id="timer-label" class="text-xs text-blue-700">Continuing automatically in <span id="timer-count">10</span>s — or edit the profile above to take your time</p>
+        <button id="btn-pause-timer" class="text-xs text-blue-600 underline hover:no-underline">Pause</button>
+      </div>
+      <div class="bg-blue-200 rounded-full h-1 overflow-hidden">
+        <div id="timer-bar" class="h-full bg-blue-600 transition-none" style="width:100%"></div>
+      </div>
     </div>
 
     <!-- Action buttons -->
@@ -421,12 +448,17 @@
 // ---------------------------------------------------------------------------
 let _result           = null;
 let _jobId            = null;
-let _pendingProfile   = null;   // Claude's raw profile from Phase 1
-let _pendingPrefs     = null;   // preferences saved when Phase 1 starts
-let _attachedFileText = '';     // text extracted from uploaded file
+let _pendingProfile   = null;
+let _pendingPrefs     = null;
+let _attachedFileText = '';
 let _sortCol          = 'priority_score';
 let _sortAsc          = false;
 let _tierFilter       = 'all';
+let _pollTimer        = null;   // setInterval handle for status polling
+let _progressCount    = 0;      // progress messages already rendered
+let _autoTimer        = null;   // setInterval handle for review-card countdown
+let _autoSeconds      = 10;     // current countdown value
+let _timerPaused      = false;  // whether user paused the auto-timer
 
 // ---------------------------------------------------------------------------
 // DOM helpers
@@ -548,7 +580,10 @@ function resumeSpinner() {
 // Reset UI to initial state
 // ---------------------------------------------------------------------------
 function resetUI() {
+  stopPolling();
+  stopAutoTimer();
   _result = _jobId = _pendingProfile = _pendingPrefs = null;
+  _progressCount = 0;
   _attachedFileText = '';
 
   $('progress-section').classList.add('hidden');
@@ -561,6 +596,117 @@ function resetUI() {
   $('progress-heading').textContent = 'Analysis in progress';
   $('spinner').classList.remove('hidden');
   clearError();
+}
+
+// ---------------------------------------------------------------------------
+// Polling
+// ---------------------------------------------------------------------------
+function startPolling(jobId) {
+  stopPolling();
+  pollStatus(jobId);
+  _pollTimer = setInterval(() => pollStatus(jobId), 3000);
+}
+
+function stopPolling() {
+  if (_pollTimer) { clearInterval(_pollTimer); _pollTimer = null; }
+}
+
+async function pollStatus(jobId) {
+  try {
+    const resp = await fetch(`/status/${jobId}`);
+    if (!resp.ok) {
+      if (resp.status === 404) {
+        stopPolling();
+        logLine('Analysis not found — the server may have restarted. Please try again.', 'error');
+        $('btn-run').disabled = false;
+        localStorage.removeItem('grantAnalyserJobId');
+      }
+      return;
+    }
+    const job = await resp.json();
+    handleJobUpdate(job);
+  } catch (_) { /* network blip — will retry */ }
+}
+
+function handleJobUpdate(job) {
+  // Append any new progress messages
+  const msgs    = job.progress || [];
+  const newMsgs = msgs.slice(_progressCount);
+  newMsgs.forEach(msg => {
+    const isSearch = /^(Company search|Search |Research search)/.test(msg);
+    logLine(msg, isSearch ? 'search' : 'info');
+  });
+  _progressCount = msgs.length;
+
+  if (job.stage) setStageActive(job.stage);
+
+  if (job.status === 'profile_ready' && !_pendingProfile) {
+    stopPolling();
+    _pendingProfile = job.profile;
+    logLine('✓ Company research complete — review the profile below', 'success');
+    markPhase1Done();
+    showReviewCard(job.profile, job.source_note || '');
+    startAutoTimer();
+
+  } else if (job.status === 'completed') {
+    stopPolling();
+    _result = job.result;
+    logLine('✓ Analysis complete', 'success');
+    setStageActive(4);
+    $('spinner').classList.add('hidden');
+    renderResults(_result);
+    localStorage.removeItem('grantAnalyserJobId');
+    localStorage.removeItem('grantAnalyserEmail');
+
+  } else if (job.status === 'failed') {
+    stopPolling();
+    logLine('ERROR: ' + (job.error || 'Unknown error'), 'error');
+    $('btn-run').disabled = false;
+    localStorage.removeItem('grantAnalyserJobId');
+    localStorage.removeItem('grantAnalyserEmail');
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Auto-continue timer (review card)
+// ---------------------------------------------------------------------------
+function startAutoTimer() {
+  stopAutoTimer();
+  _autoSeconds  = 10;
+  _timerPaused  = false;
+  $('timer-section').classList.remove('hidden');
+  $('timer-bar').style.transition = 'none';
+  $('timer-bar').style.width      = '100%';
+  updateTimerDisplay();
+
+  _autoTimer = setInterval(() => {
+    if (_timerPaused) return;
+    _autoSeconds--;
+    updateTimerDisplay();
+    $('timer-bar').style.transition = 'width 1s linear';
+    $('timer-bar').style.width      = (_autoSeconds / 10 * 100) + '%';
+    if (_autoSeconds <= 0) {
+      stopAutoTimer();
+      runPhase23();
+    }
+  }, 1000);
+}
+
+function stopAutoTimer() {
+  if (_autoTimer) { clearInterval(_autoTimer); _autoTimer = null; }
+  const ts = $('timer-section');
+  if (ts) ts.classList.add('hidden');
+}
+
+function pauseAutoTimer() {
+  _timerPaused = true;
+  $('timer-label').textContent = 'Timer paused — take your time, then click "Find Grants" when ready.';
+  $('btn-pause-timer').classList.add('hidden');
+  $('timer-bar').style.transition = 'none';
+}
+
+function updateTimerDisplay() {
+  $('timer-count').textContent = _autoSeconds;
 }
 
 // ---------------------------------------------------------------------------
@@ -630,9 +776,8 @@ $('drop-clear').addEventListener('click', e => {
 // ---------------------------------------------------------------------------
 async function runPhase1() {
   clearError();
-  const url  = $('url').value.trim();
-  const text = $('extra-text').value.trim();
-
+  const url      = $('url').value.trim();
+  const text     = $('extra-text').value.trim();
   const combined = [text, _attachedFileText].filter(Boolean).join('\n\n');
 
   if (!url && !combined) {
@@ -642,7 +787,6 @@ async function runPhase1() {
 
   resetUI();
 
-  // Save preferences for the continue call
   _pendingPrefs = {
     geographies:  $('geos').value.trim(),
     consortium:   $('chk-consortium').checked,
@@ -650,50 +794,30 @@ async function runPhase1() {
     prizes:       $('chk-prizes').checked,
   };
 
+  const email = $('email').value.trim();
+
   $('progress-section').classList.remove('hidden');
   $('btn-run').disabled = true;
   setStageActive(1);
 
-  const body = {
-    url,
-    text: combined,
-    ..._pendingPrefs,
-  };
-
   try {
     const resp = await fetch('/analyse', {
-      method: 'POST',
+      method:  'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(body),
+      body:    JSON.stringify({ url, text: combined, ..._pendingPrefs, email }),
     });
     if (!resp.ok) {
       const err = await resp.json().catch(() => ({ detail: resp.statusText }));
       throw new Error(err.detail || 'Server error');
     }
-    await streamSSE(resp, handlePhase1Event);
+    const data = await resp.json();
+    _jobId = data.job_id;
+    localStorage.setItem('grantAnalyserJobId', _jobId);
+    if (email) localStorage.setItem('grantAnalyserEmail', email);
+    startPolling(_jobId);
   } catch (err) {
     logLine('ERROR: ' + err.message, 'error');
-  } finally {
     $('btn-run').disabled = false;
-  }
-}
-
-function handlePhase1Event(evt) {
-  if (evt.type === 'progress') {
-    const isSearch = evt.message && evt.message.startsWith('Company search');
-    logLine(evt.message, isSearch ? 'search' : 'info');
-    if (evt.stage) setStageActive(evt.stage);
-
-  } else if (evt.type === 'profile_ready') {
-    _jobId          = evt.job_id;
-    _pendingProfile = evt.profile;
-
-    logLine('✓ Company research complete — review the profile below', 'success');
-    markPhase1Done();
-    showReviewCard(evt.profile, evt.source_note || '');
-
-  } else if (evt.type === 'error') {
-    logLine('ERROR: ' + evt.message, 'error');
   }
 }
 
@@ -753,80 +877,32 @@ function collectReviewedProfile() {
 async function runPhase23() {
   if (!_jobId || !_pendingProfile) return;
 
+  stopAutoTimer();
   const profile = collectReviewedProfile();
+  const email   = localStorage.getItem('grantAnalyserEmail') || '';
 
-  // Hide review card, restart progress
   $('review-section').classList.add('hidden');
   resumeSpinner();
   setStageActive(2);
   $('btn-continue').disabled = true;
-
-  const body = {
-    job_id:  _jobId,
-    profile,
-    ..._pendingPrefs,
-  };
+  _progressCount = 0;
 
   try {
     const resp = await fetch('/analyse/continue', {
       method:  'POST',
       headers: { 'Content-Type': 'application/json' },
-      body:    JSON.stringify(body),
+      body:    JSON.stringify({ job_id: _jobId, profile, ..._pendingPrefs, email }),
     });
     if (!resp.ok) {
       const err = await resp.json().catch(() => ({ detail: resp.statusText }));
       throw new Error(err.detail || 'Server error');
     }
-    await streamSSE(resp, handlePhase23Event);
+    startPolling(_jobId);
   } catch (err) {
     logLine('ERROR: ' + err.message, 'error');
-    // Re-enable continue in case user wants to retry
     $('btn-continue').disabled = false;
     $('review-section').classList.remove('hidden');
-  }
-}
-
-function handlePhase23Event(evt) {
-  if (evt.type === 'progress') {
-    const isSearch = evt.message && (
-      evt.message.startsWith('Search ') || evt.message.startsWith('Research search')
-    );
-    logLine(evt.message, isSearch ? 'search' : 'info');
-    if (evt.stage) setStageActive(evt.stage);
-
-  } else if (evt.type === 'complete') {
-    _result = evt.result;
-    _jobId  = evt.job_id;
-    logLine('✓ Analysis complete', 'success');
-    setStageActive(4);   // marks all 3 stages green
-    $('spinner').classList.add('hidden');
-    renderResults(_result);
-
-  } else if (evt.type === 'error') {
-    logLine('ERROR: ' + evt.message, 'error');
-    $('btn-continue').disabled = false;
-    $('review-section').classList.remove('hidden');
-  }
-}
-
-// ---------------------------------------------------------------------------
-// SSE stream reader (shared)
-// ---------------------------------------------------------------------------
-async function streamSSE(resp, handler) {
-  const reader = resp.body.getReader();
-  const dec    = new TextDecoder();
-  let buf = '';
-  while (true) {
-    const { done, value } = await reader.read();
-    if (done) break;
-    buf += dec.decode(value, { stream: true });
-    const lines = buf.split('\n');
-    buf = lines.pop();
-    for (const line of lines) {
-      if (!line.startsWith('data: ')) continue;
-      try { handler(JSON.parse(line.slice(6))); }
-      catch (_) {}
-    }
+    startAutoTimer();
   }
 }
 
@@ -1119,11 +1195,72 @@ $('btn-run').addEventListener('click', runPhase1);
 $('url').addEventListener('keydown', e => { if (e.key === 'Enter') runPhase1(); });
 $('btn-continue').addEventListener('click', runPhase23);
 $('btn-back').addEventListener('click', () => {
+  stopPolling();
+  stopAutoTimer();
+  localStorage.removeItem('grantAnalyserJobId');
+  localStorage.removeItem('grantAnalyserEmail');
   $('review-section').classList.add('hidden');
   $('progress-section').classList.add('hidden');
   $('btn-run').disabled = false;
   clearError();
 });
+$('btn-pause-timer').addEventListener('click', pauseAutoTimer);
+
+// Pause timer when user interacts with any review field
+$('review-section').addEventListener('focusin', e => {
+  if (e.target.matches('input, textarea, select')) pauseAutoTimer();
+});
+
+// ---------------------------------------------------------------------------
+// Restore in-progress analysis on page load
+// ---------------------------------------------------------------------------
+(async function restoreFromStorage() {
+  const savedId = localStorage.getItem('grantAnalyserJobId');
+  if (!savedId) return;
+
+  try {
+    const resp = await fetch(`/status/${savedId}`);
+    if (!resp.ok) { localStorage.removeItem('grantAnalyserJobId'); return; }
+    const job = await resp.json();
+
+    _jobId        = savedId;
+    _pendingPrefs = job.prefs || {};
+
+    if (job.status === 'completed') {
+      _result = job.result;
+      $('progress-section').classList.remove('hidden');
+      setStageActive(4);
+      $('spinner').classList.add('hidden');
+      renderResults(_result);
+      localStorage.removeItem('grantAnalyserJobId');
+      localStorage.removeItem('grantAnalyserEmail');
+
+    } else if (job.status === 'profile_ready') {
+      _pendingProfile = job.profile;
+      $('progress-section').classList.remove('hidden');
+      markPhase1Done();
+      showReviewCard(job.profile, job.source_note || '');
+      startAutoTimer();
+
+    } else if (job.status === 'failed') {
+      localStorage.removeItem('grantAnalyserJobId');
+      localStorage.removeItem('grantAnalyserEmail');
+
+    } else {
+      // Phase 1 or 2+3 still running
+      $('progress-section').classList.remove('hidden');
+      $('btn-run').disabled = true;
+      setStageActive(job.stage || 1);
+      (job.progress || []).forEach(msg => {
+        logLine(msg, /^(Company search|Search |Research search)/.test(msg) ? 'search' : 'info');
+      });
+      _progressCount = (job.progress || []).length;
+      startPolling(savedId);
+    }
+  } catch (_) {
+    localStorage.removeItem('grantAnalyserJobId');
+  }
+})();
 
 const installBanner = $('install-banner');
 const installButton = $('btn-install-app');
