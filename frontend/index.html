@@ -823,12 +823,19 @@ async function runPhase1() {
     prizes:       $('chk-prizes').checked,
   };
 
-  const email        = $('email').value.trim();
-  const subscription = await getPushSubscription();
+  const email = $('email').value.trim();
 
+  // Show progress immediately — never block the UI on push-permission dialog
   $('progress-section').classList.remove('hidden');
   $('btn-run').disabled = true;
   setStageActive(1);
+  logLine('Starting analysis…', 'info');
+
+  // Request push permission concurrently; give it 3 s max so it can't stall the start
+  const subscription = await Promise.race([
+    getPushSubscription(),
+    new Promise(r => setTimeout(() => r(null), 3000)),
+  ]);
 
   try {
     const resp = await fetch('/analyse', {
