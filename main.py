@@ -57,13 +57,14 @@ _results: dict[str, dict] = {}
 # ---------------------------------------------------------------------------
 
 class AnalyseRequest(BaseModel):
-    url:          str  = ""
-    text:         str  = ""
-    geographies:  str  = ""
-    consortium:   bool = True
-    accelerators: bool = True
-    prizes:       bool = True
-    email:        str  = ""
+    url:          str        = ""
+    text:         str        = ""
+    geographies:  str        = ""
+    consortium:   bool       = True
+    accelerators: bool       = True
+    prizes:       bool       = True
+    email:        str        = ""
+    subscription: dict | None = None   # browser push subscription object
 
 
 class ContinueRequest(BaseModel):
@@ -173,11 +174,19 @@ async def _phase23_task(
                 job["result"] = result
                 grants_found  = len(result.get("opportunities", []))
                 await asyncio.to_thread(db.log_completed, job_id, grants_found, result)
+                company = result.get("company_profile", {}).get("name", "your company")
                 if email:
-                    company = result.get("company_profile", {}).get("name", "your company")
                     await asyncio.to_thread(
                         email_sender.send_results_email,
                         email, company, grants_found, result, job_id,
+                    )
+                subscription = _jobs.get(job_id, {}).get("subscription")
+                if subscription:
+                    await asyncio.to_thread(
+                        _send_push,
+                        subscription,
+                        f"Grant analysis ready — {company}",
+                        f"Found {grants_found} grant {"opportunity" if grants_found == 1 else "opportunities"}. Tap to view your results.",
                     )
             elif t == "error":
                 job["status"] = "failed"
@@ -192,6 +201,29 @@ async def _phase23_task(
 # ---------------------------------------------------------------------------
 # Routes
 # ---------------------------------------------------------------------------
+
+def _send_push(subscription: dict, title: str, body: str) -> None:
+    """Fire a Web Push notification. Fails silently."""
+    private_key = os.environ.get("VAPID_PRIVATE_KEY", "").strip()
+    if not private_key or not subscription:
+        return
+    try:
+        from pywebpush import webpush, WebPushException
+        webpush(
+            subscription_info=subscription,
+            data=json.dumps({"title": title, "body": body}),
+            vapid_private_key=private_key,
+            vapid_claims={"sub": "mailto:thomasmurraynz@gmail.com"},
+        )
+    except Exception as exc:
+        import logging
+        logging.getLogger(__name__).warning("Push notification failed: %s", exc)
+
+
+@app.get("/vapid-public-key")
+def vapid_public_key() -> dict:
+    return {"key": os.environ.get("VAPID_PUBLIC_KEY", "")}
+
 
 @app.get("/health")
 def health() -> dict:
@@ -219,13 +251,14 @@ async def analyse(req: AnalyseRequest, request: Request) -> dict:
     job_id = str(uuid.uuid4())
 
     _jobs[job_id] = {
-        "status":      "started",
-        "progress":    [],
-        "stage":       1,
-        "profile":     None,
-        "source_note": "",
-        "result":      None,
-        "error":       None,
+        "status":       "started",
+        "progress":     [],
+        "stage":        1,
+        "profile":      None,
+        "source_note":  "",
+        "result":       None,
+        "error":        None,
+        "subscription": req.subscription,
         "prefs": {
             "geographies":  req.geographies,
             "consortium":   req.consortium,

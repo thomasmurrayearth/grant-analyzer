@@ -22,6 +22,31 @@ self.addEventListener('activate', event => {
   self.clients.claim();
 });
 
+self.addEventListener('push', event => {
+  const data = event.data ? event.data.json() : {};
+  event.waitUntil(
+    self.registration.showNotification(data.title || 'Grant Analysis Ready', {
+      body:      data.body  || 'Your results are ready — tap to view.',
+      icon:      '/icons/icon.svg',
+      badge:     '/icons/icon.svg',
+      tag:       'grant-analysis-complete',
+      renotify:  true,
+    })
+  );
+});
+
+self.addEventListener('notificationclick', event => {
+  event.notification.close();
+  event.waitUntil(
+    clients.matchAll({ type: 'window', includeUncontrolled: true }).then(list => {
+      for (const client of list) {
+        if ('focus' in client) return client.focus();
+      }
+      return clients.openWindow('/');
+    })
+  );
+});
+
 self.addEventListener('fetch', event => {
   if (event.request.method !== 'GET') {
     return;

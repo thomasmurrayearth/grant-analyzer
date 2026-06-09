@@ -772,6 +772,35 @@ $('drop-clear').addEventListener('click', e => {
 });
 
 // ---------------------------------------------------------------------------
+// Push notifications
+// ---------------------------------------------------------------------------
+function urlBase64ToUint8Array(base64String) {
+  const padding = '='.repeat((4 - base64String.length % 4) % 4);
+  const base64  = (base64String + padding).replace(/-/g, '+').replace(/_/g, '/');
+  const raw     = atob(base64);
+  return Uint8Array.from([...raw].map(c => c.charCodeAt(0)));
+}
+
+async function getPushSubscription() {
+  if (!('serviceWorker' in navigator) || !('PushManager' in window)) return null;
+  try {
+    const permission = await Notification.requestPermission();
+    if (permission !== 'granted') return null;
+
+    const reg        = await navigator.serviceWorker.ready;
+    const keyResp    = await fetch('/vapid-public-key');
+    const { key }    = await keyResp.json();
+    if (!key) return null;
+
+    const subscription = await reg.pushManager.subscribe({
+      userVisibleOnly:      true,
+      applicationServerKey: urlBase64ToUint8Array(key),
+    });
+    return subscription.toJSON();
+  } catch (_) { return null; }
+}
+
+// ---------------------------------------------------------------------------
 // Phase 1 — Analyse Company
 // ---------------------------------------------------------------------------
 async function runPhase1() {
@@ -794,7 +823,8 @@ async function runPhase1() {
     prizes:       $('chk-prizes').checked,
   };
 
-  const email = $('email').value.trim();
+  const email        = $('email').value.trim();
+  const subscription = await getPushSubscription();
 
   $('progress-section').classList.remove('hidden');
   $('btn-run').disabled = true;
@@ -804,7 +834,7 @@ async function runPhase1() {
     const resp = await fetch('/analyse', {
       method:  'POST',
       headers: { 'Content-Type': 'application/json' },
-      body:    JSON.stringify({ url, text: combined, ..._pendingPrefs, email }),
+      body:    JSON.stringify({ url, text: combined, ..._pendingPrefs, email, subscription }),
     });
     if (!resp.ok) {
       const err = await resp.json().catch(() => ({ detail: resp.statusText }));
