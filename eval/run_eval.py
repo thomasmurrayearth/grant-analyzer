@@ -114,11 +114,63 @@ TEST_CASES = [
         ],
     },
 
+    {
+        # Non-UK profile shape: stress-tests geography gating. The UK/Wales
+        # mandatory discovery queries must NOT fire, UK-registration-required
+        # programmes must not be recommended as direct applications, and the
+        # EU funding landscape (EIC etc.) must surface instead.
+        #
+        # Fictional company fed via extra_text (no URL) so the test doesn't
+        # depend on a live website; Phase 1's external searches will simply
+        # find nothing and the profile is built from the text below.
+        "id":           "germandeeptech",
+        "company_url":  None,
+        "company_name": "Kaltefluss GmbH (fictional)",
+        "extra_text": (
+            "Kaltefluss GmbH is a deep-tech hardware startup registered in Munich, "
+            "Germany. It builds high-temperature industrial heat pumps (up to 200C "
+            "output) that replace gas-fired process heat in food processing and "
+            "chemical plants across Germany and Austria. Technology: proprietary "
+            "turbo-compressor with natural refrigerants. TRL 5-6: two pilot "
+            "installations running at customer sites near Augsburg, no serial "
+            "production yet. Stage: seed, 14 employees, ~EUR 2.1m raised from "
+            "German angel investors. No UK presence, no UK customers, no UK "
+            "subsidiary. Primary outcome: industrial decarbonisation - each unit "
+            "displaces roughly 1,200 tonnes CO2 per year."
+        ),
+        "notes": "Fictional German industrial heat-pump company, TRL 5-6, seed stage, no UK presence.",
+        "preferences": {
+            "geographies":  "",
+            "consortium":   True,
+            "accelerators": True,
+            "prizes":       True,
+        },
+
+        # No must_appear_in_main entries: ground truth for a fictional company
+        # is only reliable for structural checks, not specific competitions.
+        "must_appear_in_main": [],
+
+        "must_appear_in_watchlist_or_main": [
+            "EIC",             # EIC Accelerator/programmes — core fit for a German deep-tech SME
+        ],
+
+        # Programmes requiring UK registration must not be DIRECT recommendations
+        # for a company with no UK presence (watchlist partner-route is acceptable)
+        "must_not_appear_in_main": [
+            "Innovate UK",
+        ],
+
+        # Devolved-nation programmes are impossible for a German company
+        "must_not_appear_anywhere": [
+            "Welsh",           # Welsh Government SMART FIS etc. — Wales presence required
+            "Energy Catalyst", # ODA-only geography — wrong for a German/Austrian deployer too
+        ],
+    },
+
     # -------------------------------------------------------------------------
     # Add more test cases here as you validate other companies.
     # Suggested next additions:
     #   - A pre-seed UK deeptech company (tests early-TRL grant discovery)
-    #   - A non-UK EU company (tests Horizon / EIC landscape without UK funds)
     # -------------------------------------------------------------------------
 ]
 
@@ -129,11 +181,12 @@ TEST_CASES = [
 
 async def run_pipeline(case: dict) -> dict:
     """Run Phase 1 + Phase 2+3 for a single test case. Returns the result dict."""
-    url         = case["company_url"]
+    url         = case.get("company_url")
+    extra_text  = case.get("extra_text")
     preferences = case.get("preferences", {})
 
     print(f"\n{'=' * 64}")
-    print(f"  Running: {case['company_name']}  ({url})")
+    print(f"  Running: {case['company_name']}  ({url or 'text-only profile'})")
     if case.get("notes"):
         print(f"  Notes:   {case['notes'][:120]}...")
     print(f"{'=' * 64}")
@@ -141,7 +194,7 @@ async def run_pipeline(case: dict) -> dict:
     # ── Phase 1 ──────────────────────────────────────────────────────────────
     profile = None
     print("\n[Phase 1] Company research…")
-    async for event in run_phase1(url=url, extra_text=None, preferences=preferences):
+    async for event in run_phase1(url=url, extra_text=extra_text, preferences=preferences):
         if event["type"] == "progress":
             print(f"  {event['message']}")
         elif event["type"] == "profile_ready":
@@ -260,6 +313,25 @@ def score_result(result: dict, case: dict) -> dict:
         if not passed:
             findings["fn_count"] += 1
 
+    # must_not_appear_in_main — must not be a direct recommendation
+    # (appearing in the watchlist, e.g. via a partner route, is acceptable)
+    for pattern in case.get("must_not_appear_in_main", []):
+        match = next(
+            ((n, mb) for n, mb in opp_pairs if _matches(n, pattern, mb)),
+            None,
+        )
+        matched_name = match[0] if match else None
+        passed = matched_name is None
+        findings["checks"].append({
+            "rule":    "must_not_appear_in_main",
+            "pattern": pattern,
+            "result":  "PASS" if passed else "FAIL",
+            "matched": matched_name,
+        })
+        findings["pass" if passed else "fail"] += 1
+        if not passed:
+            findings["fp_count"] += 1
+
     # must_not_appear_anywhere — should be excluded entirely
     for pattern in case.get("must_not_appear_anywhere", []):
         match = next(
@@ -281,7 +353,37 @@ def score_result(result: dict, case: dict) -> dict:
     total = findings["pass"] + findings["fail"]
     findings["score"]   = f"{findings['pass']}/{total}"
     findings["pct"]     = round(100 * findings["pass"] / total, 1) if total else 0
+    findings["link_stats"] = link_stats(result)
     return findings
+
+
+def link_stats(result: dict) -> dict:
+    """
+    Application-link quality summary across main recommendations + watchlist.
+
+    Tracks the Priority-2 goal ("every grant has a real, working link"):
+    counts by link_type, HTTP-verification outcomes, and how many items have
+    no usable URL at all.
+    """
+    stats = {
+        "main":  {"application_portal": 0, "programme_page": 0,
+                  "funder_homepage": 0, "unknown": 0},
+        "watch": {"application_portal": 0, "programme_page": 0,
+                  "funder_homepage": 0, "unknown": 0},
+        "verified": 0, "broken": 0, "unverified": 0,
+        "no_url": 0, "total": 0,
+    }
+    for bucket, items in (("main", result.get("opportunities", [])),
+                          ("watch", result.get("strategic_watchlist", []))):
+        for item in items:
+            stats["total"] += 1
+            lt = item.get("link_type", "unknown")
+            stats[bucket][lt if lt in stats[bucket] else "unknown"] += 1
+            ls = item.get("link_status", "unverified")
+            stats[ls if ls in ("verified", "broken", "unverified") else "unverified"] += 1
+            if not (item.get("application_link") or "").startswith("http"):
+                stats["no_url"] += 1
+    return stats
 
 
 # ---------------------------------------------------------------------------
@@ -325,6 +427,62 @@ def print_report(findings: dict, result: dict) -> None:
     for item in result.get("strategic_watchlist", []):
         why = (item.get("why_watchlist") or "")[:80]
         print(f"    • {item.get('name', '?')}  — {why}")
+
+    ls = findings.get("link_stats") or link_stats(result)
+    print("\n  Link quality (main | watchlist):")
+    for lt in ("application_portal", "programme_page", "funder_homepage", "unknown"):
+        print(f"    {lt:<20} {ls['main'][lt]:>3} | {ls['watch'][lt]:>3}")
+    print(
+        f"    HTTP check: {ls['verified']} verified, {ls['broken']} broken, "
+        f"{ls['unverified']} unverified  |  items with no URL: {ls['no_url']}/{ls['total']}"
+    )
+
+
+def print_aggregate(case_id: str, runs: list[dict]) -> None:
+    """Cross-run variance report for --repeat: per-check pass rates and link quality."""
+    n = len(runs)
+    print(f"\n{'#' * 64}")
+    print(f"  AGGREGATE: {case_id} — {n} runs")
+    scores = [f["score"] for f in runs]
+    pcts   = [f["pct"] for f in runs]
+    print(f"  Scores: {', '.join(scores)}  (mean {sum(pcts)/n:.1f}%)")
+    print(f"{'#' * 64}")
+
+    # Per-check pass rate across runs — shows WHICH checks are unstable
+    check_totals: dict[tuple, int] = {}
+    for f in runs:
+        for c in f["checks"]:
+            key = (c["rule"], c["pattern"])
+            check_totals.setdefault(key, 0)
+            if c["result"] == "PASS":
+                check_totals[key] += 1
+    print("\n  Per-check pass rate:")
+    for (rule, pattern), passes in check_totals.items():
+        flag = "" if passes == n else "  <-- UNSTABLE" if passes else "  <-- ALWAYS FAILS"
+        print(f"    {passes}/{n}  [{rule.replace('_', ' ')}]  '{pattern}'{flag}")
+
+    # Aggregate link quality
+    agg = {"portal": 0, "page": 0, "homepage": 0, "unknown": 0,
+           "verified": 0, "broken": 0, "total": 0}
+    for f in runs:
+        ls = f.get("link_stats")
+        if not ls:
+            continue
+        for bucket in ("main", "watch"):
+            agg["portal"]   += ls[bucket]["application_portal"]
+            agg["page"]     += ls[bucket]["programme_page"]
+            agg["homepage"] += ls[bucket]["funder_homepage"]
+            agg["unknown"]  += ls[bucket]["unknown"]
+        agg["verified"] += ls["verified"]
+        agg["broken"]   += ls["broken"]
+        agg["total"]    += ls["total"]
+    if agg["total"]:
+        print(
+            f"\n  Link quality across all runs ({agg['total']} items): "
+            f"{agg['portal']} portal, {agg['page']} programme page, "
+            f"{agg['homepage']} homepage, {agg['unknown']} unknown; "
+            f"{agg['verified']} verified, {agg['broken']} broken"
+        )
 
 
 # ---------------------------------------------------------------------------
@@ -375,16 +533,24 @@ async def main(args: argparse.Namespace) -> None:
             print(f"No test case with id '{args.case}'. Available: {ids}")
             return
 
+    repeat = max(1, args.repeat)
     for case in cases:
-        try:
-            result   = await run_pipeline(case)
-            findings = score_result(result, case)
-            save_result(case["id"], result, findings)
-            print_report(findings, result)
-        except Exception as exc:
-            print(f"\n  ERROR running {case['company_name']}: {exc}")
-            import traceback
-            traceback.print_exc()
+        case_findings: list[dict] = []
+        for i in range(repeat):
+            if repeat > 1:
+                print(f"\n>>> Run {i + 1}/{repeat} for '{case['id']}'")
+            try:
+                result   = await run_pipeline(case)
+                findings = score_result(result, case)
+                save_result(case["id"], result, findings)
+                print_report(findings, result)
+                case_findings.append(findings)
+            except Exception as exc:
+                print(f"\n  ERROR running {case['company_name']}: {exc}")
+                import traceback
+                traceback.print_exc()
+        if repeat > 1 and case_findings:
+            print_aggregate(case["id"], case_findings)
 
 
 if __name__ == "__main__":
@@ -399,5 +565,13 @@ if __name__ == "__main__":
         "--score",
         metavar="RESULT_FILE",
         help="Score a previously saved result JSON instead of running the pipeline",
+    )
+    parser.add_argument(
+        "--repeat",
+        type=int,
+        default=1,
+        metavar="N",
+        help="Run each case N times and print an aggregate variance report "
+             "(per-check pass rates across runs)",
     )
     asyncio.run(main(parser.parse_args()))

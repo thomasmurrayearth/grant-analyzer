@@ -59,10 +59,23 @@ async def _with_retry(
     so callers can surface progress messages.
     """
     delays = [10, 20]   # seconds before attempt 2, then attempt 3
+    # 4xx client errors (bad request, auth, permission, not found) will fail
+    # identically on every attempt — retrying just wastes 30s. Fail fast.
+    _non_retryable = (
+        anthropic.BadRequestError,
+        anthropic.AuthenticationError,
+        anthropic.PermissionDeniedError,
+        anthropic.NotFoundError,
+    )
     for attempt in range(max_attempts):
         try:
             return await factory()
+        except _non_retryable:
+            raise
         except Exception as exc:
+            # Some call sites wrap API errors in RuntimeError — unwrap the cause
+            if isinstance(exc.__cause__, _non_retryable):
+                raise
             if attempt < max_attempts - 1:
                 delay = delays[min(attempt, len(delays) - 1)]
                 if on_retry:
@@ -77,8 +90,17 @@ async def _with_retry(
 MAX_COMPANY_SEARCHES  = 5   # external background searches on the company
 MAX_DISCOVERY_SEARCHES = 20  # grant landscape searches
 SHORTLIST_SIZE        = 8    # grants to deep-research in Phase 3
-                             # Keep at 8: scoring output is capped at 8192 tokens
-                             # (~4 000 chars/item × 8 items ≈ 7 600 tokens ≈ limit).
+                             # Historically capped at 8 because the scoring call
+                             # was limited to 8192 output tokens and silently
+                             # truncated beyond ~8 items. The scoring call now
+                             # streams with SCORING_MAX_TOKENS headroom, but 8
+                             # also bounds Phase 3 research cost (3 searches per
+                             # grant) — raise deliberately, not casually.
+SCORING_MAX_TOKENS    = 20000  # output budget for the final scoring call.
+                               # claude-sonnet-4-6 supports up to 128K output
+                               # tokens with streaming; 20K gives ~2.5x headroom
+                               # over the ~7-8K a healthy 8-item response uses,
+                               # eliminating silent truncation as a failure mode.
 QUERIES_PER_GRANT     = 3    # research queries per shortlisted grant
 
 # ---------------------------------------------------------------------------
@@ -102,24 +124,41 @@ def _mandatory_queries(profile: dict) -> list[str]:
     geos   = " ".join(g.lower() for g in (profile.get("operational_geographies") or []))
     themes = " ".join(t.lower() for t in (profile.get("key_themes") or []))
     cls    = (profile.get("classification") or "").lower()
-    # Also scan free-text fields — the model sometimes omits Wales from hq/geos
-    # but mentions it in website_summary or external_findings
+    # Free-text fields are scanned too — the model sometimes omits Wales from
+    # hq/geos but mentions it in website_summary or external_findings. But
+    # free text can also NEGATE a geography ("No evidence of UK presence was
+    # found"), so drop any sentence containing a negation marker before
+    # scanning, and use word-boundary matching (bare "uk" also appears inside
+    # German words like "Produkte").
     freetext = (
         (profile.get("website_summary") or "") + " " +
         (profile.get("external_findings") or "") + " " +
         (profile.get("value_proposition") or "")
     ).lower()
-    all_geo  = hq + " " + geos + " " + freetext
-    all_text = themes + " " + cls
+    freetext_affirmative = " ".join(
+        s for s in re.split(r"[.;\n]", freetext)
+        if not re.search(r"\bno\b|\bnot\b|\bnone\b|\bwithout\b", s)
+    )
 
-    is_uk = any(k in all_geo for k in (
-        "uk", "united kingdom", "england", "wales", "scotland", "northern ireland",
-        "london", "manchester", "birmingham", "cardiff", "edinburgh",
-    ))
-    is_wales = any(k in all_geo for k in (
-        "wales", "cymru", "cardiff", "swansea", "newport", "wrexham", "llandow",
-        "cowbridge", "welsh",
-    ))
+    _UK_PAT = re.compile(
+        r"\buk\b|united kingdom|\bengland\b|\bwales\b|\bscotland\b|"
+        r"northern ireland|\blondon\b|\bmanchester\b|\bbirmingham\b|"
+        r"\bcardiff\b|\bedinburgh\b"
+    )
+    _WALES_PAT = re.compile(
+        r"\bwales\b|\bcymru\b|\bcardiff\b|\bswansea\b|\bnewport\b|"
+        r"\bwrexham\b|\bllandow\b|\bcowbridge\b|\bwelsh\b"
+    )
+
+    # Structured fields are authoritative; affirmative free text broadens
+    # coverage (e.g. hq says only "United Kingdom" but the summary names
+    # Llandow, Wales) or fills in when structured fields are empty.
+    structured = f"{hq} {geos}".replace("unknown", " ").strip()
+    is_uk = bool(_UK_PAT.search(structured)) or bool(_UK_PAT.search(freetext_affirmative))
+    is_wales = bool(_WALES_PAT.search(structured)) or (
+        is_uk and bool(_WALES_PAT.search(freetext_affirmative))
+    )
+    all_text = themes + " " + cls
     is_energy = any(k in all_text for k in (
         "energy", "heat", "power", "grid", "net zero", "clean energy",
         "climate", "renewabl", "decarboni", "emissions",
@@ -143,7 +182,9 @@ def _mandatory_queries(profile: dict) -> list[str]:
         queries.append(
             "Business Wales Smart innovation support grant apply 2025 2026"
         )
-    if is_energy:
+    if is_energy and is_uk:
+        # Ofgem is the GB energy regulator — its programmes are only
+        # relevant to companies operating in the UK
         queries.append(
             "Ofgem Strategic Innovation Fund SIF open call apply 2025 2026"
         )
@@ -785,6 +826,10 @@ async def _run_tool_loop(
             call_kwargs: dict = {
                 "model": "claude-sonnet-4-6",
                 "max_tokens": max_output_tokens,
+                # temperature=0 minimises run-to-run sampling variance for
+                # extraction/classification work (not full determinism, but
+                # meaningfully more stable than the default of 1.0).
+                "temperature": 0,
                 "system": system,
                 "messages": messages,
             }
@@ -907,6 +952,7 @@ async def _generate_discovery_queries(
         response = await client.messages.create(
             model="claude-sonnet-4-6",
             max_tokens=2000,
+            temperature=0,
             system=system,
             messages=[{
                 "role": "user",
@@ -959,6 +1005,7 @@ async def _analyse_discovery_results(
         async with client.messages.stream(
             model="claude-sonnet-4-6",
             max_tokens=6000,
+            temperature=0,
             system=_DISCOVERY_ANALYSIS_SYSTEM,
             messages=[{
                 "role": "user",
@@ -1027,6 +1074,7 @@ async def _generate_research_queries(shortlist: list) -> list:
         response = await client.messages.create(
             model="claude-sonnet-4-6",
             max_tokens=6000,
+            temperature=0,
             system=_QUERY_GENERATION_SYSTEM,
             messages=[{
                 "role": "user",
@@ -1144,7 +1192,8 @@ async def _score_with_evidence(
         async with anthropic.AsyncAnthropic() as client:
             async with client.messages.stream(
                 model="claude-sonnet-4-6",
-                max_tokens=8192,
+                max_tokens=SCORING_MAX_TOKENS,
+                temperature=0,
                 system=_SCORING_SYSTEM,
                 messages=[{"role": "user", "content": user_message}],
             ) as stream:
@@ -1230,6 +1279,166 @@ async def _verify_application_links(
         item["link_status"] = "broken" if isinstance(status, Exception) else status
 
     return opportunities, watchlist
+
+
+# ---------------------------------------------------------------------------
+# Watchlist link resolution — find URLs for watchlist items that have none
+# ---------------------------------------------------------------------------
+
+_MAX_WATCHLIST_LINK_SEARCHES = 12   # bound the extra search cost per run
+
+_WATCHLIST_LINK_SYSTEM = """You are a grants research analyst. For each grant programme provided, you have a current_link (may be "unknown") and web search results from a query designed to find the programme's official page or application route.
+
+For each programme, pick the single best URL and classify it:
+- Prefer: a direct application portal, form, or competition entry page → link_type "application_portal"
+- Then: the official programme or call overview page → link_type "programme_page"
+- Then: the funder's homepage → link_type "funder_homepage"
+- If current_link already points to the correct official programme page and nothing more specific appears in the search results, return current_link with the appropriate link_type
+- Do NOT invent or modify URLs — only return current_link or a URL that appears verbatim in the search results
+- Ignore URLs for clearly DIFFERENT programmes, third-party blog posts, and news aggregators when an official source is available
+- If neither current_link nor the search results contain a relevant official URL, return "unknown" with link_type "unknown"
+
+Return ONLY a valid JSON array — no markdown fences:
+[
+  {{
+    "name": "exact programme name as given",
+    "best_url": "URL or unknown",
+    "link_type": "application_portal | programme_page | funder_homepage | unknown"
+  }}
+]"""
+
+
+async def _resolve_watchlist_links(
+    watchlist: list,
+    on_search: Callable[[str, int], None] | None = None,
+) -> list:
+    """
+    Resolve and classify application links for under-linked watchlist items.
+
+    Watchlist items produced by the rescue safety nets come straight from the
+    discovery longlist and were never deep-researched: in practice they carry
+    a URL scraped from a search snippet with link_type "unknown" (never
+    classified or checked for specificity), or no URL at all. This runs ONE
+    web search per such item (bounded by _MAX_WATCHLIST_LINK_SEARCHES) and a
+    single batch Claude call to pick and classify the best official URL —
+    keeping the existing URL when it is already the right official page.
+    Items with an already-classified link are left untouched.
+    """
+    missing = [
+        item for item in watchlist
+        if item.get("link_type", "unknown") == "unknown"
+        or not (item.get("application_link") or "").startswith("http")
+    ][:_MAX_WATCHLIST_LINK_SEARCHES]
+    if not missing:
+        return watchlist
+
+    batch_items = []
+    for i, item in enumerate(missing, 1):
+        name = item.get("name", "")
+        body = item.get("managing_body", "")
+        query = f"{name} {body} grant apply application".strip()
+        if on_search:
+            on_search(query, i)
+        results = await _web_search(query)
+        batch_items.append({
+            "name": name,
+            "current_link": item.get("application_link", "unknown"),
+            "search_results": results[:1500],
+        })
+
+    try:
+        async with anthropic.AsyncAnthropic() as client:
+            response = await client.messages.create(
+                model="claude-sonnet-4-6",
+                max_tokens=2000,
+                temperature=0,
+                system=_WATCHLIST_LINK_SYSTEM,
+                messages=[{
+                    "role": "user",
+                    "content": (
+                        "Pick the best official URL for each programme:\n\n"
+                        + json.dumps(batch_items, indent=2)
+                    ),
+                }],
+            )
+        try:
+            resolutions = _extract_json_array(response.content[0].text)
+        except Exception:
+            resolutions = _extract_json_array_tolerant(response.content[0].text)
+    except Exception:
+        # Link resolution is best-effort — never fail the run over it
+        return watchlist
+
+    resolution_map = {
+        r["name"]: r for r in resolutions
+        if isinstance(r, dict) and r.get("name")
+    }
+    for item in missing:
+        res = resolution_map.get(item.get("name", ""))
+        if not res:
+            continue
+        url = res.get("best_url", "")
+        if url and url.startswith("http"):
+            item["application_link"] = url
+            lt = res.get("link_type", "programme_page")
+            item["link_type"] = lt if lt in (
+                "application_portal", "programme_page", "funder_homepage"
+            ) else "programme_page"
+
+    return watchlist
+
+
+# ---------------------------------------------------------------------------
+# Link quality gate — a top-tier recommendation must have a real, working,
+# reasonably specific link
+# ---------------------------------------------------------------------------
+
+_LINK_GATED_TIERS = {"Must Pursue", "Quick Win"}
+_LINK_GATE_DEMOTED_TIER = "Prepare for Next Window"
+
+
+def _apply_link_quality_gate(opportunities: list) -> list:
+    """
+    Post-verification safety net: an item in a top action tier ("Must Pursue"
+    / "Quick Win") is an instruction to go apply NOW — a broken link, a bare
+    funder homepage, or no link at all undermines that instruction. Such
+    items are demoted one tier and annotated so the user knows why.
+
+    Also downgrades link_type on any item whose URL failed the HTTP check,
+    so exports don't present a dead link as a confirmed portal.
+    """
+    for opp in opportunities:
+        status = opp.get("link_status", "unverified")
+        ltype  = opp.get("link_type", "unknown")
+
+        if status == "broken":
+            opp["link_type"] = "unknown"
+            note = (
+                "Application link failed an automated availability check — "
+                "verify the URL before relying on it."
+            )
+            existing = opp.get("notes") or ""
+            if note not in existing:
+                opp["notes"] = (existing + "  " + note).strip() if existing else note
+
+        weak_link = (
+            status == "broken"
+            or ltype in ("funder_homepage", "unknown")
+            or not (opp.get("application_link") or "").startswith("http")
+        )
+        if weak_link and opp.get("priority_tier") in _LINK_GATED_TIERS:
+            original = opp["priority_tier"]
+            opp["priority_tier"] = _LINK_GATE_DEMOTED_TIER
+            note = (
+                f"Demoted from '{original}': no specific, working application "
+                "link was confirmed. Locate the official application page "
+                "before investing application effort."
+            )
+            existing = opp.get("notes") or ""
+            if note not in existing:
+                opp["notes"] = (existing + "  " + note).strip() if existing else note
+
+    return opportunities
 
 
 # ---------------------------------------------------------------------------
@@ -1323,6 +1532,7 @@ async def _validate_application_specificity(
             response = await client.messages.create(
                 model="claude-sonnet-4-6",
                 max_tokens=4000,
+                temperature=0,
                 system=_SPECIFICITY_VALIDATION_SYSTEM,
                 messages=[{
                     "role": "user",
@@ -1431,9 +1641,50 @@ _EXCLUDE_ENTIRELY_TYPES = {
 }
 
 
+def _violates_known_hard_gates(opp: dict, profile: dict | None) -> str | None:
+    """
+    Code-level mirror of _SCORING_SYSTEM's "KNOWN HARD ELIGIBILITY GATES".
+
+    The scoring model sometimes overrides these gates — e.g. classifying
+    Energy Catalyst geography_match=true by asserting "UK-relevant rounds"
+    exist — so the confirmed gates are re-checked here, conditioned on the
+    COMPANY profile (not applied blindly): an ODA-only programme is fine for
+    a company deploying in developing markets, and a TRL 1-4 programme is
+    fine for an early-TRL company.
+
+    Returns a short reason string when the item must be excluded, else None.
+    """
+    if not profile:
+        return None
+    name = (opp.get("name") or "").lower()
+
+    # ODA-only programmes: fund deployment in developing countries only
+    if "energy catalyst" in name:
+        geo = " ".join(
+            [profile.get("hq") or ""]
+            + (profile.get("operational_geographies") or [])
+            + (profile.get("customer_geographies") or [])
+        ).lower()
+        oda_markers = (
+            "africa", "south asia", "southeast asia", "indo-pacific",
+            "latin america", "developing",
+        )
+        if not any(m in geo for m in oda_markers):
+            return "ODA-only geography: funds deployment in developing countries"
+
+    # Breakthrough-science calls: TRL 1-4 only
+    if "pathfinder" in name:
+        m = re.search(r"\d", profile.get("trl") or "")
+        if m and int(m.group()) >= 5:
+            return "TRL 1-4 only: company is at TRL 5+"
+
+    return None
+
+
 def _enforce_routing_rules(
     opportunities: list,
     watchlist: list,
+    profile: dict | None = None,
 ) -> tuple[list, list]:
     """
     Enforce the scoring rubric's routing rules in code.
@@ -1499,6 +1750,8 @@ def _enforce_routing_rules(
             continue   # Wrong deployment geography — confirmed factual, exclude
         if opp_type in _EXCLUDE_ENTIRELY_TYPES:
             continue   # Wrong category — exclude entirely
+        if _violates_known_hard_gates(opp, profile):
+            continue   # Confirmed eligibility gate the scoring model overrode
 
         # ── Route to watchlist (judgement-based cases) ───────────────────
         if apt == "partner":
@@ -1538,7 +1791,12 @@ def _enforce_routing_rules(
 
         kept_opps.append(opp)
 
-    combined_watchlist = watchlist + extra_watch
+    # The same confirmed gates apply to watchlist entries — a hard-ineligible
+    # programme should not be presented for monitoring either.
+    combined_watchlist = [
+        item for item in watchlist + extra_watch
+        if not _violates_known_hard_gates(item, profile)
+    ]
     return kept_opps, combined_watchlist
 
 
@@ -1587,6 +1845,97 @@ _REGULATED_ENTITY_LEAD_SIGNALS = [
 ]
 
 
+# Tokens that carry no identity when comparing grant names — generic funding
+# vocabulary, round/year qualifiers, and connectives. Kept general on purpose.
+_NAME_NOISE_TOKENS = {
+    "the", "and", "for", "of", "a", "an", "to", "in",
+    "grant", "grants", "fund", "funds", "funding", "programme", "program",
+    "scheme", "call", "competition", "round", "phase", "wave", "cohort",
+    "open", "2024", "2025", "2026", "2027",
+    # generic category vocabulary — shared by unrelated programmes
+    # ("Greentown Labs Climate Tech Accelerator" vs "Third Derivative (D3)
+    # Climate Tech Accelerator" are different programmes)
+    "accelerator", "climate", "tech", "technology", "incubator",
+}
+
+
+def _name_tokens(name: str) -> set[str]:
+    """Normalise a grant name into a set of identity-bearing tokens."""
+    tokens = re.findall(r"[a-z0-9]+", name.lower())
+    out = set()
+    for t in tokens:
+        if t in _NAME_NOISE_TOKENS or len(t) < 2:
+            continue
+        # light stemming so "partnership"/"partnerships" match
+        out.add(t[:-1] if t.endswith("s") and len(t) > 3 else t)
+    return out
+
+
+# Funder/organisation tokens: shared between DIFFERENT programmes run by the
+# same funder (e.g. "Innovate UK Smart Grants" vs "Innovate UK Energy
+# Catalyst"), so overlap on these alone must not count as a duplicate.
+_ORG_TOKENS = {
+    "innovate", "uk", "eu", "european", "commission", "horizon", "europe",
+    "government", "welsh", "wale", "scottish", "scotland", "ofgem", "nhs",
+    "national", "eic", "eit", "ukri", "esa", "defra", "beis", "desnz",
+    "sme",  # generic applicant-type acronym, not a programme identity
+}
+
+
+def _acronym_tokens(name: str) -> set[str]:
+    """All-caps acronym tokens (3+ chars) from a raw grant name, lowercased.
+
+    Programme acronyms like KTP or SIF are strong identity signals; funder
+    acronyms (EIC, EIT, UKRI, ...) are filtered out via _ORG_TOKENS by the
+    caller because different programmes share them.
+    """
+    return {
+        t.lower()
+        for t in re.findall(r"\b[A-Z][A-Z0-9]{2,5}\b", name)
+    }
+
+
+def _names_similar(a: str, b: str) -> bool:
+    """
+    True if two grant names likely refer to the same programme.
+
+    Combines the original substring-containment check with token-overlap
+    containment, which catches near-duplicates with different qualifiers —
+    e.g. "Innovate UK Knowledge Transfer Partnership (KTP) — Round 4" vs.
+    "Knowledge Transfer Partnerships (KTP) — Accelerated KTP 6".
+    """
+    al, bl = a.lower(), b.lower()
+    if len(al) > 4 and len(bl) > 4 and (al in bl or bl in al):
+        return True
+
+    ta, tb = _name_tokens(a), _name_tokens(b)
+    if not ta or not tb:
+        return False
+
+    # Names carrying DIFFERENT funder identities are different programmes
+    # even when the rest of the name (or an acronym) collides — e.g. "Ofgem
+    # Strategic Innovation Fund (SIF)" vs "Innovate UK Sustainable
+    # Innovation Fund (SIF)".
+    org_a, org_b = ta & _ORG_TOKENS, tb & _ORG_TOKENS
+    if org_a and org_b and org_a.isdisjoint(org_b):
+        return False
+
+    # Shared programme acronym (KTP, SIF, ...) is a strong identity signal —
+    # catches "Knowledge Transfer Partnerships (KTP)" vs "Innovate UK KTP".
+    # Funder acronyms (EIC, EIT, ...) are excluded: different programmes
+    # legitimately share them (EIC Accelerator vs EIC Pathfinder).
+    if (_acronym_tokens(a) & _acronym_tokens(b)) - _ORG_TOKENS:
+        return True
+
+    shared = ta & tb
+    # Most of the shorter name's identity tokens must appear in the longer
+    # name, AND at least one shared token must be programme-specific (not
+    # just a common funder name).
+    ratio_ok = len(shared) / min(len(ta), len(tb)) >= 0.6
+    discriminative = any(t not in _ORG_TOKENS for t in shared)
+    return ratio_ok and discriminative
+
+
 def _rescue_missing_partner_items(
     shortlist: list,
     opportunities: list,
@@ -1623,21 +1972,16 @@ def _rescue_missing_partner_items(
       Items with initial_thematic_fit < 3 are NOT rescued — a low discovery
       fit score suggests the model may have correctly excluded them.
     """
-    # Build a set of names already present in either output array
-    output_names_lower = {
-        (o.get("name") or "").lower()
+    # Names already present in either output array. Rescued names are added
+    # as we go so two near-duplicate longlist entries can't both be rescued.
+    present_names = [
+        (o.get("name") or "")
         for o in opportunities + watchlist
-    }
+        if o.get("name")
+    ]
 
     def _already_present(name: str) -> bool:
-        nl = name.lower()
-        if nl in output_names_lower:
-            return True
-        return any(
-            nl in present or present in nl
-            for present in output_names_lower
-            if len(present) > 4
-        )
+        return any(_names_similar(name, present) for present in present_names)
 
     # Hard-exclusion filters — applied in Tier 2 to avoid rescuing known-bad items
     _HARD_EXCLUDE_NAMES = [
@@ -1713,6 +2057,7 @@ def _rescue_missing_partner_items(
                 ),
                 "_rescued_by_safety_net": True,
             })
+            present_names.append(name)
             continue
 
         # Tier 2: items with thematic fit ≥ 3 — skip known hard mismatches
@@ -1755,6 +2100,7 @@ def _rescue_missing_partner_items(
                 ),
                 "_rescued_by_safety_net": True,
             })
+            present_names.append(name)
 
     return watchlist + rescued
 
@@ -1940,6 +2286,7 @@ async def run_phase23(
                 _enforce_routing_rules(
                     result.get("opportunities", []),
                     result.get("strategic_watchlist", []),
+                    profile=profile,
                 )
             )
 
@@ -1977,6 +2324,27 @@ async def run_phase23(
                 result["opportunities"]       = opps
                 result["strategic_watchlist"] = watch
 
+            # ── Watchlist link resolution ─────────────────────────────────
+            # Rescued watchlist items were never deep-researched — their URL
+            # (if any) came from a discovery search snippet and was never
+            # classified. Run a bounded search pass to find and classify
+            # their official pages so the watchlist is actionable too.
+            stage_name = "watchlist link resolution"
+            n_missing = sum(
+                1 for item in watch
+                if item.get("link_type", "unknown") == "unknown"
+                or not (item.get("application_link") or "").startswith("http")
+            )
+            if n_missing:
+                await queue.put({"type": "progress", "stage": 3,
+                                 "message": (
+                                     f"Finding official links for "
+                                     f"{min(n_missing, _MAX_WATCHLIST_LINK_SEARCHES)} "
+                                     "watchlist items…"
+                                 )})
+                watch = await _resolve_watchlist_links(watch)
+                result["strategic_watchlist"] = watch
+
             # ── Link verification ─────────────────────────────────────────
             stage_name = "link verification"
             n_checkable = sum(
@@ -1989,6 +2357,14 @@ async def run_phase23(
                 opps, watch = await _verify_application_links(opps, watch)
                 result["opportunities"]      = opps
                 result["strategic_watchlist"] = watch
+
+            # ── Link quality gate ─────────────────────────────────────────
+            # A "Must Pursue" / "Quick Win" item with a broken or generic
+            # link is a contradiction — demote it and explain why.
+            stage_name = "link quality gate"
+            result["opportunities"] = _apply_link_quality_gate(
+                result.get("opportunities", [])
+            )
 
             await queue.put({"type": "complete", "result": result})
 
