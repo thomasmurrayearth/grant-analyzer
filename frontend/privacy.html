@@ -4,25 +4,48 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Privacy Policy — Grant Opportunity Analyser</title>
+    <meta name="theme-color" content="#1A1916" />
+  <link rel="icon" href="/icons/icon.svg" type="image/svg+xml" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Archivo:wght@600;700;800&family=Instrument+Sans:ital,wght@0,400;0,500;0,600;1,400&family=Spline+Sans+Mono:wght@400;500&display=swap" rel="stylesheet" />
   <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            paper: '#F7F5F0', paper2: '#EEECEA', card: '#FDFCFA', line: '#E4E2DE',
+            ink: '#1A1916', soft: '#7A7870', moss: '#3D8C68', pine: '#2E7055',
+            bronze: '#8A6F3A', clay: '#9C4A2F',
+          },
+          fontFamily: {
+            display: ['Archivo', 'system-ui', 'sans-serif'],
+            sans: ['"Instrument Sans"', 'system-ui', 'sans-serif'],
+            mono: ['"Spline Sans Mono"', 'ui-monospace', 'monospace'],
+          },
+        },
+      },
+    };
+  </script>
 </head>
-<body class="bg-slate-50 min-h-screen font-sans text-slate-800">
+<body class="bg-paper min-h-screen font-sans text-ink antialiased">
 
-<header class="bg-[#1E3A5F] text-white py-6 px-8 shadow-lg">
+<header class="bg-ink text-paper py-6 px-8">
   <div class="max-w-3xl mx-auto">
-    <a href="/" class="text-slate-300 text-sm hover:text-white">← Back to Grant Analyser</a>
-    <h1 class="text-2xl font-bold tracking-tight mt-2">Privacy Policy</h1>
-    <p class="text-slate-300 text-sm mt-0.5">Grant Opportunity Analyser</p>
+    <a href="/" class="text-[#B4B1A9] text-sm hover:text-paper">← Back to Grant Analyser</a>
+    <h1 class="font-display text-2xl font-bold tracking-tight mt-2">Privacy Policy</h1>
+    <p class="text-[#B4B1A9] text-sm mt-0.5">Grant Opportunity Analyser</p>
   </div>
 </header>
 
 <main class="max-w-3xl mx-auto px-6 py-10">
 
 
-<div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-8 space-y-8 text-sm leading-relaxed">
+<div class="bg-card rounded-md border border-line p-8 space-y-8 text-sm leading-relaxed">
 
     <div>
-      <p class="text-slate-500">Last updated: 5 June 2026</p>
+      <p class="text-soft">Last updated: 5 June 2026</p>
     </div>
 
     <!-- 1. WHO WE ARE -->
@@ -35,7 +58,7 @@
       </p>
       <p class="mt-3">
         <strong>Contact:</strong><br />
-        Email: <a href="mailto:thomasmurraynz@gmail.com" class="text-blue-600 underline">thomasmurraynz@gmail.com</a><br />
+        Email: <a href="mailto:thomasmurraynz@gmail.com" class="text-pine underline">thomasmurraynz@gmail.com</a><br />
         <!-- [REQUIRED: Postal address — a physical address is required under GDPR Article 13] -->
         Address: 8 Redmond House, N1 0TN, London, United Kingdom
       </p>
@@ -50,62 +73,62 @@
       <p class="mb-3">When you use this tool, we record the following information about each analysis session:</p>
 
       <div class="overflow-x-auto">
-        <table class="w-full text-xs border-collapse border border-slate-200">
+        <table class="w-full text-xs border-collapse border border-line">
           <thead>
-            <tr class="bg-slate-100 text-left">
-              <th class="border border-slate-200 px-3 py-2 font-semibold">Data</th>
-              <th class="border border-slate-200 px-3 py-2 font-semibold">Why we collect it</th>
-              <th class="border border-slate-200 px-3 py-2 font-semibold">Legal basis (UK/EU GDPR)</th>
+            <tr class="bg-paper2 text-left">
+              <th class="border border-line px-3 py-2 font-semibold">Data</th>
+              <th class="border border-line px-3 py-2 font-semibold">Why we collect it</th>
+              <th class="border border-line px-3 py-2 font-semibold">Legal basis (UK/EU GDPR)</th>
             </tr>
           </thead>
           <tbody>
             <tr>
-              <td class="border border-slate-200 px-3 py-2">Company website URL you enter</td>
-              <td class="border border-slate-200 px-3 py-2">To deliver the analysis; to understand what types of companies use this tool</td>
-              <td class="border border-slate-200 px-3 py-2">Legitimate interest (Art. 6(1)(f))</td>
+              <td class="border border-line px-3 py-2">Company website URL you enter</td>
+              <td class="border border-line px-3 py-2">To deliver the analysis; to understand what types of companies use this tool</td>
+              <td class="border border-line px-3 py-2">Legitimate interest (Art. 6(1)(f))</td>
             </tr>
-            <tr class="bg-slate-50">
-              <td class="border border-slate-200 px-3 py-2">Company description text (first 500 characters of any pasted text)</td>
-              <td class="border border-slate-200 px-3 py-2">To understand what types of companies use this tool and improve results quality</td>
-              <td class="border border-slate-200 px-3 py-2">Legitimate interest (Art. 6(1)(f))</td>
-            </tr>
-            <tr>
-              <td class="border border-slate-200 px-3 py-2">Search preferences (geography, grant types)</td>
-              <td class="border border-slate-200 px-3 py-2">To tailor results; to understand user needs</td>
-              <td class="border border-slate-200 px-3 py-2">Legitimate interest (Art. 6(1)(f))</td>
-            </tr>
-            <tr class="bg-slate-50">
-              <td class="border border-slate-200 px-3 py-2">AI-generated company profile</td>
-              <td class="border border-slate-200 px-3 py-2">To record analysis outputs and improve the AI pipeline</td>
-              <td class="border border-slate-200 px-3 py-2">Legitimate interest (Art. 6(1)(f))</td>
+            <tr class="bg-paper2">
+              <td class="border border-line px-3 py-2">Company description text (first 500 characters of any pasted text)</td>
+              <td class="border border-line px-3 py-2">To understand what types of companies use this tool and improve results quality</td>
+              <td class="border border-line px-3 py-2">Legitimate interest (Art. 6(1)(f))</td>
             </tr>
             <tr>
-              <td class="border border-slate-200 px-3 py-2">Grant analysis results</td>
-              <td class="border border-slate-200 px-3 py-2">To record outputs and improve the scoring methodology</td>
-              <td class="border border-slate-200 px-3 py-2">Legitimate interest (Art. 6(1)(f))</td>
+              <td class="border border-line px-3 py-2">Search preferences (geography, grant types)</td>
+              <td class="border border-line px-3 py-2">To tailor results; to understand user needs</td>
+              <td class="border border-line px-3 py-2">Legitimate interest (Art. 6(1)(f))</td>
+            </tr>
+            <tr class="bg-paper2">
+              <td class="border border-line px-3 py-2">AI-generated company profile</td>
+              <td class="border border-line px-3 py-2">To record analysis outputs and improve the AI pipeline</td>
+              <td class="border border-line px-3 py-2">Legitimate interest (Art. 6(1)(f))</td>
             </tr>
             <tr>
-              <td class="border border-slate-200 px-3 py-2">Email address <span class="text-slate-400">(if provided)</span></td>
-              <td class="border border-slate-200 px-3 py-2">To send you a single notification when your analysis is complete</td>
-              <td class="border border-slate-200 px-3 py-2">Legitimate interest (Art. 6(1)(f)) — directly fulfilling the service you requested</td>
-            </tr>
-            <tr class="bg-slate-50">
-              <td class="border border-slate-200 px-3 py-2">IP address</td>
-              <td class="border border-slate-200 px-3 py-2">To detect and prevent abuse; to understand the geographic spread of users</td>
-              <td class="border border-slate-200 px-3 py-2">Legitimate interest (Art. 6(1)(f))</td>
+              <td class="border border-line px-3 py-2">Grant analysis results</td>
+              <td class="border border-line px-3 py-2">To record outputs and improve the scoring methodology</td>
+              <td class="border border-line px-3 py-2">Legitimate interest (Art. 6(1)(f))</td>
             </tr>
             <tr>
-              <td class="border border-slate-200 px-3 py-2">Date and time of analysis</td>
-              <td class="border border-slate-200 px-3 py-2">To understand usage patterns</td>
-              <td class="border border-slate-200 px-3 py-2">Legitimate interest (Art. 6(1)(f))</td>
+              <td class="border border-line px-3 py-2">Email address <span class="text-soft">(if provided)</span></td>
+              <td class="border border-line px-3 py-2">To send you a single notification when your analysis is complete</td>
+              <td class="border border-line px-3 py-2">Legitimate interest (Art. 6(1)(f)) — directly fulfilling the service you requested</td>
+            </tr>
+            <tr class="bg-paper2">
+              <td class="border border-line px-3 py-2">IP address</td>
+              <td class="border border-line px-3 py-2">To detect and prevent abuse; to understand the geographic spread of users</td>
+              <td class="border border-line px-3 py-2">Legitimate interest (Art. 6(1)(f))</td>
+            </tr>
+            <tr>
+              <td class="border border-line px-3 py-2">Date and time of analysis</td>
+              <td class="border border-line px-3 py-2">To understand usage patterns</td>
+              <td class="border border-line px-3 py-2">Legitimate interest (Art. 6(1)(f))</td>
             </tr>
           </tbody>
         </table>
       </div>
 
-      <div class="mt-4 bg-slate-50 rounded-lg p-4">
+      <div class="mt-4 bg-paper2 rounded-lg p-4">
         <p class="font-semibold mb-1">What we do NOT collect:</p>
-        <ul class="list-disc list-inside space-y-1 text-slate-600">
+        <ul class="list-disc list-inside space-y-1 text-soft">
           <li>Your name (unless you contact us directly)</li>
           <li>Your email address, unless you choose to provide it for result notifications</li>
           <li>Payment or financial information</li>
@@ -114,7 +137,7 @@
         </ul>
       </div>
 
-      <p class="mt-4 text-slate-600">
+      <p class="mt-4 text-soft">
         <strong>Legitimate interest balancing test:</strong> We have assessed that our legitimate interest in improving the quality of this tool does not override users' rights and freedoms, because: the data is predominantly business-related (company URLs, grant searches) rather than personal; we store only a brief snippet of any pasted text; we do not use the data for marketing or share it with advertisers; and users can request deletion at any time (see section 6).
       </p>
     </section>
@@ -125,28 +148,28 @@
       <p class="mb-3">We use the following third-party services to operate this tool. Each acts as a <strong>data processor</strong> on our behalf and is contractually required to handle data securely:</p>
 
       <div class="space-y-4">
-        <div class="border border-slate-200 rounded-lg p-4">
+        <div class="border border-line rounded-lg p-4">
           <p class="font-semibold">Supabase Inc.</p>
-          <p class="text-slate-500 text-xs mb-1">supabase.com — database storage</p>
-          <p>Stores the analytics data described above on servers located in the <strong>United States</strong>. For transfers from the UK and EU, we rely on Supabase's Data Processing Agreement and Standard Contractual Clauses (SCCs). See <a href="https://supabase.com/privacy" class="text-blue-600 underline" target="_blank">supabase.com/privacy</a>.</p>
+          <p class="text-soft text-xs mb-1">supabase.com — database storage</p>
+          <p>Stores the analytics data described above on servers located in the <strong>United States</strong>. For transfers from the UK and EU, we rely on Supabase's Data Processing Agreement and Standard Contractual Clauses (SCCs). See <a href="https://supabase.com/privacy" class="text-pine underline" target="_blank">supabase.com/privacy</a>.</p>
         </div>
 
-        <div class="border border-slate-200 rounded-lg p-4">
+        <div class="border border-line rounded-lg p-4">
           <p class="font-semibold">Anthropic PBC</p>
-          <p class="text-slate-500 text-xs mb-1">anthropic.com — AI processing</p>
-          <p>Receives the company information you provide in order to generate the grant analysis. Processing takes place on Anthropic's servers in the <strong>United States</strong>. Anthropic's API usage terms apply and they do not use API inputs to train their models by default. See <a href="https://www.anthropic.com/privacy" class="text-blue-600 underline" target="_blank">anthropic.com/privacy</a>.</p>
+          <p class="text-soft text-xs mb-1">anthropic.com — AI processing</p>
+          <p>Receives the company information you provide in order to generate the grant analysis. Processing takes place on Anthropic's servers in the <strong>United States</strong>. Anthropic's API usage terms apply and they do not use API inputs to train their models by default. See <a href="https://www.anthropic.com/privacy" class="text-pine underline" target="_blank">anthropic.com/privacy</a>.</p>
         </div>
 
-        <div class="border border-slate-200 rounded-lg p-4">
+        <div class="border border-line rounded-lg p-4">
           <p class="font-semibold">DuckDuckGo</p>
-          <p class="text-slate-500 text-xs mb-1">duckduckgo.com — web search</p>
-          <p>The AI generates web search queries based on your company inputs to research grant opportunities. We do not send your raw input text directly to DuckDuckGo — only AI-generated search terms. See <a href="https://duckduckgo.com/privacy" class="text-blue-600 underline" target="_blank">duckduckgo.com/privacy</a>.</p>
+          <p class="text-soft text-xs mb-1">duckduckgo.com — web search</p>
+          <p>The AI generates web search queries based on your company inputs to research grant opportunities. We do not send your raw input text directly to DuckDuckGo — only AI-generated search terms. See <a href="https://duckduckgo.com/privacy" class="text-pine underline" target="_blank">duckduckgo.com/privacy</a>.</p>
         </div>
 
-        <div class="border border-slate-200 rounded-lg p-4">
+        <div class="border border-line rounded-lg p-4">
           <p class="font-semibold">Resend Inc.</p>
-          <p class="text-slate-500 text-xs mb-1">resend.com — transactional email</p>
-          <p>If you provide an email address, we use Resend to send you a single notification when your analysis is complete. Your email address is passed to Resend solely for this purpose and is not used for any other communication. Resend operates servers in the <strong>United States</strong>. We rely on Resend's Data Processing Agreement and Standard Contractual Clauses for transfers from the UK/EU. See <a href="https://resend.com/legal/privacy-policy" class="text-blue-600 underline" target="_blank">resend.com/legal/privacy-policy</a>.</p>
+          <p class="text-soft text-xs mb-1">resend.com — transactional email</p>
+          <p>If you provide an email address, we use Resend to send you a single notification when your analysis is complete. Your email address is passed to Resend solely for this purpose and is not used for any other communication. Resend operates servers in the <strong>United States</strong>. We rely on Resend's Data Processing Agreement and Standard Contractual Clauses for transfers from the UK/EU. See <a href="https://resend.com/legal/privacy-policy" class="text-pine underline" target="_blank">resend.com/legal/privacy-policy</a>.</p>
         </div>
       </div>
 
@@ -202,19 +225,19 @@
       </div>
 
       <p class="mb-3 font-medium">If you are in California, USA (CCPA / CPRA):</p>
-      <ul class="list-disc list-inside space-y-1 text-slate-700 mb-4">
+      <ul class="list-disc list-inside space-y-1 text-ink mb-4">
         <li>Right to know what personal information we collect</li>
         <li>Right to request deletion of your personal information</li>
         <li>Right to opt out of the sale of personal information — <strong>we do not sell personal information</strong></li>
         <li>Right to non-discrimination for exercising your privacy rights</li>
       </ul>
 
-      <div class="bg-blue-50 border border-blue-200 rounded-lg p-4">
+      <div class="bg-paper2 border border-line rounded-lg p-4">
         <p class="font-semibold mb-1">How to exercise your rights</p>
         <p>
-          Email <a href="mailto:thomasmurraynz@gmail.com" class="text-blue-600 underline">thomasmurraynz@gmail.com</a> with the subject line <strong>"Data Request"</strong>. Please include the approximate date of your analysis and the company URL you entered so we can locate your record. We will respond within <strong>30 days</strong> (UK/EU) or <strong>45 days</strong> (California).
+          Email <a href="mailto:thomasmurraynz@gmail.com" class="text-pine underline">thomasmurraynz@gmail.com</a> with the subject line <strong>"Data Request"</strong>. Please include the approximate date of your analysis and the company URL you entered so we can locate your record. We will respond within <strong>30 days</strong> (UK/EU) or <strong>45 days</strong> (California).
         </p>
-        <p class="mt-2 text-xs text-slate-500">Please include your email address if you provided one, or the approximate time and company URL of your analysis, so we can locate your record.</p>
+        <p class="mt-2 text-xs text-soft">Please include your email address if you provided one, or the approximate time and company URL of your analysis, so we can locate your record.</p>
       </div>
     </section>
 
@@ -222,12 +245,12 @@
     <section>
       <h2 class="text-lg font-semibold mb-3">7. Right to complain to a supervisory authority</h2>
       <p class="mb-3">If you believe we have not handled your data lawfully, you have the right to complain to your local data protection authority:</p>
-      <ul class="list-disc list-inside space-y-2 text-slate-700">
-        <li><strong>United Kingdom:</strong> Information Commissioner's Office (ICO) — <a href="https://ico.org.uk/make-a-complaint" class="text-blue-600 underline" target="_blank">ico.org.uk/make-a-complaint</a></li>
-        <li><strong>European Union:</strong> Your national data protection authority (a full list is at <a href="https://edpb.europa.eu/about-edpb/about-edpb/members_en" class="text-blue-600 underline" target="_blank">edpb.europa.eu</a>)</li>
-        <li><strong>California, USA:</strong> California Privacy Protection Agency (CPPA) — <a href="https://cppa.ca.gov" class="text-blue-600 underline" target="_blank">cppa.ca.gov</a></li>
+      <ul class="list-disc list-inside space-y-2 text-ink">
+        <li><strong>United Kingdom:</strong> Information Commissioner's Office (ICO) — <a href="https://ico.org.uk/make-a-complaint" class="text-pine underline" target="_blank">ico.org.uk/make-a-complaint</a></li>
+        <li><strong>European Union:</strong> Your national data protection authority (a full list is at <a href="https://edpb.europa.eu/about-edpb/about-edpb/members_en" class="text-pine underline" target="_blank">edpb.europa.eu</a>)</li>
+        <li><strong>California, USA:</strong> California Privacy Protection Agency (CPPA) — <a href="https://cppa.ca.gov" class="text-pine underline" target="_blank">cppa.ca.gov</a></li>
       </ul>
-      <p class="mt-3 text-slate-600">We would, however, appreciate the opportunity to address your concern directly before you contact a regulator.</p>
+      <p class="mt-3 text-soft">We would, however, appreciate the opportunity to address your concern directly before you contact a regulator.</p>
     </section>
 
     <!-- 8. AUTOMATED DECISION-MAKING -->
@@ -261,7 +284,7 @@
       <h2 class="text-lg font-semibold mb-3">12. Contact</h2>
       <p>
         For any privacy-related questions or requests:<br />
-        Email: <a href="mailto:thomasmurraynz@gmail.com" class="text-blue-600 underline">thomasmurraynz@gmail.com</a><br />
+        Email: <a href="mailto:thomasmurraynz@gmail.com" class="text-pine underline">thomasmurraynz@gmail.com</a><br />
         <!-- [REQUIRED: Postal address] -->
         Address: 8 Redmond House, N1 0TN, London, United Kingdom
       </p>
@@ -270,14 +293,14 @@
   </div>
 </main>
 
-<footer class="text-center text-xs text-slate-400 py-8 space-x-4">
-  <a href="/" class="hover:text-slate-600">Home</a>
+<footer class="text-center text-xs text-soft py-8 space-x-4">
+  <a href="/" class="hover:text-ink">Home</a>
   <span>·</span>
-  <a href="/privacy.html" class="hover:text-slate-600">Privacy Policy</a>
+  <a href="/privacy.html" class="hover:text-ink">Privacy Policy</a>
   <span>·</span>
-  <a href="/terms.html" class="hover:text-slate-600">Terms of Use</a>
+  <a href="/terms.html" class="hover:text-ink">Terms of Use</a>
   <span>·</span>
-  <a href="mailto:thomasmurraynz@gmail.com" class="hover:text-slate-600">Contact</a>
+  <a href="mailto:thomasmurraynz@gmail.com" class="hover:text-ink">Contact</a>
 </footer>
 
 </body>
