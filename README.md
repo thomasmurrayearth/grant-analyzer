@@ -4,6 +4,9 @@ A web app that runs the repeatable grant opportunity analysis workflow for clima
 
 Paste a startup website URL → get a prioritised, scored grant opportunity report + downloadable XLSX.
 
+**Project history and current status:** see [PROJECT_LOG.md](PROJECT_LOG.md).
+It must be updated with a dated entry every time a change is committed.
+
 ## Setup
 
 **Requirements:** Python 3.11+, an Anthropic API key.
