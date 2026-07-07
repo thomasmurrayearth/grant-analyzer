@@ -2289,12 +2289,12 @@ async def run_phase1(
             stage_name = "company research"
             await queue.put({
                 "type": "progress", "stage": 1,
-                "message": f"Researching company externally (up to {MAX_COMPANY_SEARCHES} searches)…",
+                "message": "Researching company externally…",
             })
 
             def _on_s1(query: str, n: int) -> None:
                 queue.put_nowait({"type": "progress", "stage": 1,
-                                  "message": f'Company search {n}: "{query}"'})
+                                  "message": f'Searching: "{query}"'})
 
             profile = await _analyse_company(
                 context, source_note, url, on_search=_on_s1
@@ -2342,13 +2342,12 @@ async def run_phase23(
             # ── Stage 2: Grant discovery ──────────────────────────────────
             await queue.put({
                 "type": "progress", "stage": 2,
-                "message": f"Searching for grant opportunities (up to {MAX_DISCOVERY_SEARCHES} searches)…",
+                "message": "Searching for grant opportunities…",
             })
 
             def _on_s2(query: str, n: int) -> None:
                 queue.put_nowait({"type": "progress", "stage": 2,
-                                  "message": f'Search {n}/{MAX_DISCOVERY_SEARCHES}: "{query}"',
-                                  "search_count": n})
+                                  "message": f'Searching: "{query}"'})
 
             longlist = await _discover_opportunities(profile, preferences, on_search=_on_s2)
 
@@ -2402,13 +2401,12 @@ async def run_phase23(
             )
 
             stage_name = "deep grant research"
-            total_queries = len(queries) * QUERIES_PER_GRANT
             await queue.put({"type": "progress", "stage": 3,
-                             "message": f"Executing {total_queries} targeted research searches…"})
+                             "message": "Executing targeted research searches…"})
 
             def _on_s3(query: str, n: int) -> None:
                 queue.put_nowait({"type": "progress", "stage": 3,
-                                  "message": f'Research search {n}/{total_queries}: "{query}"'})
+                                  "message": f'Researching: "{query}"'})
 
             evidence, apply_evidence = await _execute_research_queries(queries, on_search=_on_s3)
 
