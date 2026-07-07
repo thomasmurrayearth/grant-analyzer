@@ -7,12 +7,13 @@ Phase 1 — Company Analysis
       (news, funding history, pilots, LinkedIn, Crunchbase, etc.)
   1c. Claude synthesises website + research into a structured company profile.
 
-Phase 2 — Grant Discovery
-  2a. Claude runs up to 20 targeted web searches across all grant categories.
-  2b. When the search budget is spent, a separate final call (no tools)
-      forces Claude to write the raw longlist JSON — this prevents runaway
-      searching and guarantees output.
-  2c. Returns a longlist of 20-40 opportunities with quick thematic fit scores.
+Phase 2 — Grant Discovery (wide funnel, thematic fit first)
+  2a. Claude generates theme-driven search queries; mandatory geography/sector
+      queries are prepended in code.
+  2b. Python executes all queries itself (no tool-use loop — no runaway risk).
+  2c. A single streaming call compiles a wide longlist (target 30-45) scored
+      ONLY on thematic fit. Eligibility concerns are recorded as flags, not
+      used to exclude — Phase 3 and the code-level gates do the filtering.
 
 Phase 3 — Deep Research & Scoring
   3a. Take the top 20 candidates by initial thematic fit from the longlist.
@@ -88,24 +89,52 @@ async def _with_retry(
 # Tuneable constants
 # ---------------------------------------------------------------------------
 MAX_COMPANY_SEARCHES  = 5   # external background searches on the company
-MAX_DISCOVERY_SEARCHES = 20  # grant landscape searches
-SHORTLIST_SIZE        = 8    # grants to deep-research in Phase 3
+MAX_DISCOVERY_SEARCHES = 30  # grant landscape searches (wide-funnel discovery)
+DISCOVERY_RESULTS_PER_SEARCH = 6   # DuckDuckGo results kept per discovery query
+DISCOVERY_SNIPPET_CHARS = 2500     # per-search evidence budget in the longlist
+                                   # call. At ~500 chars per formatted result,
+                                   # 2500 keeps ~5 of 6 results; the old value
+                                   # of 500 silently discarded all but one.
+LONGLIST_MAX_TOKENS   = 12000  # output budget for the longlist call (streams,
+                               # so no timeout risk). 6000 capped the longlist
+                               # at ~25 items; 12000 supports the 30-45 target.
+SHORTLIST_SIZE        = 10   # grants to deep-research in Phase 3
                              # Historically capped at 8 because the scoring call
                              # was limited to 8192 output tokens and silently
                              # truncated beyond ~8 items. The scoring call now
-                             # streams with SCORING_MAX_TOKENS headroom, but 8
-                             # also bounds Phase 3 research cost (3 searches per
-                             # grant) — raise deliberately, not casually.
+                             # streams with SCORING_MAX_TOKENS headroom (20K is
+                             # ~2x the ~10K a 10-item response uses); each extra
+                             # item costs 3 Phase-3 searches — raise
+                             # deliberately, not casually.
 SCORING_MAX_TOKENS    = 20000  # output budget for the final scoring call.
                                # claude-sonnet-4-6 supports up to 128K output
-                               # tokens with streaming; 20K gives ~2.5x headroom
-                               # over the ~7-8K a healthy 8-item response uses,
-                               # eliminating silent truncation as a failure mode.
+                               # tokens with streaming; 20K eliminates silent
+                               # truncation as a failure mode.
 QUERIES_PER_GRANT     = 3    # research queries per shortlisted grant
+
+# Watchlist admission policy: a slot is earned ONLY by
+#   (a) "partner_route"   — a programme requiring a specific class of eligible
+#       lead applicant (licensed operator, NHS trust, social landlord, local
+#       authority, ...) that the startup could join as technology partner, or
+#   (b) "between_rounds"  — a well-established recurring programme with strong
+#       thematic fit that is currently between public application rounds.
+# Strong-fit items whose application route cannot be confirmed are DROPPED,
+# not watchlisted — an unverifiable entry is not actionable.
+STRONG_FIT_MIN        = 4    # minimum thematic fit for watchlist admission
+WATCHLIST_CAP         = 10   # maximum watchlist entries shown to the user
+_MAX_TRIAGE_SEARCHES  = 12   # bound on extra searches for watchlist triage
 
 # ---------------------------------------------------------------------------
 # Mandatory discovery query helpers
 # ---------------------------------------------------------------------------
+
+def _year_qualifier() -> str:
+    """Current + next year, e.g. "2026 2027" — keeps search queries fresh
+    without hardcoded years going stale."""
+    from datetime import date
+    y = date.today().year
+    return f"{y} {y + 1}"
+
 
 def _mandatory_queries(profile: dict) -> list[str]:
     """
@@ -168,29 +197,30 @@ def _mandatory_queries(profile: dict) -> list[str]:
         "advanced manufacturing", "compute", "semiconductor",
     ))
 
+    years = _year_qualifier()
     if is_uk:
         queries.append(
-            "Innovate UK open grant competitions SME innovation apply 2025 2026"
+            f"Innovate UK open grant competitions SME innovation apply {years}"
         )
         queries.append(
-            "Innovate UK Knowledge Transfer Partnership KTP open call UK SME university 2025 2026"
+            f"Innovate UK Knowledge Transfer Partnership KTP open call UK SME university {years}"
         )
     if is_wales:
         queries.append(
-            "Welsh Government SMART FIS innovation grant SME apply Wales 2025 2026"
+            f"Welsh Government SMART FIS innovation grant SME apply Wales {years}"
         )
         queries.append(
-            "Business Wales Smart innovation support grant apply 2025 2026"
+            f"Business Wales Smart innovation support grant apply {years}"
         )
     if is_energy and is_uk:
         # Ofgem is the GB energy regulator — its programmes are only
         # relevant to companies operating in the UK
         queries.append(
-            "Ofgem Strategic Innovation Fund SIF open call apply 2025 2026"
+            f"Ofgem Strategic Innovation Fund SIF open call apply {years}"
         )
     if is_deeptech or is_energy:
         queries.append(
-            "EIC Accelerator open call apply EU climate deep tech SME 2025 2026"
+            f"EIC Accelerator open call apply EU climate deep tech SME {years}"
         )
 
     return queries
@@ -237,92 +267,98 @@ _DISCOVERY_QUERY_SYSTEM = """You are a grants research analyst. Generate exactly
 IMPORTANT: Do NOT generate queries for the following programmes — they are already being searched separately and you should use your query budget for OTHER opportunities:
 {exclude_programmes}
 
-Cover ALL of these categories:
-  1. National innovation / R&D grants (sector + HQ country) — 4 queries
-  2. EU / regional programmes (Horizon Europe, EIC, EIT) — 3 queries
-  3. Sector-specific government programmes — 3 queries
-  4. Challenge prizes and open innovation competitions — 2 queries
-  5. Accelerators / incubators with grant or equity-free funding — 2 queries
-  6. Philanthropic innovation funds — 2 queries
-  7. Geography-specific or multilateral programmes — 2 queries
-  8. Any other highly relevant category — 2 queries
+## QUERY STRATEGY — derive queries from the company's THEMES, not from a fixed category checklist
 
-Each query must be specific — include sector, geography, year (2025 or 2024 2025), and terms like "open" or "apply" or "grant" where useful.
+The goal is a wide, thematically targeted net. Build most queries by combining
+the company's key themes, primary outcome, and technology with the geographies
+where it operates or sells:
+
+  1. THEME x GEOGRAPHY queries (roughly half the budget): for each key theme and
+     the primary outcome, search for grants in the company's HQ country and each
+     operational/customer geography. Vary the vocabulary — use the funder's
+     language (e.g. "decarbonisation", "net zero", "industrial efficiency"),
+     not just the company's own words.
+  2. National innovation / R&D agency programmes in the HQ country.
+  3. EU / regional programmes (Horizon Europe, EIC, EIT) — only if the company
+     operates in or sells to eligible geographies.
+  4. Sector-specific government programmes and regulated-sector innovation
+     funds relevant to the company's themes.
+  5. Philanthropic and multilateral innovation funds for the company's primary
+     outcome.
+  6. Challenge prizes / open innovation competitions — ONLY if the user is open
+     to prizes; otherwise spend these queries on categories 1-5.
+  7. Accelerators / incubators with grant or equity-free funding — ONLY if the
+     user is open to accelerators; otherwise spend these queries on categories 1-5.
+
+Each query must be specific — include sector or theme, geography, the year
+qualifier "{years}", and terms like "open" or "apply" or "grant" where useful.
+No two queries should be near-duplicates of each other.
 
 Return ONLY a JSON array of query strings — no markdown:
 ["query 1", "query 2", ...]"""
 
 
-_DISCOVERY_ANALYSIS_SYSTEM = """You are a grants research analyst. You have been given web search results. Analyse them and compile a longlist of actionable grant and funding opportunities for the startup described.
+_DISCOVERY_ANALYSIS_SYSTEM = """You are a grants research analyst. You have been given web search results. Analyse them and compile a WIDE longlist of grant and funding opportunities for the startup described.
 
-## STRICT ACTIONABILITY FILTER
+## YOUR ONE ORGANISING CRITERION: THEMATIC FIT
 
-**ONLY include an opportunity if the search result contains evidence of a SPECIFIC, NAMED programme.** Apply this filter to avoid padding with vague funders — but err on the side of including real named programmes even if their current status is uncertain.
+Your job at this stage is a single judgement per programme: is this startup a
+good THEMATIC fit for what the fund exists to support? You are NOT filtering
+for eligibility, application route, or current status — later pipeline stages
+research and verify all of that with far better evidence than you have here.
+A relevant programme excluded now is unrecoverable; an included marginal one
+gets filtered later. Cast the net wide.
 
-INCLUDE if the search result shows:
-- A named programme with an application form, portal, open call, or competition entry
-- Phrases like "apply now", "submit a proposal", "call for applications", "open call", "competition entry"
-- A programme that has previously run open application rounds, even if currently closed or between rounds — use status "Recurring"
-- Any well-established institutionalised fund with a track record of open calls (national innovation agencies, EU programmes, devolved government grants, regulated sector innovation funds, NHS/AHSN innovation programmes) — include with status "Recurring" even if no active round is currently visible in the search results
-- A programme that clearly accepts direct startup or SME applications, or one where startups can participate as technology partners
+### THEMATIC FIT (1-5) — score every candidate
+Compare the funder's PRIMARY objective, intended beneficiary, and intended
+applicant type against the company's CORE product and PRIMARY outcome:
+5 = Exact match — the company is a natural poster-child for what this fund exists to support
+4 = Strong alignment — core product clearly serves the funder's primary objective with only minor reframing
+3 = Partial alignment — real overlap, but requires reframing or leans on secondary co-benefits
+2 = Weak — only a secondary co-benefit or broad sector keyword connects them
+1 = Poor / forced relevance
 
-EXCLUDE if the search result only shows:
-- A general funding commitment or pledge ("Organisation X has £50m for clean tech")
-- A strategy document, policy announcement, or roadmap for future funding
-- A news article about funding awarded to other recipients (past awards only — no application route for new entrants)
-- A funder homepage or portfolio page with no specific named programme or application process
-- Vague language suggesting relationship-led or invitation-only access ("contact us", "by referral only")
-- A fund that only takes equity with no grant or prize component
+Do NOT conflate co-benefits with primary alignment. Shared vocabulary (both
+mention "energy" or "climate") is not alignment — check whether the funder's
+intended beneficiary and applicant type actually match this company.
 
-**When in doubt about whether a named programme is real: EXCLUDE. When in doubt about whether a real named programme is currently open: INCLUDE with status "Recurring". The two cases are different — missing a real programme is a worse error than including one that turns out to be closed.**
+## MINIMAL JUNK FILTER — the ONLY grounds for exclusion
 
-## GEOGRAPHIC ELIGIBILITY — CHECK BEFORE INCLUDING
+EXCLUDE an item only when the search result shows:
+- No specific, NAMED programme at all (a bare funder homepage, portfolio page, or general funding pledge like "Organisation X has £50m for clean tech")
+- A strategy document, policy announcement, or roadmap with no programme attached
+- A news article ONLY about funding already awarded to other recipients, with no named programme new entrants could apply to
+- A fund that only makes equity investments, with no grant or prize component
 
-Before including any grant, verify that its geographic eligibility actually matches where this company deploys its technology or creates its impact.
+Everything else that is a named programme with thematic fit >= 2 goes on the
+longlist. In particular, DO INCLUDE (with the appropriate status and flags):
+- Programmes currently between rounds or recently closed — status "Recurring"
+- Well-established institutional funds (national innovation agencies, EU programmes, devolved government grants, regulated-sector innovation funds, NHS/AHSN programmes) even if no active round is visible — status "Recurring"
+- Programmes that require a licensed or regulated entity as lead applicant (energy network innovation funds, NHS innovation funds, social housing decarbonisation schemes, local authority programmes) where the startup could participate as a named technology partner — set "likely_partner_route": true
+- Programmes whose geographic eligibility might not match the company — set "possible_geography_mismatch": true and explain in notes; do NOT exclude
 
-EXCLUDE if:
-- The grant explicitly requires funded projects to deploy in or benefit developing countries, ODA-eligible countries, sub-Saharan Africa, South Asia, the Indo-Pacific, or Latin America — and the company's technology is deployed in developed markets (UK, EU, North America, etc.)
-- The grant is restricted to a region, country, or devolved nation where the company has no presence or operations
+## ELIGIBILITY FLAGS — record concerns, do not act on them
 
-## APPLICANT TYPE AND BUSINESS MODEL — CHECK BEFORE INCLUDING
+"possible_geography_mismatch": true when the fund's required deployment or
+impact geography (e.g. ODA-eligible developing countries, a specific country or
+devolved nation) may not match where this company operates. Later stages verify.
 
-A grant designed for a fundamentally different applicant type or business model does not fit this company even if they share broad sector keywords.
-
-EXCLUDE if:
-- The grant funds centralised infrastructure operators and the company makes distributed consumer products
-- The grant funds service delivery organisations and the company is a technology developer
-- The grant is for academic research institutions only AND the company has no academic partnership route whatsoever
-- The named fund is clearly a government procurement or investment vehicle rather than a grant open to startups
-
-IMPORTANT — do NOT exclude grants where the company could participate as a named technology or innovation partner under an eligible lead applicant. This applies to the whole class of regulated-entity-led innovation programmes:
-- Energy network innovation funds (e.g. Ofgem SIF, NIC, NIA): require a licensed DNO or GDN as lead, but technology SMEs regularly participate as named project partners. INCLUDE.
-- NHS and health system innovation funds: require an NHS trust or ICS as lead, but health tech companies can be named technology partners. INCLUDE.
-- Social housing decarbonisation schemes: require a registered social landlord or local authority as lead, but technology suppliers participate as delivery partners. INCLUDE.
-- Local authority innovation programmes: require a council as lead, but technology companies can be named sub-contractors. INCLUDE.
-If the grant description explicitly states that technology companies or non-licensed entities may NOT participate in any capacity, then EXCLUDE. Otherwise, if partner participation is plausible, INCLUDE with a note — the scoring step will classify the correct eligibility route.
+"likely_partner_route": true when the fund appears to require a specific class
+of lead applicant (licensed network operator, NHS trust, registered social
+landlord, local authority, university, other public body) so the startup could
+likely only participate as a project partner.
 
 ## PROGRAMME FAMILIES vs. SPECIFIC COMPETITIONS
 
 Many large funders (e.g. Innovate UK, Horizon Europe) run multiple specific competitions under a broad programme umbrella. Do NOT name the programme umbrella as a single entry — name only the specific competition.
 
 - WRONG: "Innovate UK Smart Grants" (a programme family with many sub-competitions)
-- WRONG: "Energy Catalyst" (a programme with geographically restricted sub-rounds)
 - RIGHT: "Innovate UK Smart Grants — [specific current or recent round name]"
-- RIGHT: "Horizon Europe EIC Accelerator Open 2025"
+- RIGHT: "Horizon Europe EIC Accelerator Open {years}"
 
-If you can only identify the programme family but not a specific open or recent competition within it, you may include it ONLY if you note clearly in the `notes` field that this is a programme umbrella and the specific competition must be confirmed. In that case, set `status` to "Recurring" and flag that the next open window is uncertain.
+If you can only identify the programme family but not a specific competition within it, include it with a clear note in the `notes` field that this is a programme umbrella and the specific competition must be confirmed, and set `status` to "Recurring".
 
-## INITIAL THEMATIC FIT (1-5)
-Score based on how well the company's CORE value proposition matches what the fund supports:
-5 = Exact match — company is a natural poster-child
-4 = Strong alignment
-3 = Partial alignment
-2 = Weak — only a secondary co-benefit connects them
-1 = Poor / forced relevance — includes any programme with a confirmed TRL mismatch
-    (e.g. fund requires TRL 1–4 but company is at TRL 5+, or fund requires late-stage
-    commercial scale but company is pre-revenue) — score 1 regardless of sector fit.
-
-Do NOT conflate co-benefits with primary alignment.
+List each distinct programme ONCE — if several search results describe the same programme, merge them into one entry using the most specific name found.
 
 ## OUTPUT
 Return ONLY a valid JSON array — no markdown:
@@ -332,17 +368,19 @@ Return ONLY a valid JSON array — no markdown:
     "managing_body": "organisation",
     "geography": "geography where the company would need to deploy or operate to qualify",
     "funder_target_geography": "geography where the funded technology must have impact (e.g. 'UK domestic', 'ODA-eligible developing countries', 'EU member states')",
-    "status": "Open | Recurring | Closed but likely reopening | Exclude",
+    "status": "Open | Recurring | Closed but likely reopening",
     "application_link": "URL or unknown",
     "funding_type": "Grant | Prize | Blended | Concessional | Accelerator",
     "funding_estimate": "amount / range / unknown",
     "initial_thematic_fit": 4,
-    "initial_thematic_fit_reason": "one sentence",
+    "initial_thematic_fit_reason": "one sentence grounded in the funder's primary objective vs the company's core product",
+    "possible_geography_mismatch": false,
+    "likely_partner_route": false,
     "notes": "key eligibility caveats, programme family note if applicable, or specific competition name if different from entry name"
   }}
 ]
 
-Exclude items with status "Exclude". Aim for 15-30 candidates. Be more inclusive than exclusive — the scoring phase applies the full rubric. A missed relevant programme cannot be recovered; an included marginal one gets filtered."""
+Aim for 30-45 candidates. Sort by initial_thematic_fit descending. Be inclusive — the deep-research and scoring stages apply the full rubric with real evidence."""
 
 
 _QUERY_GENERATION_SYSTEM = """You are a grants research analyst. For each grant in the list provided, generate exactly 3 targeted web search queries:
@@ -541,6 +579,7 @@ IMPORTANT: generate the fields in exactly this order — executive_summary and s
       "link_type": "application_portal | programme_page | funder_homepage | unknown",
       "funding_type": "Grant | Prize | Blended | Concessional | Accelerator",
       "max_funding": "amount / range / unknown",
+      "max_funding_eur": 250000,
       "funding_confidence": "High | Medium | Low",
       "thematic_fit_score": 4,
       "thematic_fit_explanation": "1-2 sentences grounded in the research evidence",
@@ -550,7 +589,8 @@ IMPORTANT: generate the fields in exactly this order — executive_summary and s
       "ease_explanation": "1-2 sentences citing process requirements or applicant testimony",
       "priority_score": 3.55,
       "priority_tier": "Must Pursue | Big Bet | Quick Win | Prepare for Next Window | Strategic Positioning | Low Priority",
-      "deadline": "date / rolling / unknown",
+      "opens_date": "date applications open, e.g. '12 March 2026' or 'February 2026' — 'unknown' if not stated in evidence",
+      "deadline": "date applications close — prefer a full date like '12 March 2026' when the evidence gives one; otherwise 'rolling' / 'unknown'",
       "recurrence": "Annual | Biannual | Rolling | One-off | Unknown",
       "project_size_duration": "typical award size and project duration, e.g. '£100k–£500k, 6–18 months' — use 'unknown' if not found in evidence",
       "trl_requirement": "TRL range required by the funder, e.g. 'TRL 4–7', 'TRL 6+', 'Any' — use 'unknown' if not stated",
@@ -582,6 +622,8 @@ IMPORTANT: generate the fields in exactly this order — executive_summary and s
 }}
 
 Sort opportunities by priority_score descending. Sort watchlist by thematic relevance descending.
+max_funding_eur must be a plain integer: your best estimate of the maximum funding available
+to a single applicant, converted to euros (approximate conversion is fine). Use null if unknown.
 Keep all explanation fields to 1-2 sentences maximum to stay within output limits."""
 
 
@@ -611,7 +653,7 @@ _TOOLS = [
 # ---------------------------------------------------------------------------
 
 
-def _sync_search(query: str) -> str:
+def _sync_search(query: str, max_results: int = 4) -> str:
     import time
     from ddgs import DDGS
 
@@ -619,7 +661,7 @@ def _sync_search(query: str) -> str:
     for attempt in range(5):
         try:
             with DDGS() as ddgs:
-                results = list(ddgs.text(query, max_results=4))
+                results = list(ddgs.text(query, max_results=max_results))
             break
         except Exception as exc:
             if attempt < 4:
@@ -641,10 +683,10 @@ def _sync_search(query: str) -> str:
     return "\n\n---\n\n".join(parts)
 
 
-async def _web_search(query: str) -> str:
+async def _web_search(query: str, max_results: int = 4) -> str:
     await asyncio.sleep(0.5)
     try:
-        return await asyncio.to_thread(_sync_search, query)
+        return await asyncio.to_thread(_sync_search, query, max_results)
     except Exception as exc:
         import traceback
         traceback.print_exc()   # full traceback visible in uvicorn terminal
@@ -947,6 +989,7 @@ async def _generate_discovery_queries(
         _DISCOVERY_QUERY_SYSTEM
         .replace("{n}", str(count))
         .replace("{exclude_programmes}", excludes_note)
+        .replace("{years}", _year_qualifier())
     )
     async with anthropic.AsyncAnthropic() as client:
         response = await client.messages.create(
@@ -982,7 +1025,9 @@ async def _execute_discovery_queries(
     for i, query in enumerate(queries[:MAX_DISCOVERY_SEARCHES], 1):
         if on_search:
             on_search(query, i)
-        results[query] = await _web_search(query)
+        results[query] = await _web_search(
+            query, max_results=DISCOVERY_RESULTS_PER_SEARCH
+        )
     return results
 
 
@@ -993,20 +1038,23 @@ async def _analyse_discovery_results(
 ) -> list:
     """Step 2c — analyse all results in one API call, return longlist.
 
-    Uses streaming so a large longlist (6 000 max tokens) never hits a
+    Uses streaming so a large longlist (LONGLIST_MAX_TOKENS) never hits a
     fixed read-timeout.
     """
-    # Format results concisely to keep context manageable
+    # Keep DISCOVERY_SNIPPET_CHARS per search — enough for ~5 formatted
+    # results. Total input at 30 searches is ~75K chars (~19K tokens).
     results_text = ""
     for i, (query, result) in enumerate(search_results.items(), 1):
-        results_text += f"\n\n=== Search {i}: {query} ===\n{result[:500]}"
+        results_text += (
+            f"\n\n=== Search {i}: {query} ===\n{result[:DISCOVERY_SNIPPET_CHARS]}"
+        )
 
     async with anthropic.AsyncAnthropic() as client:
         async with client.messages.stream(
             model="claude-sonnet-4-6",
-            max_tokens=6000,
+            max_tokens=LONGLIST_MAX_TOKENS,
             temperature=0,
-            system=_DISCOVERY_ANALYSIS_SYSTEM,
+            system=_DISCOVERY_ANALYSIS_SYSTEM.replace("{years}", _year_qualifier()),
             messages=[{
                 "role": "user",
                 "content": (
@@ -1023,6 +1071,29 @@ async def _analyse_discovery_results(
         ) as stream:
             text = await stream.get_final_text()
     return _extract_json_array_tolerant(text)
+
+
+def _dedupe_longlist(longlist: list) -> list:
+    """
+    Collapse near-duplicate longlist entries (same programme surfaced by
+    several queries) using the fuzzy name matcher. Keeps the entry with the
+    higher initial_thematic_fit — ties keep the earlier (usually more
+    specific) entry — so a duplicate never occupies a second shortlist slot.
+    """
+    kept: list = []
+    for item in longlist:
+        name = item.get("name") or ""
+        if not name:
+            continue
+        dup_idx = next(
+            (i for i, k in enumerate(kept) if _names_similar(name, k.get("name") or "")),
+            None,
+        )
+        if dup_idx is None:
+            kept.append(item)
+        elif (item.get("initial_thematic_fit") or 0) > (kept[dup_idx].get("initial_thematic_fit") or 0):
+            kept[dup_idx] = item
+    return kept
 
 
 async def _discover_opportunities(
@@ -1058,9 +1129,10 @@ async def _discover_opportunities(
 
     search_results = await _execute_discovery_queries(queries, on_search=on_search)
     # _analyse_discovery_results is a long streaming call — retry on network error
-    return await _with_retry(
+    longlist = await _with_retry(
         lambda: _analyse_discovery_results(company_profile, search_results, preferences),
     )
+    return _dedupe_longlist(longlist)
 
 
 # ---------------------------------------------------------------------------
@@ -1505,9 +1577,16 @@ async def _validate_application_specificity(
     For every main recommendation, uses the query_apply search evidence to
     confirm that a specific, named application process actually exists.
 
-    Grants that fail confirmation are moved to the strategic watchlist with
-    a reason explaining why.  Grants that pass may have their application_link
-    updated to a more specific URL found in the evidence.
+    Outcome per grant (watchlist admission policy — see constants):
+      "confirmed"   — stays a main recommendation; application_link may be
+                      upgraded to a more specific URL found in the evidence.
+      "likely"      — an established recurring programme currently between
+                      rounds: moved to the strategic watchlist as a
+                      "between_rounds" entry when thematic fit is strong
+                      (>= STRONG_FIT_MIN), otherwise dropped.
+      "unconfirmed" — no evidence a public application process exists:
+                      DROPPED entirely. An unverifiable route is not
+                      actionable, so it earns neither list.
 
     This runs as a single Claude batch call (one API request for all grants),
     not per-grant calls, to keep latency low.
@@ -1574,60 +1653,123 @@ async def _validate_application_specificity(
         else:
             status = str(raw_status).lower()
 
-        if status in ("confirmed", "likely"):
-            updated = dict(opp)   # shallow copy — don't mutate the original
+        # Resolve the best URL once — used by both confirmed and likely paths
+        best_url = val.get("best_url", "")
+        has_better_url = (
+            best_url
+            and best_url not in ("unknown", "n/a", "")
+            and best_url.startswith("http")
+        )
 
-            # Update link to a better URL if one was found
-            best_url = val.get("best_url", "")
-            if best_url and best_url not in ("unknown", "n/a", "") and best_url.startswith("http"):
+        if status == "confirmed":
+            updated = dict(opp)   # shallow copy — don't mutate the original
+            if has_better_url:
                 updated["application_link"] = best_url
                 # If we upgraded from a funder homepage, mark as at least programme_page
                 if updated.get("link_type") == "funder_homepage":
                     updated["link_type"] = "programme_page"
-
-            # For "likely" grants (established recurring programmes between rounds),
-            # add a visible note so users know to monitor for the next opening —
-            # rather than silently hiding them in the watchlist.
-            if status == "likely":
-                existing = updated.get("notes") or ""
-                round_note = (
-                    "Application window not currently open — this is a well-established "
-                    "recurring programme. Monitor for next round opening."
-                )
-                if round_note not in existing:
-                    updated["notes"] = (
-                        (existing + "  " + round_note).strip() if existing else round_note
-                    )
-
             confirmed_opps.append(updated)
 
-        else:
-            # "unconfirmed" — demote to strategic watchlist
+        elif status == "likely":
+            # Established recurring programme currently between rounds.
+            # Strong fit → strategic watchlist as a "between_rounds" entry;
+            # weaker fit → dropped (watchlist slots are reserved for
+            # strong-fit items only).
+            fit = opp.get("thematic_fit_score")
+            if not isinstance(fit, (int, float)) or fit < STRONG_FIT_MIN:
+                continue
             demoted.append({
                 "name":              opp.get("name", ""),
                 "managing_body":     opp.get("managing_body", ""),
                 "geography":         opp.get("geography", ""),
                 "opportunity_type":  opp.get("opportunity_type", ""),
                 "application_route": opp.get("application_route", ""),
-                "application_timing": opp.get("application_timing", "timing_unknown"),
-                "status":            opp.get("status", ""),
-                "application_link":  opp.get("application_link", "unknown"),
+                "application_timing": opp.get("application_timing", "recurring_uncertain"),
+                "status":            opp.get("status", "Recurring"),
+                "application_link":  best_url if has_better_url else opp.get("application_link", "unknown"),
                 "link_type":         opp.get("link_type", "unknown"),
                 "funding_type":      opp.get("funding_type", ""),
                 "max_funding":       opp.get("max_funding", "unknown"),
                 "thematic_relevance": opp.get("thematic_fit_explanation", ""),
+                "watchlist_class":   "between_rounds",
+                "thematic_fit":      fit,
                 "why_watchlist": (
-                    "No confirmed specific application process found in research evidence. "
+                    "Well-established recurring programme with no application "
+                    "window currently open. "
                     + (val.get("reason", ""))
-                ),
+                ).strip(),
                 "what_would_unlock": (
-                    "Locate the specific application portal or open call page for this programme."
+                    "The next application round opening — monitor the programme "
+                    "page and prepare the application in advance."
                 ),
             })
 
-    # Append demoted items to the existing watchlist
+        # "unconfirmed" — no evidence any public application process exists.
+        # Dropped entirely: not actionable, so it earns neither list.
+
+    # Append between-rounds demotions to the existing watchlist
     combined_watchlist = watchlist + demoted
     return confirmed_opps, combined_watchlist
+
+
+# ---------------------------------------------------------------------------
+# Acronym definitions — for the "Definitions acronyms" tab in the XLSX export
+# ---------------------------------------------------------------------------
+
+_ACRONYMS_MAX_TOKENS = 2500
+_ACRONYMS_CORPUS_CHARS = 16000
+
+
+async def _generate_acronym_definitions(opportunities: list) -> list:
+    """
+    Extract the acronyms/abbreviations used across the final opportunity
+    rows and define each one. Returns [{"acronym", "definition"}, ...]
+    sorted alphabetically. Non-fatal: returns [] on any failure — the
+    exporter falls back to a static general dictionary.
+    """
+    if not opportunities:
+        return []
+
+    corpus = json.dumps(
+        [{k: v for k, v in opp.items() if isinstance(v, str)} for opp in opportunities],
+        ensure_ascii=False,
+    )[:_ACRONYMS_CORPUS_CHARS]
+
+    prompt = (
+        "Below is the JSON content of a grant-opportunities report. List every "
+        "acronym or abbreviation that appears in the text — programme names, "
+        "funding instruments, agencies, and technical terms. For each, give a "
+        "concise one-line definition appropriate to the grant-funding context. "
+        "Only include acronyms that actually appear in the text; never invent "
+        "entries. Return ONLY a JSON array in this form:\n"
+        '[{"acronym": "TRL", "definition": "Technology Readiness Level '
+        '(scale from 1–9 measuring maturity of a technology)"}]\n\n'
+        f"REPORT CONTENT:\n{corpus}"
+    )
+
+    try:
+        async with anthropic.AsyncAnthropic() as client:
+            response = await client.messages.create(
+                model="claude-sonnet-4-6",
+                max_tokens=_ACRONYMS_MAX_TOKENS,
+                temperature=0,
+                messages=[{"role": "user", "content": prompt}],
+            )
+        items = _extract_json_array(response.content[0].text)
+    except Exception:
+        return []
+
+    out, seen = [], set()
+    for item in items:
+        if not isinstance(item, dict):
+            continue
+        acro = str(item.get("acronym") or "").strip()
+        defn = str(item.get("definition") or "").strip()
+        if acro and defn and acro.upper() not in seen:
+            seen.add(acro.upper())
+            out.append({"acronym": acro, "definition": defn})
+    out.sort(key=lambda d: d["acronym"].upper())
+    return out
 
 
 # ---------------------------------------------------------------------------
@@ -1699,14 +1841,19 @@ def _enforce_routing_rules(
         company does not operate in)
       - opportunity_type is in the exclude set (wrong category entirely)
 
-    MOVE TO WATCHLIST (uncertain or judgement-based cases):
+    MOVE TO WATCHLIST (tagged "partner_route" — admission class (a)):
       - applicant_type_match is "partner" (can participate but not lead)
-      - applicant_type_match is "ineligible" — note: this classification is
-        often wrong; route to watchlist so the user can review rather than
-        silently dropping. The scoring model sets "ineligible" too broadly.
+      - applicant_type_match is "ineligible" AND the item carries
+        regulated-entity-lead signals — the scoring model routinely writes
+        "ineligible" for programmes that actually have a partner route
+        (energy network funds, NHS funds, social housing schemes, local
+        authority programmes), so these are reclassified rather than lost.
 
-    Items excluded entirely are dropped; watchlisted items get a clear
-    why_watchlist explanation.
+    DROP:
+      - applicant_type_match is "ineligible" with no partner-route signals.
+        Under the watchlist admission policy an item earns a slot only as a
+        partner-route or between-rounds entry; a plainly ineligible
+        programme is neither.
     """
     kept_opps: list = []
     extra_watch: list = []
@@ -1733,9 +1880,24 @@ def _enforce_routing_rules(
             "funding_type":      opp.get("funding_type", ""),
             "max_funding":       opp.get("max_funding", "unknown"),
             "thematic_relevance": opp.get("thematic_fit_explanation", ""),
+            "watchlist_class":   "partner_route",
+            "thematic_fit":      opp.get("thematic_fit_score"),
             "why_watchlist":     why,
             "what_would_unlock": what,
         }
+
+    _PARTNER_WHY = (
+        "Startup cannot be lead applicant or direct funding recipient "
+        "for this programme — the grant requires a licensed operator, "
+        "public body, or regulated entity as the applicant of record. "
+        "Participation as a named project partner under an eligible lead "
+        "organisation may be possible and is worth pursuing."
+    )
+    _PARTNER_WHAT = (
+        "Identify a suitable lead partner (e.g. a licensed network operator, "
+        "housing association, or NHS trust) willing to be the applicant of "
+        "record, with the startup as named technology partner."
+    )
 
     for opp in opportunities:
         opp_type = opp.get("opportunity_type", "")
@@ -1753,40 +1915,22 @@ def _enforce_routing_rules(
         if _violates_known_hard_gates(opp, profile):
             continue   # Confirmed eligibility gate the scoring model overrode
 
-        # ── Route to watchlist (judgement-based cases) ───────────────────
+        # ── Route to watchlist as partner_route ──────────────────────────
         if apt == "partner":
-            extra_watch.append(_to_watchlist(
-                opp,
-                why=(
-                    "Startup cannot be lead applicant or direct funding recipient "
-                    "for this programme — the grant requires a licensed operator, "
-                    "public body, or regulated entity as the applicant of record. "
-                    "Participation as a named project partner under an eligible lead "
-                    "organisation may be possible and is worth pursuing."
-                ),
-                what=(
-                    "Identify a suitable lead partner (e.g. a licensed network operator, "
-                    "housing association, or NHS trust) willing to be the applicant of "
-                    "record, with the startup as named technology partner."
-                ),
-            ))
+            extra_watch.append(_to_watchlist(opp, _PARTNER_WHY, _PARTNER_WHAT))
             continue
 
         if apt == "ineligible":
-            # Route to watchlist rather than dropping — the model's ineligible
-            # classification is often wrong. Let the user verify.
-            extra_watch.append(_to_watchlist(
-                opp,
-                why=(
-                    "Assessed as potentially ineligible for this startup based on "
-                    "scoring research. Verify eligibility directly — this classification "
-                    "may be incorrect and a participation route may exist."
-                ),
-                what=(
-                    "Review the programme's eligibility criteria directly to confirm "
-                    "whether the startup can apply as lead, partner, or in another capacity."
-                ),
-            ))
+            # The model over-uses "ineligible" for regulated-entity-led
+            # programmes that actually have a partner route. Reclassify when
+            # the signals say so; otherwise drop — a plainly ineligible
+            # programme earns no watchlist slot.
+            searchable = " ".join([
+                opp.get("name", ""), opp.get("managing_body", ""),
+                opp.get("notes", "") or "", opp.get("application_route", ""),
+            ]).lower()
+            if any(sig in searchable for sig in _REGULATED_ENTITY_LEAD_SIGNALS):
+                extra_watch.append(_to_watchlist(opp, _PARTNER_WHY, _PARTNER_WHAT))
             continue
 
         kept_opps.append(opp)
@@ -1801,19 +1945,18 @@ def _enforce_routing_rules(
 
 
 # ---------------------------------------------------------------------------
-# Partner-route rescue — catches items silently dropped by the scoring model
+# Watchlist candidate selection + triage — replaces the old passive rescue
+# sweep with an evidence-based admission test (see watchlist policy constants)
 # ---------------------------------------------------------------------------
 
 # Text patterns that indicate a programme likely requires a licensed or
 # regulated entity as lead applicant — meaning a startup could participate
-# only as a named project partner, not as lead.  Used as a rescue signal for
-# shortlisted items the scoring model silently dropped.
+# only as a named project partner, not as lead.
 #
 # Intentionally general: covers energy networks, health, social housing, and
-# local authority programmes rather than naming specific grants.  When any of
-# these substrings appears in a shortlisted item's name, managing_body, or
-# notes field, and the item is absent from both output arrays, it is rescued
-# into the strategic watchlist so the user can investigate the partner route.
+# local authority programmes rather than naming specific grants.  Used to
+# reclassify "ineligible" scoring calls as partner-route, and as the fallback
+# admission signal when the triage call is unavailable.
 _REGULATED_ENTITY_LEAD_SIGNALS = [
     # Energy network regulators and programmes
     "ofgem",
@@ -2209,9 +2352,22 @@ async def run_phase23(
 
             longlist = await _discover_opportunities(profile, preferences, on_search=_on_s2)
 
-            sorted_list = sorted(
-                longlist, key=lambda x: x.get("initial_thematic_fit", 0), reverse=True
-            )
+            # Rank by thematic fit; break ties by actionability so that with a
+            # wide longlist the deep-research slots go to items the startup
+            # could act on directly: an open call beats a recurring programme,
+            # and a direct-application candidate beats a likely partner-route
+            # one (partner-route items reach the watchlist without deep
+            # research, via triage).
+            def _shortlist_key(item: dict) -> tuple:
+                fit = item.get("initial_thematic_fit") or 0
+                status = (item.get("status") or "").lower()
+                status_rank = 2 if status.startswith("open") else (
+                    1 if status.startswith("recurring") else 0
+                )
+                direct = 0 if item.get("likely_partner_route") else 1
+                return (fit, direct, status_rank)
+
+            sorted_list = sorted(longlist, key=_shortlist_key, reverse=True)
             shortlist = sorted_list[:SHORTLIST_SIZE]
 
             await queue.put({
@@ -2363,6 +2519,17 @@ async def run_phase23(
             # link is a contradiction — demote it and explain why.
             stage_name = "link quality gate"
             result["opportunities"] = _apply_link_quality_gate(
+                result.get("opportunities", [])
+            )
+
+            # ── Acronym definitions ───────────────────────────────────────
+            # Compile the acronyms/abbreviations used across the final rows
+            # so the XLSX export can render its "Definitions acronyms" tab.
+            # Non-fatal: the exporter has a static fallback dictionary.
+            stage_name = "acronym definitions"
+            await queue.put({"type": "progress", "stage": 3,
+                             "message": "Compiling acronym and abbreviation definitions…"})
+            result["acronym_definitions"] = await _generate_acronym_definitions(
                 result.get("opportunities", [])
             )
 

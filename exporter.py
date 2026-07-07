@@ -1,90 +1,126 @@
 """
-Generate a multi-tab XLSX report from the grant analysis result.
+Generate the grant-analysis XLSX report.
+
+Two tabs, matching the exemplar workbook layout:
+  1. "Grant Opportunities"   — one row per grant. Columns A–V mirror the
+     exemplar exactly; W (Applicant Route) and X (Status) are appended.
+  2. "Definitions acronyms"  — acronyms/abbreviations used in tab 1.
 """
 
 import io
+import re
+from datetime import datetime
+
 from openpyxl import Workbook
-from openpyxl.styles import (
-    Alignment, Border, Font, PatternFill, Side
-)
+from openpyxl.formatting.rule import ColorScaleRule, FormulaRule
+from openpyxl.styles import Alignment, Font, PatternFill
 from openpyxl.utils import get_column_letter
 
 # ---------------------------------------------------------------------------
-# Colour palette
+# Shared styles (exemplar palette)
 # ---------------------------------------------------------------------------
 
-_TIER_COLOURS = {
-    "Must Pursue":              ("1A7A4A", "FFFFFF"),   # dark green / white
-    "Big Bet":                  ("6B21A8", "FFFFFF"),   # purple / white
-    "Quick Win":                ("1D4ED8", "FFFFFF"),   # blue / white
-    "Prepare for Next Window":  ("0F766E", "FFFFFF"),   # teal / white
-    "Strategic Positioning":    ("B45309", "FFFFFF"),   # amber / white
-    "Low Priority":             ("6B7280", "FFFFFF"),   # grey / white
-}
+_HEADER_FILL  = PatternFill("solid", fgColor="073763")   # navy
+_HEADER_FONT  = Font(bold=True, color="FFFFFF", size=11)
+_HEADER_ALIGN = Alignment(wrap_text=True, vertical="top")
+_DATA_ALIGN   = Alignment(wrap_text=True, vertical="top")
+_LINK_FONT    = Font(color="1155CC", underline="single")
 
-_HEADER_FILL     = PatternFill("solid", fgColor="073763")   # matches Mitti navy
-_HEADER_FONT     = Font(bold=True, color="FFFFFF", size=10)
-_ALT_FILL        = PatternFill("solid", fgColor="F0F4F8")
-_SECTION_FILL    = PatternFill("solid", fgColor="1E3A5F")
-
-_THIN = Side(style="thin", color="D1D5DB")
-_BORDER = Border(left=_THIN, right=_THIN, top=_THIN, bottom=_THIN)
+_SCALE_GREEN  = "57BB8A"   # colour-scale top for Priority Score / Funding
+_SCALE_YELLOW = "FFD966"   # colour-scale top for the 1-5 sub-scores
+_EXPIRED_RED  = "EA9999"   # past-deadline highlight
 
 
-def _header_row(ws, cols: list[str]) -> None:
-    ws.append(cols)
-    for cell in ws[ws.max_row]:
+def _style_header_row(ws) -> None:
+    for cell in ws[1]:
         cell.fill = _HEADER_FILL
         cell.font = _HEADER_FONT
-        cell.alignment = Alignment(wrap_text=True, vertical="center")
-        cell.border = _BORDER
-    ws.row_dimensions[ws.max_row].height = 36
+        cell.alignment = _HEADER_ALIGN
 
 
-def _auto_widths(ws, min_w: int = 12, max_w: int = 50) -> None:
-    for col_idx, col_cells in enumerate(ws.columns, 1):
-        width = min_w
-        for cell in col_cells:
-            try:
-                cell_len = len(str(cell.value or ""))
-                width = min(max(width, cell_len + 2), max_w)
-            except Exception:
-                pass
-        ws.column_dimensions[get_column_letter(col_idx)].width = width
+# ---------------------------------------------------------------------------
+# Value coercion helpers
+# ---------------------------------------------------------------------------
+
+_FUNDING_RE = re.compile(
+    r"(?:€|\bEUR\s?)\s*([\d][\d.,]*)\s*(million|billion|bn|mn|m\b|k\b)?",
+    re.IGNORECASE,
+)
+
+_MULTIPLIERS = {
+    "k": 1_000, "m": 1_000_000, "mn": 1_000_000, "million": 1_000_000,
+    "bn": 1_000_000_000, "billion": 1_000_000_000,
+}
 
 
-def _tier_fill(tier: str) -> PatternFill | None:
-    colours = _TIER_COLOURS.get(tier)
-    if colours:
-        return PatternFill("solid", fgColor=colours[0])
+def _max_funding_eur(opp: dict) -> int | None:
+    """Numeric euro value for column J, or None when no estimate exists."""
+    val = opp.get("max_funding_eur")
+    if isinstance(val, (int, float)) and val > 0:
+        return round(val)
+    if isinstance(val, str):
+        try:
+            return round(float(val.replace(",", "").replace("€", "")))
+        except ValueError:
+            pass
+    # Fallback for results produced before max_funding_eur existed: parse
+    # euro-denominated amounts out of the free-text field. Other currencies
+    # are left blank rather than converted with a made-up exchange rate,
+    # and equity components ("€2.5m grant + €15m equity") don't count as
+    # grant funding.
+    text = str(opp.get("max_funding") or "")
+    amounts = []
+    for m in _FUNDING_RE.finditer(text):
+        if re.match(r"\s*(equity|investment)", text[m.end():], re.IGNORECASE):
+            continue
+        try:
+            value = float(m.group(1).replace(",", "").rstrip("."))
+        except ValueError:
+            continue
+        amounts.append(value * _MULTIPLIERS.get((m.group(2) or "").lower().strip(), 1))
+    return round(max(amounts)) if amounts else None
+
+
+_ORDINAL_RE = re.compile(r"(\d{1,2})(st|nd|rd|th)\b", re.IGNORECASE)
+
+_DATE_FORMATS = (
+    "%Y-%m-%d", "%d %B %Y", "%d %b %Y", "%B %d, %Y", "%b %d, %Y", "%d/%m/%Y",
+)
+
+
+def _as_excel_date(text) -> datetime | None:
+    """
+    Return a real datetime when the whole cell value is a specific
+    day-level date, so the past-deadline conditional rule can fire.
+    Descriptive values ("rolling", "July 2026 (window Feb–Jul)") stay text.
+    """
+    s = _ORDINAL_RE.sub(r"\1", re.sub(r"\s+", " ", str(text or "").strip()))
+    for fmt in _DATE_FORMATS:
+        try:
+            return datetime.strptime(s, fmt)
+        except ValueError:
+            continue
     return None
 
 
-def _tier_font(tier: str) -> Font:
-    colours = _TIER_COLOURS.get(tier)
-    if colours:
-        return Font(bold=True, color=colours[1], size=10)
-    return Font(size=10)
-
-
 # ---------------------------------------------------------------------------
-# Tab 1 — Grant Opportunities  (matches Mitti layout)
+# Tab 1 — Grant Opportunities
 #
-# Column map (A–V mirrors Mitti exactly; W–Z are our bonus fields):
+# Column map (A–V mirrors the exemplar; W–X are our additions):
 #   A  Grant Name
 #   B  Priority Score          ← live Excel formula: =(2*D{r})+F{r}+H{r}
 #   C  Thematic Fit (explanation)
-#   D  Thematic Fit Score (1-5)
+#   D  Thematic Fit score (1-5)
 #   E  Strategic Value (explanation)
-#   F  Strategic Value Score (1-5)
+#   F  Strategic Value Score (1–5)
 #   G  Ease of Execution (explanation)
-#   H  Ease of Execution Score (1-5)
+#   H  Ease of Execution Score (1–5)
 #   I  Funding Level (explanation)
-#   J  Maximum Funding Level
-#   K  Application Link
+#   J  Maximum Funding Level (Estimated by AI, Euros)   ← numeric, "€"#,##0
+#   K  Application Link         ← real hyperlink
 #   L  Managing Body
-#   M  Grant opens for applications
-#   N  Grant closes / recurrence
+#   M  Grant opens for applications (date)
+#   N  Grant closes for applications (date)             ← real date if parseable
 #   O  Project Size / Duration
 #   P  Past Similar Projects
 #   Q  Alignment Conditions
@@ -93,60 +129,70 @@ def _tier_font(tier: str) -> Font:
 #   T  Geography / Eligibility
 #   U  Application Timing
 #   V  Compliance / Risks
-#   W  Priority Tier           ← bonus
-#   X  Applicant Route         ← bonus
-#   Y  Status                  ← bonus
+#   W  Applicant Route
+#   X  Status
 # ---------------------------------------------------------------------------
+
+_HEADERS = [
+    "Grant Name",
+    "Priority Score",
+    "Thematic Fit (explanation)",
+    "Thematic Fit score (1-5)",
+    "Strategic Value (explanation)",
+    "Strategic Value Score (1–5)",
+    "Ease of Execution (explanation)",
+    "Ease of Execution Score (1–5)",
+    "Funding Level (explanation)",
+    "Maximum Funding Level (Estimated by AI, Euros)",
+    "Application Link",
+    "Managing Body",
+    "Grant opens for applications (date)",
+    "Grant closes for applications (date)",
+    "Project Size / Duration",
+    "Past Similar Projects",
+    "Alignment Conditions",
+    "TRL Requirement",
+    "Consortium Rules",
+    "Geography / Eligibility",
+    "Application Timing",
+    "Compliance / Risks",
+    "Applicant Route",
+    "Status",
+]
+
+_COLUMN_WIDTHS = {
+    "A": 20.63, "B": 7.88,  "C": 35.25, "D": 9.5,
+    "E": 18.13, "F": 13.0,  "G": 17.0,  "H": 10.63,
+    "I": 17.88, "J": 14.25, "K": 19.38, "L": 13.5,
+    "M": 13.0,  "N": 13.0,  "O": 14.25, "P": 22.5,
+    "Q": 35.0,  "R": 18.13, "S": 22.5,  "T": 15.88,
+    "U": 18.13, "V": 25.0,  "W": 18.0,  "X": 14.0,
+}
+
+_ROUTE_LABELS = {
+    "direct":     "Direct applicant",
+    "partner":    "Partner route only",
+    "ineligible": "Potential ineligible — verify",
+}
+
+
+def _txt(value) -> str:
+    """Text cell value — never blank; empty/missing becomes 'unknown'."""
+    s = str(value).strip() if value is not None else ""
+    return s or "unknown"
+
 
 def _tab_opportunities(wb: Workbook, opportunities: list[dict]) -> None:
     ws = wb.active
     ws.title = "Grant Opportunities"
 
-    headers = [
-        "Grant Name",
-        "Priority Score",
-        "Thematic Fit (explanation)",
-        "Thematic Fit Score (1-5)",
-        "Strategic Value (explanation)",
-        "Strategic Value Score (1-5)",
-        "Ease of Execution (explanation)",
-        "Ease of Execution Score (1-5)",
-        "Funding Level (explanation)",
-        "Maximum Funding Level",
-        "Application Link",
-        "Managing Body",
-        "Grant opens for applications",
-        "Grant closes / recurrence",
-        "Project Size / Duration",
-        "Past Similar Projects",
-        "Alignment Conditions",
-        "TRL Requirement",
-        "Consortium Rules",
-        "Geography / Eligibility",
-        "Application Timing",
-        "Compliance / Risks",
-        "Priority Tier",
-        "Applicant Route",
-        "Status",
-    ]
-    ws.append(headers)
-    hdr_row = ws.max_row
-    for cell in ws[hdr_row]:
-        cell.fill = _HEADER_FILL
-        cell.font = _HEADER_FONT
-        cell.alignment = Alignment(wrap_text=True, vertical="center")
-        cell.border = _BORDER
-    ws.row_dimensions[hdr_row].height = 36
-    ws.freeze_panes = "A2"
+    ws.append(_HEADERS)
+    _style_header_row(ws)
+    ws.freeze_panes = "B2"
 
     for opp in opportunities:
-        tier = opp.get("priority_tier", "")
-        apt  = (opp.get("applicant_type_match") or "direct").lower()
-        apt_label = {
-            "direct":     "Direct applicant",
-            "partner":    "Partner route only",
-            "ineligible": "Potential ineligible — verify",
-        }.get(apt, apt.replace("_", " ").title())
+        apt = (opp.get("applicant_type_match") or "direct").lower()
+        apt_label = _ROUTE_LABELS.get(apt, apt.replace("_", " ").title())
 
         # Funding level explanation: combine type + amount + confidence
         funding_parts = [p for p in [
@@ -156,334 +202,179 @@ def _tab_opportunities(wb: Workbook, opportunities: list[dict]) -> None:
         ] if p]
         funding_explanation = " | ".join(funding_parts)
 
-        data_row = [
-            opp.get("name", ""),
-            None,                                          # B — formula written below
-            opp.get("thematic_fit_explanation", ""),
-            opp.get("thematic_fit_score", ""),
-            opp.get("strategic_value_explanation", ""),
-            opp.get("strategic_value_score", ""),
-            opp.get("ease_explanation", ""),
-            opp.get("ease_score", ""),
-            funding_explanation,
-            opp.get("max_funding", ""),
-            opp.get("application_link", ""),
-            opp.get("managing_body", ""),
-            opp.get("deadline", ""),
+        # Application timing: recurrence pattern + current window
+        timing_parts = [p for p in [
             opp.get("recurrence", ""),
-            opp.get("project_size_duration", ""),
-            opp.get("past_similar_projects", ""),
-            opp.get("reason_for_inclusion", ""),
-            opp.get("trl_requirement", ""),
-            opp.get("consortium_rules", ""),
-            opp.get("geography", ""),
             (opp.get("application_timing", "") or "").replace("_", " "),
-            opp.get("reason_for_caution", ""),
-            tier,
-            apt_label,
-            opp.get("status", ""),
+        ] if p and p.lower() != "unknown"]
+        timing = "; ".join(timing_parts) or "unknown"
+
+        link = opp.get("application_link", "")
+        closes = opp.get("deadline", "")
+
+        # Only write the live Priority Score formula when all three
+        # sub-scores are real numbers — a text score ("unknown") would
+        # make the formula render as #VALUE!.
+        scores = [
+            opp.get("thematic_fit_score"),
+            opp.get("strategic_value_score"),
+            opp.get("ease_score"),
         ]
-        ws.append(data_row)
+        have_scores = all(isinstance(s, (int, float)) for s in scores)
+
+        ws.append([
+            _txt(opp.get("name")),
+            None,                                          # B — written below
+            _txt(opp.get("thematic_fit_explanation")),
+            scores[0] if isinstance(scores[0], (int, float)) else "unknown",
+            _txt(opp.get("strategic_value_explanation")),
+            scores[1] if isinstance(scores[1], (int, float)) else "unknown",
+            _txt(opp.get("ease_explanation")),
+            scores[2] if isinstance(scores[2], (int, float)) else "unknown",
+            _txt(funding_explanation),
+            _max_funding_eur(opp) or "unknown",
+            _txt(link),
+            _txt(opp.get("managing_body")),
+            _txt(opp.get("opens_date")),
+            _as_excel_date(closes) or _txt(closes),
+            _txt(opp.get("project_size_duration")),
+            _txt(opp.get("past_similar_projects")),
+            _txt(opp.get("reason_for_inclusion")),
+            _txt(opp.get("trl_requirement")),
+            _txt(opp.get("consortium_rules")),
+            _txt(opp.get("geography")),
+            timing,
+            _txt(opp.get("reason_for_caution")),
+            apt_label,
+            _txt(opp.get("status")),
+        ])
 
         row_num = ws.max_row
+        if have_scores:
+            ws[f"B{row_num}"] = f"=(2*D{row_num})+F{row_num}+H{row_num}"
+        else:
+            ws[f"B{row_num}"] = "unknown"
 
-        # Write Priority Score as a live formula
-        ws[f"B{row_num}"] = f"=(2*D{row_num})+F{row_num}+H{row_num}"
+        for cell in ws[row_num]:
+            cell.alignment = _DATA_ALIGN
 
-        # Style data cells
-        for col_idx, cell in enumerate(ws[row_num], 1):
-            cell.alignment = Alignment(wrap_text=True, vertical="top")
-            cell.border = _BORDER
+        ws[f"J{row_num}"].number_format = '"€"#,##0'
+        if isinstance(ws[f"N{row_num}"].value, datetime):
+            ws[f"N{row_num}"].number_format = "dd mmmm yyyy"
+        if isinstance(link, str) and link.startswith("http"):
+            k_cell = ws[f"K{row_num}"]
+            k_cell.hyperlink = link
+            k_cell.font = _LINK_FONT
 
-            # Colour the Priority Tier cell (col W = 23)
-            if col_idx == 23:
-                tf = _tier_fill(tier)
-                if tf:
-                    cell.fill = tf
-                    cell.font = _tier_font(tier)
-                    continue
-            # No alternating fill — plain white like Mitti
-
-    # Column widths matching Mitti (A–V), sensible defaults for W–Y
-    widths = {
-        "A": 20.63, "B": 7.88,  "C": 35.25, "D": 9.5,
-        "E": 18.13, "F": 13.0,  "G": 17.0,  "H": 10.63,
-        "I": 17.88, "J": 14.25, "K": 19.38, "L": 13.5,
-        "M": 13.0,  "N": 13.0,  "O": 14.25, "P": 22.5,
-        "Q": 35.0,  "R": 18.13, "S": 22.5,  "T": 15.88,
-        "U": 18.13, "V": 25.0,  "W": 22.0,  "X": 18.0,
-        "Y": 14.0,
-    }
-    for col_letter, width in widths.items():
+    for col_letter, width in _COLUMN_WIDTHS.items():
         ws.column_dimensions[col_letter].width = width
 
+    last = ws.max_row
+    if last < 2:
+        return
+
+    # Conditional formatting, matching the exemplar:
+    #   B (Priority Score) and J (Max Funding)  white → green scales
+    #   D / F / H (1-5 sub-scores)              white → yellow scales
+    #   N (closing date)                        red when a real date is past
+    def _scale(top_colour: str) -> ColorScaleRule:
+        return ColorScaleRule(
+            start_type="min", start_color="FFFFFF",
+            end_type="max", end_color=top_colour,
+        )
+
+    ws.conditional_formatting.add(f"B2:B{last}", _scale(_SCALE_GREEN))
+    for col in ("D", "F", "H"):
+        ws.conditional_formatting.add(f"{col}2:{col}{last}", _scale(_SCALE_YELLOW))
+    ws.conditional_formatting.add(f"J2:J{last}", _scale(_SCALE_GREEN))
+    ws.conditional_formatting.add(
+        f"N2:N{last}",
+        FormulaRule(
+            formula=[f"AND(ISNUMBER(N2),TRUNC(N2)<TODAY())"],
+            fill=PatternFill(
+                start_color=_EXPIRED_RED, end_color=_EXPIRED_RED, fill_type="solid"
+            ),
+        ),
+    )
+
 
 # ---------------------------------------------------------------------------
-# Tab 2 — Priority Matrix
+# Tab 2 — Definitions acronyms
 # ---------------------------------------------------------------------------
 
-_TIER_ORDER = [
-    "Must Pursue",
-    "Big Bet",
-    "Quick Win",
-    "Prepare for Next Window",
-    "Strategic Positioning",
-    "Low Priority",
-]
-
-_TIER_DESCRIPTIONS = {
-    "Must Pursue":             "High fit + high strategic value + open or known future window + realistic route",
-    "Big Bet":                 "Transformational but difficult — worth investing in if capacity allows",
-    "Quick Win":               "Open now, manageable effort, good fit — act immediately",
-    "Prepare for Next Window": "Good fit and clear route — no current call but likely to recur",
-    "Strategic Positioning":   "Useful for signalling and ecosystem access",
-    "Low Priority":            "Weak fit, timing unknown, or unrealistic — monitor only",
+# Fallback dictionary of grant-world acronyms, used only when the analysis
+# result carries no LLM-generated acronym_definitions (e.g. results saved
+# before that pipeline step existed). Deliberately general — spans EU, UK,
+# US, and global programme vocabulary rather than any one funder.
+_FALLBACK_ACRONYMS = {
+    "AI":     "Artificial Intelligence",
+    "ARPA-E": "Advanced Research Projects Agency–Energy (US Department of Energy)",
+    "CSA":    "Coordination and Support Action (Horizon Europe funding type focused on networking and coordination)",
+    "DOE":    "United States Department of Energy",
+    "EIC":    "European Innovation Council",
+    "EIT":    "European Institute of Innovation and Technology",
+    "ERDF":   "European Regional Development Fund",
+    "ESG":    "Environmental, Social and Governance",
+    "EU":     "European Union",
+    "FTE":    "Full-Time Equivalent",
+    "IA":     "Innovation Action (Horizon Europe funding instrument typically focused on demonstration and piloting)",
+    "IP":     "Intellectual Property",
+    "LCA":    "Life Cycle Assessment",
+    "LIFE":   "EU LIFE Programme (funding programme for environment, climate, and circular economy)",
+    "MRV":    "Measurement, Reporting and Verification",
+    "NGO":    "Non-Governmental Organisation",
+    "NHS":    "National Health Service (United Kingdom)",
+    "ODA":    "Official Development Assistance",
+    "POC":    "Proof of Concept",
+    "PPP":    "Public-Private Partnership",
+    "R&D":    "Research and Development",
+    "RIA":    "Research and Innovation Action (Horizon Europe funding instrument typically focused on research)",
+    "RTO":    "Research and Technology Organisation",
+    "SBIR":   "Small Business Innovation Research (US federal funding programme)",
+    "SIF":    "Strategic Innovation Fund (Ofgem programme for energy network innovation)",
+    "SME":    "Small and Medium-sized Enterprise",
+    "TRL":    "Technology Readiness Level (scale from 1–9 measuring maturity of a technology)",
+    "UK":     "United Kingdom",
+    "UKRI":   "UK Research and Innovation",
+    "US":     "United States",
+    "VC":     "Venture Capital",
 }
 
 
-def _tab_priority(wb: Workbook, opportunities: list[dict]) -> None:
-    ws = wb.create_sheet("Priority Matrix")
+def _fallback_definitions(opportunities: list[dict]) -> list[dict]:
+    """Scan the tab-1 text for known acronyms and define the ones present."""
+    corpus = " ".join(
+        str(v) for opp in opportunities for v in opp.values() if isinstance(v, str)
+    )
+    found = []
+    for acro, definition in _FALLBACK_ACRONYMS.items():
+        pattern = r"(?<![A-Za-z0-9])" + re.escape(acro) + r"(?![A-Za-z0-9])"
+        if re.search(pattern, corpus):
+            found.append({"acronym": acro, "definition": definition})
+    return found
 
-    by_tier: dict[str, list[dict]] = {t: [] for t in _TIER_ORDER}
-    for opp in opportunities:
-        tier = opp.get("priority_tier", "Low Priority")
-        if tier not in by_tier:
-            tier = "Low Priority"
-        by_tier[tier].append(opp)
 
-    for tier in _TIER_ORDER:
-        opps = sorted(by_tier[tier], key=lambda o: o.get("priority_score", 0), reverse=True)
-        if not opps:
+def _tab_acronyms(wb: Workbook, result: dict, opportunities: list[dict]) -> None:
+    ws = wb.create_sheet("Definitions acronyms")
+    ws.column_dimensions["A"].width = 14
+    ws.column_dimensions["B"].width = 70.75
+
+    ws.append(["Acronym", "Definition"])
+    _style_header_row(ws)
+
+    definitions = [
+        d for d in (result.get("acronym_definitions") or [])
+        if isinstance(d, dict) and d.get("acronym") and d.get("definition")
+    ] or _fallback_definitions(opportunities)
+
+    seen: set[str] = set()
+    for item in sorted(definitions, key=lambda d: str(d["acronym"]).upper()):
+        acro = str(item["acronym"]).strip()
+        if acro.upper() in seen:
             continue
-
-        # Tier heading row
-        ws.append([tier, _TIER_DESCRIPTIONS[tier]])
-        heading_row = ws.max_row
-        tf = _tier_fill(tier)
-        for cell in ws[heading_row]:
-            if tf:
-                cell.fill = tf
-                cell.font = _tier_font(tier)
-            cell.alignment = Alignment(wrap_text=False, vertical="center")
-        ws.row_dimensions[heading_row].height = 22
-        ws.merge_cells(f"C{heading_row}:G{heading_row}")
-
-        # Column headers
-        _header_row(ws, ["Name", "Managing Body", "Geography", "Priority Score",
-                          "Thematic Fit", "Strategic Value", "Ease", "Status", "Max Funding"])
-
-        for opp in opps:
-            row = [
-                opp.get("name", ""),
-                opp.get("managing_body", ""),
-                opp.get("geography", ""),
-                opp.get("priority_score", ""),
-                opp.get("thematic_fit_score", ""),
-                opp.get("strategic_value_score", ""),
-                opp.get("ease_score", ""),
-                opp.get("status", ""),
-                opp.get("max_funding", ""),
-            ]
-            ws.append(row)
-            for cell in ws[ws.max_row]:
-                cell.border = _BORDER
-                cell.alignment = Alignment(vertical="top")
-            ws.row_dimensions[ws.max_row].height = 18
-
-        ws.append([])  # spacer
-
-    _auto_widths(ws)
-
-
-# ---------------------------------------------------------------------------
-# Tab 3 — Strategic Recommendations
-# ---------------------------------------------------------------------------
-
-
-def _tab_recommendations(wb: Workbook, result: dict) -> None:
-    ws = wb.create_sheet("Strategic Recommendations")
-    ws.column_dimensions["A"].width = 30
-    ws.column_dimensions["B"].width = 80
-
-    profile = result.get("company_profile", {})
-    summary = result.get("executive_summary", {})
-    recs    = result.get("strategic_recommendations", {})
-
-    sections = [
-        ("COMPANY PROFILE", None),
-        ("Company", profile.get("name", "")),
-        ("Classification", profile.get("classification", "")),
-        ("Value Proposition", profile.get("value_proposition", "")),
-        ("Technology", profile.get("technology", "")),
-        ("HQ", profile.get("hq", "")),
-        ("Operational Geographies", ", ".join(profile.get("operational_geographies", []))),
-        ("Stage", profile.get("stage", "")),
-        ("TRL", profile.get("trl", "")),
-        ("", ""),
-        ("EXECUTIVE SUMMARY", None),
-        ("Company Overview", summary.get("company_overview", "")),
-        ("Strongest Themes", summary.get("strongest_themes", "")),
-        ("Strongest Geographies", summary.get("strongest_geographies", "")),
-        ("Key Constraints", summary.get("key_constraints", "")),
-        ("", ""),
-        ("STRATEGIC RECOMMENDATIONS", None),
-        ("Best Fit Strategy", recs.get("best_fit_strategy", "")),
-        ("Best Geographies", recs.get("best_geographies", "")),
-        ("Strongest Pathways", recs.get("strongest_pathways", "")),
-        ("Key Partnerships", recs.get("key_partnerships", "")),
-        ("Capability Gaps", recs.get("capability_gaps", "")),
-        ("Key Risks", recs.get("key_risks", "")),
-    ]
-
-    section_fill = PatternFill("solid", fgColor="1E3A5F")
-    section_font = Font(bold=True, color="FFFFFF", size=11)
-
-    for label, value in sections:
-        if value is None:
-            ws.append([label, ""])
-            row_num = ws.max_row
-            ws[f"A{row_num}"].fill = section_fill
-            ws[f"A{row_num}"].font = section_font
-            ws[f"B{row_num}"].fill = section_fill
-            ws.row_dimensions[row_num].height = 24
-        else:
-            ws.append([label, value])
-            row_num = ws.max_row
-            ws[f"A{row_num}"].font = Font(bold=True, size=10)
-            ws[f"A{row_num}"].alignment = Alignment(vertical="top")
-            ws[f"B{row_num}"].alignment = Alignment(wrap_text=True, vertical="top")
-            ws.row_dimensions[row_num].height = max(18, min(len(str(value)) // 3, 80))
-
-
-# ---------------------------------------------------------------------------
-# Tab 4 — Strategic Watchlist
-# ---------------------------------------------------------------------------
-
-_WATCHLIST_FILL = PatternFill("solid", fgColor="FFF8E1")   # pale amber rows
-_WATCHLIST_ALT  = PatternFill("solid", fgColor="FFFFFF")
-_WATCHLIST_HDR  = PatternFill("solid", fgColor="92400E")   # amber-900
-
-
-def _tab_watchlist(wb: Workbook, watchlist: list[dict]) -> None:
-    ws = wb.create_sheet("Strategic Watchlist")
-
-    cols = [
-        "Name", "Managing Body", "Geography",
-        "Opportunity Type", "Application Route", "Status",
-        "Funding Type", "Max Funding",
-        "Thematic Relevance", "Why Not Main Recommendation", "What Would Unlock",
-        "Application Link",
-    ]
-    # Custom amber header
-    ws.append(cols)
-    hdr_fill = PatternFill("solid", fgColor="92400E")
-    hdr_font = Font(bold=True, color="FFFFFF", size=10)
-    for cell in ws[ws.max_row]:
-        cell.fill = hdr_fill
-        cell.font = hdr_font
-        cell.alignment = Alignment(wrap_text=True, vertical="center")
-        cell.border = _BORDER
-    ws.row_dimensions[ws.max_row].height = 36
-    ws.freeze_panes = "A2"
-
-    for i, item in enumerate(watchlist, 1):
-        row = [
-            item.get("name", ""),
-            item.get("managing_body", ""),
-            item.get("geography", ""),
-            (item.get("opportunity_type", "") or "").replace("_", " "),
-            (item.get("application_route", "") or "").replace("_", " "),
-            item.get("status", ""),
-            item.get("funding_type", ""),
-            item.get("max_funding", ""),
-            item.get("thematic_relevance", ""),
-            item.get("why_watchlist", ""),
-            item.get("what_would_unlock", ""),
-            item.get("application_link", ""),
-        ]
-        ws.append(row)
-        row_num = ws.max_row
-        fill = _WATCHLIST_FILL if i % 2 else _WATCHLIST_ALT
-        for cell in ws[row_num]:
-            cell.alignment = Alignment(wrap_text=True, vertical="top")
-            cell.border = _BORDER
-            cell.fill = fill
-        ws.row_dimensions[row_num].height = 60
-
-    _auto_widths(ws)
-    # Widen the three narrative columns
-    ws.column_dimensions["I"].width = 45   # Thematic Relevance
-    ws.column_dimensions["J"].width = 40   # Why Not Main
-    ws.column_dimensions["K"].width = 40   # What Would Unlock
-
-
-# ---------------------------------------------------------------------------
-# Tab 5 — Rubrics Reference
-# ---------------------------------------------------------------------------
-
-
-def _tab_rubrics(wb: Workbook) -> None:
-    ws = wb.create_sheet("Rubrics Reference")
-    ws.column_dimensions["A"].width = 28
-    ws.column_dimensions["B"].width = 12
-    ws.column_dimensions["C"].width = 65
-
-    rubrics = [
-        ("THEMATIC FIT", "", "Does the grant target this company's core problem?"),
-        ("Score", "Meaning", "Guidance"),
-        ("5 — Core alignment", "5", "Company is exactly what this fund exists to support"),
-        ("4 — Strong alignment", "4", "Company clearly relevant, strong natural fit"),
-        ("3 — Moderate alignment", "3", "Partial relevance; co-benefits present but not primary"),
-        ("2 — Weak alignment", "2", "Secondary co-benefit being stretched as primary claim"),
-        ("1 — Poor alignment", "1", "Peripheral or forced relevance"),
-        ("", "", ""),
-        ("STRATEGIC VALUE", "", "Does this fund create leverage beyond its direct funding?"),
-        ("Score", "Meaning", "Guidance"),
-        ("5 — Transformational", "5", "Unlocks major new market, geography, or institutional credibility"),
-        ("4 — High", "4", "Strong investor signal, ecosystem positioning, or follow-on leverage"),
-        ("3 — Moderate", "3", "Useful credibility or network access"),
-        ("2 — Limited", "2", "Modest benefit beyond direct funding"),
-        ("1 — Minimal", "1", "Little strategic value"),
-        ("", "", ""),
-        ("EASE OF APPLICATION", "", "How difficult is it to prepare and submit a credible bid?"),
-        ("Score", "Meaning", "Guidance"),
-        ("5 — Very easy", "5", "Simple online form, solo application, low burden"),
-        ("4 — Easy", "4", "Standard short proposal"),
-        ("3 — Moderate", "3", "Full technical proposal, moderate reporting"),
-        ("2 — Difficult", "2", "Consortium or co-funding required, complex process"),
-        ("1 — Very difficult", "1", "Multi-partner, political, or highly regulated process"),
-        ("", "", ""),
-        ("PRIORITY SCORE FORMULA", "", ""),
-        ("", "", "Priority Score = (0.45 × Thematic Fit) + (0.35 × Strategic Value) + (0.20 × Ease)"),
-        ("", "", ""),
-        ("PRIORITY TIERS", "", ""),
-        ("Must Pursue", "", "Priority ≥ 3.5 AND Thematic Fit ≥ 4"),
-        ("Big Bet", "", "Thematic Fit ≥ 4 but Ease ≤ 2, or Strategic Value = 5 but difficult"),
-        ("Quick Win", "", "Ease ≥ 4 AND Priority ≥ 3.0 AND Thematic Fit ≥ 3"),
-        ("Strategic Positioning", "", "Strategic Value ≥ 4 but Thematic Fit ≤ 3"),
-        ("Low Priority", "", "Priority < 2.5 OR Thematic Fit ≤ 2"),
-    ]
-
-    heading_fill = PatternFill("solid", fgColor="1E3A5F")
-    heading_font = Font(bold=True, color="FFFFFF", size=10)
-    sub_fill = PatternFill("solid", fgColor="E8EEF4")
-    sub_font = Font(bold=True, size=10)
-
-    for row_data in rubrics:
-        ws.append(list(row_data))
-        rn = ws.max_row
-        label = str(row_data[0])
-        if label in ("THEMATIC FIT", "STRATEGIC VALUE", "EASE OF APPLICATION",
-                     "PRIORITY SCORE FORMULA", "PRIORITY TIERS"):
-            for cell in ws[rn]:
-                cell.fill = heading_fill
-                cell.font = heading_font
-        elif label == "Score":
-            for cell in ws[rn]:
-                cell.fill = sub_fill
-                cell.font = sub_font
-        ws[f"C{rn}"].alignment = Alignment(wrap_text=True)
-        ws.row_dimensions[rn].height = 18
+        seen.add(acro.upper())
+        ws.append([acro, str(item["definition"]).strip()])
+        ws[f"B{ws.max_row}"].alignment = _DATA_ALIGN
 
 
 # ---------------------------------------------------------------------------
@@ -495,18 +386,14 @@ def generate_xlsx(result: dict) -> bytes:
     """Return an XLSX file as bytes from a completed analysis result dict."""
     wb = Workbook()
 
-    opportunities = result.get("opportunities", [])
-    # Sort by priority score descending
-    opportunities = sorted(opportunities, key=lambda o: o.get("priority_score", 0), reverse=True)
-
-    watchlist = result.get("strategic_watchlist", [])
+    opportunities = sorted(
+        result.get("opportunities", []),
+        key=lambda o: o.get("priority_score", 0) or 0,
+        reverse=True,
+    )
 
     _tab_opportunities(wb, opportunities)
-    _tab_priority(wb, opportunities)
-    if watchlist:
-        _tab_watchlist(wb, watchlist)
-    _tab_recommendations(wb, result)
-    _tab_rubrics(wb)
+    _tab_acronyms(wb, result, opportunities)
 
     buf = io.BytesIO()
     wb.save(buf)
