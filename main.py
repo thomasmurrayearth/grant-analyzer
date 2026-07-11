@@ -394,6 +394,76 @@ async def download(req: DownloadRequest) -> Response:
 
 
 # ---------------------------------------------------------------------------
+# Admin analytics
+# ---------------------------------------------------------------------------
+
+@app.get("/admin/stats")
+async def admin_stats(token: str = "", days: int = 30) -> Response:
+    """Private usage dashboard. Requires ADMIN_TOKEN to be set in the
+    environment and passed as ?token=...; returns 404 when disabled so the
+    endpoint is invisible on deployments without a token."""
+    import secrets as _secrets
+
+    admin_token = os.environ.get("ADMIN_TOKEN", "").strip()
+    if not admin_token:
+        raise HTTPException(status_code=404, detail="Not found")
+    if not _secrets.compare_digest(token, admin_token):
+        raise HTTPException(status_code=403, detail="Invalid token")
+
+    rows = await asyncio.to_thread(db.get_recent_analyses, days)
+    if rows is None:
+        raise HTTPException(status_code=503, detail="Database unavailable")
+
+    total     = len(rows)
+    completed = sum(1 for r in rows if r.get("status") == "completed")
+    failed    = sum(1 for r in rows if r.get("status") == "failed")
+    grants    = [r["grants_found"] for r in rows
+                 if r.get("status") == "completed" and r.get("grants_found") is not None]
+    avg_grants = round(sum(grants) / len(grants), 1) if grants else 0
+
+    def esc(v: Any) -> str:
+        import html
+        return html.escape(str(v)) if v not in (None, "") else "—"
+
+    table_rows = "".join(
+        "<tr>"
+        f"<td>{esc((r.get('created_at') or '')[:16].replace('T', ' '))}</td>"
+        f"<td>{esc(r.get('company_name'))}</td>"
+        f"<td>{esc(r.get('company_url'))}</td>"
+        f"<td>{esc(r.get('geographies'))}</td>"
+        f"<td>{esc(r.get('status'))}</td>"
+        f"<td>{esc(r.get('grants_found'))}</td>"
+        f"<td>{esc(r.get('user_email'))}</td>"
+        f"<td>{esc((r.get('error_message') or '')[:120])}</td>"
+        "</tr>"
+        for r in rows
+    )
+    page = f"""<!doctype html><html><head><meta charset="utf-8">
+<title>Grant Analyzer — Usage</title>
+<style>
+body{{font-family:system-ui,sans-serif;margin:2rem;color:#222}}
+.tiles{{display:flex;gap:1rem;margin-bottom:1.5rem;flex-wrap:wrap}}
+.tile{{border:1px solid #ddd;border-radius:8px;padding:1rem 1.5rem}}
+.tile b{{display:block;font-size:1.6rem}}
+table{{border-collapse:collapse;width:100%;font-size:.85rem}}
+th,td{{border:1px solid #ddd;padding:.4rem .6rem;text-align:left;vertical-align:top}}
+th{{background:#f5f5f5}}
+</style></head><body>
+<h1>Grant Analyzer — last {days} days</h1>
+<div class="tiles">
+<div class="tile"><b>{total}</b>analyses</div>
+<div class="tile"><b>{completed}</b>completed</div>
+<div class="tile"><b>{failed}</b>failed</div>
+<div class="tile"><b>{avg_grants}</b>avg grants found</div>
+</div>
+<table><tr><th>Started</th><th>Company</th><th>URL</th><th>Geographies</th>
+<th>Status</th><th>Grants</th><th>Email</th><th>Error</th></tr>
+{table_rows}</table>
+</body></html>"""
+    return Response(content=page, media_type="text/html")
+
+
+# ---------------------------------------------------------------------------
 # Serve frontend
 # ---------------------------------------------------------------------------
 

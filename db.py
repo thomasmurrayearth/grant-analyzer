@@ -161,3 +161,29 @@ def get_completed_result(job_id: str) -> dict | None:
     except Exception as exc:
         logger.warning("DB get_completed_result failed: %s", exc)
         return None
+
+
+def get_recent_analyses(days: int = 30, limit: int = 200) -> list[dict] | None:
+    """Return recent analyses (newest first) for the admin stats page.
+    Returns None when the database is unavailable."""
+    c = _client()
+    if not c:
+        return None
+    try:
+        from datetime import datetime, timedelta, timezone
+        since = (datetime.now(timezone.utc) - timedelta(days=days)).isoformat()
+        rows = (
+            c.table("analyses")
+            .select(
+                "created_at,completed_at,company_name,company_url,geographies,"
+                "status,grants_found,error_message,user_email"
+            )
+            .gte("created_at", since)
+            .order("created_at", desc=True)
+            .limit(limit)
+            .execute()
+        )
+        return rows.data or []
+    except Exception as exc:
+        logger.warning("DB get_recent_analyses failed: %s", exc)
+        return None
