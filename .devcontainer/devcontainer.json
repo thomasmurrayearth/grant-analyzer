@@ -1,10 +1,35 @@
 {
-  "name": "Python 3",
-  "image": "mcr.microsoft.com/devcontainers/python:3-3.14-trixie",
-
+  "name": "grant-analyzer",
+  "image": "mcr.microsoft.com/devcontainers/python:1-3.11-bookworm",
   "features": {
     "ghcr.io/devcontainers/features/node:1": {
       "version": "lts"
+    },
+    "ghcr.io/anthropics/devcontainer-features/claude-code:1.0": {}
+  },
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "anthropic.claude-code",
+        "ms-python.python"
+      ]
     }
-  }
+  },
+  "postCreateCommand": "pip install --user -r requirements.txt",
+  "forwardPorts": [
+    8000
+  ],
+  "portsAttributes": {
+    "8000": {
+      "label": "Grant Analyser (uvicorn)"
+    }
+  },
+  "remoteEnv": {
+    "ANTHROPIC_API_KEY": "${localEnv:ANTHROPIC_API_KEY}",
+    "SUPABASE_URL": "${localEnv:SUPABASE_URL}",
+    "SUPABASE_KEY": "${localEnv:SUPABASE_KEY}"
+  },
+  "mounts": [
+    "source=${localEnv:USERPROFILE}/OneDrive/Documents/Claude/Projects/Start-up consultant,target=/workspaces/launch-plan,type=bind"
+  ]
 }
