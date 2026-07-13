@@ -123,11 +123,12 @@ def send_results_email(
         </div>
 
         <div style="margin-top:32px;padding-top:24px;border-top:1px solid #E4E2DE;">
-          <h2 style="margin:0 0 8px;font-size:12px;color:#7A7870;text-transform:uppercase;letter-spacing:0.08em;">Want help winning one of these?</h2>
+          <h2 style="margin:0 0 8px;font-size:12px;color:#7A7870;text-transform:uppercase;letter-spacing:0.08em;">Want help winning a grant?</h2>
           <p style="margin:0 0 14px;font-size:14px;line-height:1.6;">
-            I'm Thomas Murray — I built this tool, and I help climate and deeptech startups
-            write and win the grants it finds. If you'd like a hand with an application, reply to
-            this email or book a call and we'll talk through which of these are actually worth your time.
+            I'm Thomas Murray. I help climate and deep tech startups win grant funding and achieve
+            profitability. This tool is a productised version of an opportunity assessment I've done
+            for several startups. If you want help turning a grant opportunity into a complete
+            application, contact me.
           </p>
           <a href="{CONSULTING_URL}" style="color:#2E7055;font-weight:600;font-size:14px;text-decoration:underline;">
             Get help with your application →

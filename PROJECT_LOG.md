@@ -48,6 +48,15 @@ notifications when results are ready.
 
 ## Timeline
 
+**2026-07-13 — Consulting offer reworded (Thomas's copy)**
+Thomas rewrote the consulting call-to-action in his own voice ("Want help
+winning a grant?… I help climate and deep tech startups win grant funding
+and achieve profitability… a productised version of an opportunity
+assessment I've done for several startups"). Applied identically in all
+three places the offer appears — the results page, the completion email,
+and the Strategic Recommendations tab of the XLSX — and the frozen sample
+workbook was rebuilt to match.
+
 **2026-07-13 — Sample report + "what you'll get" landing section (WP-2)**
 Users were being asked to commit ten minutes blind. The landing page now
 shows three cards explaining the output and links to a full sample report

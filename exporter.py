@@ -360,14 +360,14 @@ def _tab_recommendations(wb: Workbook, result: dict) -> None:
 
     # The offer. Deliberately last: the reader has just finished the analysis.
     ws.append([])
-    ws.append(["Get help with these applications", ""])
+    ws.append(["Want help winning a grant?", ""])
     ws[f"A{ws.max_row}"].font = Font(bold=True)
     ws.append([
         "About this report",
-        "Built by Thomas Murray, a consultant who helps climate and deeptech "
-        "startups win grant funding. This shortlist is the same landscape scan "
-        "I run at the start of a client engagement — if you want help turning "
-        "any of these into a submitted application, get in touch.",
+        "I'm Thomas Murray. I help climate and deep tech startups win grant funding "
+        "and achieve profitability. This tool is a productised version of an "
+        "opportunity assessment I've done for several startups. If you want help "
+        "turning a grant opportunity into a complete application, contact me.",
     ])
     ws[f"B{ws.max_row}"].alignment = _DATA_ALIGN
     ws[f"A{ws.max_row}"].alignment = _DATA_ALIGN
