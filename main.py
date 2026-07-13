@@ -29,6 +29,7 @@ from fastapi.responses import Response, StreamingResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 
+import analyzer
 from analyzer import run_phase1, run_phase23
 from exporter import generate_xlsx
 
@@ -53,6 +54,70 @@ _results: dict[str, dict] = {}
 
 
 # ---------------------------------------------------------------------------
+# Abuse control
+#
+# Every analysis costs real API money, so a traffic spike (a launch-day post,
+# a scraper) has to be bounded. Two limits, both overridable from the
+# environment so they can be relaxed on launch day without a redeploy:
+#   * a per-IP daily cap on new analyses;
+#   * a cap on analyses running at the same time.
+# A user who hits either is offered the waitlist instead of an error, which
+# turns overload into list growth.
+# ---------------------------------------------------------------------------
+
+def _int_env(name: str, default: int) -> int:
+    try:
+        return int(os.environ.get(name, "").strip() or default)
+    except ValueError:
+        return default
+
+
+MAX_RUNS_PER_IP_PER_DAY = _int_env("MAX_RUNS_PER_IP_PER_DAY", 5)
+MAX_CONCURRENT_JOBS     = _int_env("MAX_CONCURRENT_JOBS", 4)
+
+AT_CAPACITY_MESSAGE = (
+    "We're at capacity right now — analyses are queued behind other users. "
+    "Leave your email and we'll run yours and send you the results."
+)
+DAILY_LIMIT_MESSAGE = (
+    f"You've reached the limit of {MAX_RUNS_PER_IP_PER_DAY} analyses per day. "
+    "Leave your email if you need more and we'll sort it out."
+)
+
+# {(ip, YYYY-MM-DD): count} — reset naturally as the date key changes.
+_ip_runs_today: dict[tuple[str, str], int] = {}
+
+
+def _today() -> str:
+    from datetime import datetime, timezone
+    return datetime.now(timezone.utc).strftime("%Y-%m-%d")
+
+
+def _running_jobs() -> int:
+    return sum(
+        1 for j in _jobs.values()
+        if j.get("status") in ("started", "phase1_running", "phase23_running")
+    )
+
+
+def _ip_runs(ip: str | None) -> int:
+    """Analyses started by this IP today. Counts the in-memory tally and, when
+    the database is reachable, the persisted count — so a Railway restart does
+    not hand everyone a fresh quota."""
+    if not ip:
+        return 0
+    in_memory = _ip_runs_today.get((ip, _today()), 0)
+    persisted = db.count_recent_runs_for_ip(ip, hours=24)
+    return max(in_memory, persisted or 0)
+
+
+def _note_ip_run(ip: str | None) -> None:
+    if ip:
+        key = (ip, _today())
+        _ip_runs_today[key] = _ip_runs_today.get(key, 0) + 1
+
+
+# ---------------------------------------------------------------------------
 # Request / response models
 # ---------------------------------------------------------------------------
 
@@ -64,7 +129,27 @@ class AnalyseRequest(BaseModel):
     accelerators: bool       = True
     prizes:       bool       = True
     email:        str        = ""
+    newsletter:   bool       = False   # explicit consent to the deadline digest
     subscription: dict | None = None   # browser push subscription object
+
+
+class FeedbackRequest(BaseModel):
+    job_id:      str
+    rating:      int
+    comment:     str  = ""
+    may_contact: bool = False
+    email:       str  = ""
+
+
+class EventRequest(BaseModel):
+    event:  str
+    job_id: str = ""
+    detail: str = ""
+
+
+class WaitlistRequest(BaseModel):
+    email:  str
+    reason: str = ""
 
 
 class ContinueRequest(BaseModel):
@@ -114,6 +199,7 @@ async def _phase1_task(
 ) -> None:
     job = _jobs[job_id]
     job["status"] = "phase1_running"
+    job["usage"]  = analyzer.start_usage_tracking()
     try:
         async for event in run_phase1(url=url, extra_text=text, preferences=preferences):
             t = event.get("type")
@@ -160,6 +246,9 @@ async def _phase23_task(
     job["status"]   = "phase23_running"
     job["progress"] = []   # fresh log for phases 2+3
     job["stage"]    = 2
+    # Keep counting tokens into the same accumulator phase 1 used, so the
+    # logged cost is the cost of the whole analysis.
+    job["usage"]    = analyzer.start_usage_tracking(job.get("usage"))
     try:
         async for event in run_phase23(profile, preferences):
             t = event.get("type")
@@ -173,8 +262,14 @@ async def _phase23_task(
                 job["status"] = "completed"
                 job["result"] = result
                 grants_found  = len(result.get("opportunities", []))
-                await asyncio.to_thread(db.log_completed, job_id, grants_found, result)
+                usage         = job.get("usage")
+                cost          = analyzer.usage_cost_usd(usage)
+                job["cost_usd"] = cost
+                await asyncio.to_thread(
+                    db.log_completed, job_id, grants_found, result, usage, cost,
+                )
                 company = result.get("company_profile", {}).get("name", "your company")
+                noun    = "opportunity" if grants_found == 1 else "opportunities"
                 if email:
                     await asyncio.to_thread(
                         email_sender.send_results_email,
@@ -186,7 +281,7 @@ async def _phase23_task(
                         _send_push,
                         subscription,
                         f"Grant analysis ready — {company}",
-                        f"Found {grants_found} grant {"opportunity" if grants_found == 1 else "opportunities"}. Tap to view your results.",
+                        f"Found {grants_found} grant {noun}. Tap to view your results.",
                     )
             elif t == "error":
                 job["status"] = "failed"
@@ -248,6 +343,22 @@ async def analyse(req: AnalyseRequest, request: Request) -> dict:
 
     ip    = _get_ip(request)
     email = req.email.strip() or None
+
+    # Abuse / cost control. 429 carries a machine-readable reason so the
+    # frontend can offer the waitlist rather than showing a dead end.
+    if _running_jobs() >= MAX_CONCURRENT_JOBS:
+        await asyncio.to_thread(db.log_event, "at_capacity", None, ip, "concurrency")
+        raise HTTPException(
+            status_code=429,
+            detail={"reason": "at_capacity", "message": AT_CAPACITY_MESSAGE},
+        )
+    if await asyncio.to_thread(_ip_runs, ip) >= MAX_RUNS_PER_IP_PER_DAY:
+        await asyncio.to_thread(db.log_event, "rate_limited", None, ip, "daily_cap")
+        raise HTTPException(
+            status_code=429,
+            detail={"reason": "daily_limit", "message": DAILY_LIMIT_MESSAGE},
+        )
+
     job_id = str(uuid.uuid4())
 
     _jobs[job_id] = {
@@ -267,11 +378,13 @@ async def analyse(req: AnalyseRequest, request: Request) -> dict:
         },
     }
 
+    _note_ip_run(ip)
+
     await asyncio.to_thread(
         db.log_started,
         job_id, req.url.strip(), req.text.strip(),
         req.geographies, req.consortium, req.accelerators, req.prizes,
-        ip, email,
+        ip, email, req.newsletter,
     )
 
     asyncio.create_task(_phase1_task(
@@ -366,8 +479,49 @@ async def extract_file(file: UploadFile) -> dict:
         raise HTTPException(status_code=500, detail=f"Could not read file: {exc}")
 
 
+# ---------------------------------------------------------------------------
+# Funnel: feedback, events, waitlist
+# ---------------------------------------------------------------------------
+
+@app.post("/feedback")
+async def feedback(req: FeedbackRequest, request: Request) -> dict:
+    """"How useful was this shortlist?" — the currency of the free phase."""
+    rating = req.rating
+    if not isinstance(rating, int) or not 1 <= rating <= 5:
+        raise HTTPException(status_code=400, detail="Rating must be between 1 and 5.")
+    await asyncio.to_thread(
+        db.log_feedback,
+        req.job_id, rating, req.comment.strip(),
+        req.may_contact, req.email.strip() or None,
+    )
+    return {"ok": True}
+
+
+@app.post("/event")
+async def event(req: EventRequest, request: Request) -> dict:
+    """Record one funnel event (landing view, CTA click, share, download)."""
+    if not req.event.strip():
+        raise HTTPException(status_code=400, detail="Event name required.")
+    await asyncio.to_thread(
+        db.log_event,
+        req.event.strip(), req.job_id.strip() or None,
+        _get_ip(request), req.detail.strip(),
+    )
+    return {"ok": True}
+
+
+@app.post("/waitlist")
+async def waitlist(req: WaitlistRequest, request: Request) -> dict:
+    """Email left after a run was turned away at capacity."""
+    email = req.email.strip()
+    if "@" not in email:
+        raise HTTPException(status_code=400, detail="Please enter a valid email address.")
+    await asyncio.to_thread(db.log_waitlist, email, req.reason.strip(), _get_ip(request))
+    return {"ok": True}
+
+
 @app.post("/download")
-async def download(req: DownloadRequest) -> Response:
+async def download(req: DownloadRequest, request: Request) -> Response:
     """Return an XLSX file for a completed analysis."""
     result = _results.get(req.job_id)
     if not result:
@@ -382,6 +536,9 @@ async def download(req: DownloadRequest) -> Response:
             status_code=404,
             detail="Result not found. The analysis may not have completed yet.",
         )
+    await asyncio.to_thread(
+        db.log_event, "xlsx_download", req.job_id, _get_ip(request), None,
+    )
     xlsx_bytes = generate_xlsx(result)
     company    = result.get("company_profile", {}).get("name", "grant-analysis")
     safe_name  = "".join(c if c.isalnum() or c in "- _" else "_" for c in company)
@@ -413,6 +570,8 @@ async def admin_stats(token: str = "", days: int = 30) -> Response:
     rows = await asyncio.to_thread(db.get_recent_analyses, days)
     if rows is None:
         raise HTTPException(status_code=503, detail="Database unavailable")
+    events   = await asyncio.to_thread(db.get_recent_events, days)
+    feedback = await asyncio.to_thread(db.get_recent_feedback, days)
 
     total     = len(rows)
     completed = sum(1 for r in rows if r.get("status") == "completed")
@@ -420,10 +579,58 @@ async def admin_stats(token: str = "", days: int = 30) -> Response:
     grants    = [r["grants_found"] for r in rows
                  if r.get("status") == "completed" and r.get("grants_found") is not None]
     avg_grants = round(sum(grants) / len(grants), 1) if grants else 0
+    emails     = sum(1 for r in rows if r.get("user_email"))
+
+    # Funnel
+    def count(name: str) -> int:
+        return sum(1 for e in events if e.get("event") == name)
+
+    views      = count("landing_view")
+    downloads  = count("xlsx_download")
+    cta_clicks = count("cta_click")
+    turned_away = count("at_capacity") + count("rate_limited")
+
+    def pct(numerator: int, denominator: int) -> str:
+        return f"{round(100 * numerator / denominator)}%" if denominator else "—"
+
+    # Cost per run — mean and p90, the number the pricing gates key off.
+    costs = sorted(float(r["cost_usd"]) for r in rows if r.get("cost_usd") is not None)
+    total_cost = round(sum(costs), 2)
+    mean_cost  = f"${round(sum(costs) / len(costs), 2)}" if costs else "—"
+    p90_cost   = f"${round(costs[min(int(len(costs) * 0.9), len(costs) - 1)], 2)}" if costs else "—"
+
+    ratings    = [f["rating"] for f in feedback if isinstance(f.get("rating"), int)]
+    avg_rating = f"{round(sum(ratings) / len(ratings), 1)}/5" if ratings else "—"
 
     def esc(v: Any) -> str:
         import html
         return html.escape(str(v)) if v not in (None, "") else "—"
+
+    # Pricing gates from the launch plan (§6). Flagged explicitly so the
+    # weekly report can say "GATE TRIGGERED" without re-deriving the rules.
+    gates = []
+    if completed >= 100 and len(ratings) >= 15 and ratings and sum(ratings) / len(ratings) >= 3.5:
+        gates.append("Gate B: ≥100 completed analyses and ≥15 feedback responses averaging ≥3.5/5")
+    if total_cost > 50:
+        gates.append(f"Gate B: spend in this window is ${total_cost} (over the ~US$50/month trigger)")
+    if total >= 500 and ratings and sum(ratings) / len(ratings) >= 4:
+        gates.append("Gate C: ≥500 analyses with sustained ≥4/5 feedback")
+    gates_html = (
+        "<div class='gate'><b>GATE TRIGGERED</b><ul>"
+        + "".join(f"<li>{esc(g)}</li>" for g in gates)
+        + "</ul></div>"
+    ) if gates else ""
+
+    feedback_html = "".join(
+        "<tr>"
+        f"<td>{esc((f.get('created_at') or '')[:16].replace('T', ' '))}</td>"
+        f"<td>{esc(f.get('rating'))}/5</td>"
+        f"<td>{esc(f.get('comment'))}</td>"
+        f"<td>{'yes' if f.get('may_contact') else '—'}</td>"
+        f"<td>{esc(f.get('user_email'))}</td>"
+        "</tr>"
+        for f in feedback
+    ) or "<tr><td colspan='5'>No feedback yet.</td></tr>"
 
     table_rows = "".join(
         "<tr>"
@@ -433,6 +640,7 @@ async def admin_stats(token: str = "", days: int = 30) -> Response:
         f"<td>{esc(r.get('geographies'))}</td>"
         f"<td>{esc(r.get('status'))}</td>"
         f"<td>{esc(r.get('grants_found'))}</td>"
+        f"<td>{('$' + str(r['cost_usd'])) if r.get('cost_usd') is not None else '—'}</td>"
         f"<td>{esc(r.get('user_email'))}</td>"
         f"<td>{esc((r.get('error_message') or '')[:120])}</td>"
         "</tr>"
@@ -445,19 +653,45 @@ body{{font-family:system-ui,sans-serif;margin:2rem;color:#222}}
 .tiles{{display:flex;gap:1rem;margin-bottom:1.5rem;flex-wrap:wrap}}
 .tile{{border:1px solid #ddd;border-radius:8px;padding:1rem 1.5rem}}
 .tile b{{display:block;font-size:1.6rem}}
+.tile span{{font-size:.8rem;color:#666}}
+.gate{{border:2px solid #9C4A2F;background:#fdf1ed;border-radius:8px;padding:1rem 1.5rem;margin-bottom:1.5rem}}
+h2{{margin-top:2rem;font-size:1.1rem}}
 table{{border-collapse:collapse;width:100%;font-size:.85rem}}
 th,td{{border:1px solid #ddd;padding:.4rem .6rem;text-align:left;vertical-align:top}}
 th{{background:#f5f5f5}}
 </style></head><body>
 <h1>Grant Analyzer — last {days} days</h1>
+{gates_html}
+<h2>Usage</h2>
 <div class="tiles">
-<div class="tile"><b>{total}</b>analyses</div>
-<div class="tile"><b>{completed}</b>completed</div>
-<div class="tile"><b>{failed}</b>failed</div>
-<div class="tile"><b>{avg_grants}</b>avg grants found</div>
+<div class="tile"><b>{total}</b><span>analyses started</span></div>
+<div class="tile"><b>{completed}</b><span>completed</span></div>
+<div class="tile"><b>{failed}</b><span>failed</span></div>
+<div class="tile"><b>{avg_grants}</b><span>avg grants found</span></div>
+<div class="tile"><b>{turned_away}</b><span>turned away (at capacity)</span></div>
 </div>
+<h2>Funnel</h2>
+<div class="tiles">
+<div class="tile"><b>{views}</b><span>landing views</span></div>
+<div class="tile"><b>{pct(total, views)}</b><span>view → start</span></div>
+<div class="tile"><b>{pct(completed, total)}</b><span>start → completion</span></div>
+<div class="tile"><b>{pct(emails, total)}</b><span>left an email</span></div>
+<div class="tile"><b>{pct(downloads, completed)}</b><span>downloaded XLSX</span></div>
+<div class="tile"><b>{cta_clicks}</b><span>consulting CTA clicks</span></div>
+</div>
+<h2>Economics &amp; feedback</h2>
+<div class="tiles">
+<div class="tile"><b>{mean_cost}</b><span>mean API cost / run</span></div>
+<div class="tile"><b>{p90_cost}</b><span>p90 cost / run</span></div>
+<div class="tile"><b>${total_cost}</b><span>API spend in window</span></div>
+<div class="tile"><b>{avg_rating}</b><span>avg feedback ({len(ratings)} responses)</span></div>
+</div>
+<h2>Feedback</h2>
+<table><tr><th>When</th><th>Rating</th><th>Comment</th><th>May contact</th><th>Email</th></tr>
+{feedback_html}</table>
+<h2>Analyses</h2>
 <table><tr><th>Started</th><th>Company</th><th>URL</th><th>Geographies</th>
-<th>Status</th><th>Grants</th><th>Email</th><th>Error</th></tr>
+<th>Status</th><th>Grants</th><th>Cost</th><th>Email</th><th>Error</th></tr>
 {table_rows}</table>
 </body></html>"""
     return Response(content=page, media_type="text/html")

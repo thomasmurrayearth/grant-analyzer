@@ -1,4 +1,4 @@
-const CACHE_NAME = 'grant-analyser-static-v3';
+const CACHE_NAME = 'grant-analyser-static-v4';
 const OFFLINE_ASSETS = [
   '/',
   '/index.html',
@@ -8,6 +8,7 @@ const OFFLINE_ASSETS = [
   '/icons/icon-512.png',
   '/icons/icon-maskable-512.png',
   '/icons/apple-touch-icon.png',
+  '/icons/og-image.png',
 ];
 
 self.addEventListener('install', event => {

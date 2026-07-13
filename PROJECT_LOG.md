@@ -12,15 +12,25 @@ section.
 
 ---
 
-## Where we are now (last updated 2026-07-07)
+## Where we are now (last updated 2026-07-13)
 
-**Status: live in production.** The app runs at
-https://grant-analyzer-production.up.railway.app/ on Railway,
+**Status: live in production, and now instrumented for launch.** The app
+runs at https://grant-analyzer-production.up.railway.app/ on Railway,
 auto-deployed from the `main` branch of this GitHub repository. It is a
 working product past the prototype stage: the May 2026 output-quality
 concerns (see `CONSULTANT_REVIEW.md`) have been substantially addressed
 through the June–July quality overhauls, verified with the eval harness
 in `eval/`.
+
+As of 13 July 2026 the conversion and measurement layer from the launch
+plan is in place: the landing page shows what you get before you commit
+ten minutes (including a live sample report), the results page, the XLSX,
+and the completion email all carry the consulting offer, users can rate
+the shortlist, every funnel step and the API cost of every run are
+logged, and per-IP/concurrency limits cap spend during a traffic spike.
+**One manual step is outstanding — the Supabase migration in
+`supabase_schema.sql` must be run or the new tracking silently drops.**
+See `LAUNCH_SETUP.md`.
 
 **What the app does:** a user describes their company (URL, pasted text,
 or uploaded document) → the app researches the company, lets the user
@@ -37,6 +47,40 @@ iOS, and desktop); job logging to Supabase (`db.py`); email + web-push
 notifications when results are ready.
 
 ## Timeline
+
+**2026-07-13 — Sample report + "what you'll get" landing section (WP-2)**
+Users were being asked to commit ten minutes blind. The landing page now
+shows three cards explaining the output and links to a full sample report
+at `/?demo=1` — a real analysis of a fictional climate hardware startup
+(Kelvara Systems, seed-stage thermal storage, NZ/UK), frozen as static
+JSON plus a downloadable sample XLSX. The demo renders through the live
+result renderers, so it cannot drift from the real app.
+
+**2026-07-13 — Conversion essentials: CTAs, feedback, funnel, cost, limits (WP-1)**
+The launch plan's conversion layer. The results page, the XLSX (via a new
+"Strategic Recommendations" tab), and the completion email now carry the
+consulting offer, because the app is the lead magnet for the consulting
+work and previously the only trace of Thomas was a `mailto:` link. Added:
+a 1–5 feedback widget with optional comment and contact consent; funnel
+event logging (landing views, CTA clicks, XLSX downloads, shares); token
+and dollar cost logged per analysis, without which the pricing gates in
+the plan cannot fire; social/OG meta plus a share image and a "share this
+tool" button; an explicit newsletter consent checkbox; and per-IP daily
+and concurrency limits that offer a waitlist instead of an error, turning
+overload into list growth. The admin stats page now reports the whole
+funnel, cost per run (mean and p90), feedback scores, and flags
+**GATE TRIGGERED** when a pricing gate is met. The privacy policy was
+updated to cover the new data. Requires the Supabase migration in
+`supabase_schema.sql`.
+
+**2026-07-12 — Dev container for safe Claude Code execution**
+Replaced the minimal `.devcontainer` config with a full setup: Python 3.11
+base, Claude Code extension + CLI preinstalled, port 8000 forwarded, API keys
+passed from host env vars, and the launch-plan folder (Start-up consultant
+project, containing `GRANT_ANALYZER_LAUNCH_PLAN.md`) bind-mounted at
+`/workspaces/launch-plan`. Plain-English usage guide in
+`.devcontainer/README.md`. Purpose: all launch-plan work packages can be
+executed by Claude Code inside an isolated container.
 
 **2026-07-07 — Project log introduced**
 Created this file as the ongoing record of the app's evolution, plus
@@ -97,9 +141,25 @@ shortlist of 10.
 
 ## Open items and known limitations
 
+- **Supabase migration not yet run (blocking the new analytics)** — the
+  feedback, events, and waitlist tables and the cost columns exist in
+  `supabase_schema.sql` but must be applied by hand in the Supabase SQL
+  editor. Until then those writes fail and are logged as warnings; the
+  analysis pipeline is unaffected by design. See `LAUNCH_SETUP.md`.
+- **Custom domain still outstanding (C1)** — the canonical, OG, and
+  Twitter URLs in `frontend/index.html` are hardcoded to the Railway
+  address and must be changed together with `APP_URL` when the domain
+  lands.
+- **Sample report is thin on scored opportunities** — the frozen sample
+  run returned 4 scored grants but 21 watchlist items. That is a real
+  output, not a bug, but it suggests the pipeline routes a lot of
+  programmes to the watchlist for multi-geography hardware profiles.
+  Worth investigating as an output-quality question, and worth re-running
+  the sample if a better showcase is wanted.
 - **Watchlist table density** — the seven-column strategic watchlist gets
   very long with many items; could benefit from a condensed or
-  card-based layout.
+  card-based layout. Now visible in the sample report, where the
+  watchlist runs to 21 rows.
 - **Progress messages that still reveal internal caps** — "Shortlisting
   top 10 for deep research…" and "Applying full scoring rubric to all 10
   shortlisted grants…" still expose the shortlist size (search-count

@@ -30,12 +30,76 @@ import asyncio
 import json
 import re
 from concurrent.futures import ThreadPoolExecutor
+from contextvars import ContextVar
 from typing import Any, AsyncGenerator, Callable
 
 import anthropic
 import httpx
 
 _executor = ThreadPoolExecutor(max_workers=4)
+
+
+# ---------------------------------------------------------------------------
+# Model + token/cost accounting
+# ---------------------------------------------------------------------------
+
+MODEL = "claude-sonnet-4-6"
+
+# USD per million tokens for MODEL. Cache writes bill at 1.25x input, cache
+# reads at 0.1x input. Update these together with MODEL.
+PRICE_PER_MTOK = {
+    "input":       3.00,
+    "output":     15.00,
+    "cache_write":  3.75,
+    "cache_read":   0.30,
+}
+
+# Per-analysis usage accumulator. A ContextVar so two analyses running
+# concurrently each accumulate into their own dict: asyncio.create_task copies
+# the current context, so whatever the task sets stays inside that task.
+_usage_ctx: ContextVar[dict | None] = ContextVar("analyzer_usage", default=None)
+
+
+def new_usage() -> dict:
+    return {
+        "api_calls":         0,
+        "input_tokens":      0,
+        "output_tokens":     0,
+        "cache_write_tokens": 0,
+        "cache_read_tokens": 0,
+    }
+
+
+def start_usage_tracking(existing: dict | None = None) -> dict:
+    """Begin accumulating token usage for the current task. Returns the
+    accumulator; the caller holds the same dict the pipeline writes into.
+    Pass the accumulator from an earlier phase of the same analysis to keep
+    counting into it, so cost-per-run covers the whole pipeline."""
+    acc = existing if existing is not None else new_usage()
+    _usage_ctx.set(acc)
+    return acc
+
+
+def _record_usage(usage: Any) -> None:
+    """Add one API response's token usage to the current accumulator."""
+    acc = _usage_ctx.get()
+    if acc is None or usage is None:
+        return
+    acc["api_calls"]          += 1
+    acc["input_tokens"]       += getattr(usage, "input_tokens", 0) or 0
+    acc["output_tokens"]      += getattr(usage, "output_tokens", 0) or 0
+    acc["cache_write_tokens"] += getattr(usage, "cache_creation_input_tokens", 0) or 0
+    acc["cache_read_tokens"]  += getattr(usage, "cache_read_input_tokens", 0) or 0
+
+
+def usage_cost_usd(usage: dict | None) -> float:
+    """Dollar cost of one analysis from its accumulated token usage."""
+    if not usage:
+        return 0.0
+    return round(sum(
+        usage.get(f"{k}_tokens", 0) / 1_000_000 * price
+        for k, price in PRICE_PER_MTOK.items()
+    ), 4)
 
 
 # ---------------------------------------------------------------------------
@@ -880,6 +944,7 @@ async def _run_tool_loop(
 
             try:
                 response = await client.messages.create(**call_kwargs)
+                _record_usage(response.usage)
             except Exception as exc:
                 import traceback
                 traceback.print_exc()
@@ -993,7 +1058,7 @@ async def _generate_discovery_queries(
     )
     async with anthropic.AsyncAnthropic() as client:
         response = await client.messages.create(
-            model="claude-sonnet-4-6",
+            model=MODEL,
             max_tokens=2000,
             temperature=0,
             system=system,
@@ -1010,6 +1075,7 @@ async def _generate_discovery_queries(
                 ),
             }],
         )
+        _record_usage(response.usage)
     try:
         return _extract_json_array(response.content[0].text)
     except Exception:
@@ -1051,7 +1117,7 @@ async def _analyse_discovery_results(
 
     async with anthropic.AsyncAnthropic() as client:
         async with client.messages.stream(
-            model="claude-sonnet-4-6",
+            model=MODEL,
             max_tokens=LONGLIST_MAX_TOKENS,
             temperature=0,
             system=_DISCOVERY_ANALYSIS_SYSTEM.replace("{years}", _year_qualifier()),
@@ -1070,6 +1136,7 @@ async def _analyse_discovery_results(
             }],
         ) as stream:
             text = await stream.get_final_text()
+            _record_usage((await stream.get_final_message()).usage)
     return _extract_json_array_tolerant(text)
 
 
@@ -1144,7 +1211,7 @@ async def _generate_research_queries(shortlist: list) -> list:
     """Ask Claude to produce 3 search queries per grant (no tool use)."""
     async with anthropic.AsyncAnthropic() as client:
         response = await client.messages.create(
-            model="claude-sonnet-4-6",
+            model=MODEL,
             max_tokens=6000,
             temperature=0,
             system=_QUERY_GENERATION_SYSTEM,
@@ -1160,6 +1227,7 @@ async def _generate_research_queries(shortlist: list) -> list:
                 ),
             }],
         )
+        _record_usage(response.usage)
     return _extract_json_array(response.content[0].text)
 
 
@@ -1263,7 +1331,7 @@ async def _score_with_evidence(
     try:
         async with anthropic.AsyncAnthropic() as client:
             async with client.messages.stream(
-                model="claude-sonnet-4-6",
+                model=MODEL,
                 max_tokens=SCORING_MAX_TOKENS,
                 temperature=0,
                 system=_SCORING_SYSTEM,
@@ -1280,6 +1348,7 @@ async def _score_with_evidence(
                         on_progress(chars_generated)
                         last_reported = chars_generated
                 text = "".join(chunks)
+                _record_usage((await stream.get_final_message()).usage)
     except Exception as exc:
         import traceback
         traceback.print_exc()
@@ -1421,7 +1490,7 @@ async def _resolve_watchlist_links(
     try:
         async with anthropic.AsyncAnthropic() as client:
             response = await client.messages.create(
-                model="claude-sonnet-4-6",
+                model=MODEL,
                 max_tokens=2000,
                 temperature=0,
                 system=_WATCHLIST_LINK_SYSTEM,
@@ -1433,6 +1502,7 @@ async def _resolve_watchlist_links(
                     ),
                 }],
             )
+            _record_usage(response.usage)
         try:
             resolutions = _extract_json_array(response.content[0].text)
         except Exception:
@@ -1609,7 +1679,7 @@ async def _validate_application_specificity(
     try:
         async with anthropic.AsyncAnthropic() as client:
             response = await client.messages.create(
-                model="claude-sonnet-4-6",
+                model=MODEL,
                 max_tokens=4000,
                 temperature=0,
                 system=_SPECIFICITY_VALIDATION_SYSTEM,
@@ -1622,6 +1692,7 @@ async def _validate_application_specificity(
                     ),
                 }],
             )
+            _record_usage(response.usage)
         try:
             validations = _extract_json_array(response.content[0].text)
         except Exception:
@@ -1750,11 +1821,12 @@ async def _generate_acronym_definitions(opportunities: list) -> list:
     try:
         async with anthropic.AsyncAnthropic() as client:
             response = await client.messages.create(
-                model="claude-sonnet-4-6",
+                model=MODEL,
                 max_tokens=_ACRONYMS_MAX_TOKENS,
                 temperature=0,
                 messages=[{"role": "user", "content": prompt}],
             )
+            _record_usage(response.usage)
         items = _extract_json_array(response.content[0].text)
     except Exception:
         return []

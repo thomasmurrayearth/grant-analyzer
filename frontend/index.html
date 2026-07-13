@@ -3,12 +3,29 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <meta name="description" content="Discover and score grant opportunities for climate and deeptech startups." />
+  <meta name="description" content="Tell us about your company. We search the live funding landscape and hand you a ranked, scored shortlist of grants worth your time — in about 10 minutes. Free, no signup." />
   <meta name="theme-color" content="#1A1916" />
   <link rel="manifest" href="/manifest.json" />
   <link rel="icon" href="/icons/icon.svg" type="image/svg+xml" />
   <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png" />
-  <title>Grant Opportunity Analyser</title>
+  <title>Grant Analyser — find the climate &amp; deeptech grants worth your time</title>
+
+  <!-- Canonical + social preview.
+       ONE PLACE TO CHANGE when the custom domain lands: update SITE_URL below
+       and the two absolute URLs here. -->
+  <link rel="canonical" href="https://grant-analyzer-production.up.railway.app/" />
+  <meta property="og:type" content="website" />
+  <meta property="og:site_name" content="Grant Analyser" />
+  <meta property="og:title" content="Find the climate &amp; deeptech grants worth your time" />
+  <meta property="og:description" content="We search the live funding landscape and hand you a ranked, scored shortlist of grants your startup can actually win — in about 10 minutes. Free, no signup." />
+  <meta property="og:url" content="https://grant-analyzer-production.up.railway.app/" />
+  <meta property="og:image" content="https://grant-analyzer-production.up.railway.app/icons/og-image.png" />
+  <meta property="og:image:width" content="1200" />
+  <meta property="og:image:height" content="630" />
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="Find the climate &amp; deeptech grants worth your time" />
+  <meta name="twitter:description" content="A ranked, scored shortlist of grants your startup can actually win — in about 10 minutes. Free, no signup." />
+  <meta name="twitter:image" content="https://grant-analyzer-production.up.railway.app/icons/og-image.png" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;600;700;800;900&family=Instrument+Sans:ital,wght@0,400;0,500;0,600;1,400&family=Spline+Sans+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
@@ -239,6 +256,18 @@
 
     .install-banner { display: none; }
     .install-banner.active { display: flex; }
+
+    /* ── Feedback rating buttons ─────────────────────────────── */
+    .rating-btn {
+      width: 2.5rem; height: 2.5rem; border-radius: 4px;
+      border: 1px solid var(--line); background: #fff;
+      font-family: 'Spline Sans Mono', monospace; font-size: .9375rem;
+      color: var(--ink); transition: all .15s ease;
+    }
+    .rating-btn:hover { border-color: var(--moss); background: rgba(61,140,104,.08); }
+    .rating-btn.selected {
+      background: var(--pine); border-color: var(--pine); color: #fff; font-weight: 600;
+    }
   </style>
 </head>
 
@@ -376,9 +405,15 @@
 
       <!-- Email notification -->
       <div>
-        <label class="eyebrow block mb-1.5" for="email">Email <span class="normal-case opacity-70">— optional, we'll notify you when results are ready</span></label>
+        <label class="eyebrow block mb-1.5" for="email">Email <span class="normal-case opacity-70">— optional</span></label>
         <input id="email" type="email" placeholder="your@email.com" class="field" />
-        <p class="text-xs text-soft mt-1.5">Analysis takes 7–10 minutes. You can safely lock your screen — we'll email you when it's done.</p>
+        <p class="text-xs text-soft mt-1.5">
+          Email me my results when they're ready. Analysis takes 7–10 minutes — you can safely lock your screen.
+        </p>
+        <label class="flex items-start gap-2 mt-2.5 text-xs text-soft cursor-pointer">
+          <input id="chk-newsletter" type="checkbox" class="accent-[#2E7055] mt-0.5" />
+          <span>Also send me occasional high-value grant deadlines for companies like mine. No spam, unsubscribe anytime.</span>
+        </label>
       </div>
 
       <div class="flex items-center gap-3 pt-1">
@@ -391,6 +426,111 @@
         and acknowledge that we collect usage data to improve this service as described in our
         <a href="/privacy.html" target="_blank" class="underline hover:text-ink">Privacy Policy</a>.
       </p>
+
+    </div>
+  </section>
+
+  <!-- ── AT CAPACITY / RATE LIMITED ─────────────────────────────────────────── -->
+  <!-- Shown instead of a dead-end error when a run is turned away. -->
+  <section id="capacity-section" class="hidden card p-6 sm:p-8 fade-up" style="border-color:#8A6F3A">
+    <h2 class="font-display text-xl tracking-tight" style="font-weight:700">Not right now — but leave your email</h2>
+    <p id="capacity-message" class="text-sm text-soft mt-2"></p>
+    <div class="flex flex-col sm:flex-row gap-3 mt-4">
+      <input id="waitlist-email" type="email" placeholder="your@email.com" class="field sm:max-w-xs" />
+      <button id="btn-waitlist" class="btn-accent">Email me when there's room</button>
+    </div>
+    <p id="waitlist-status" class="hidden text-sm mt-3" style="color:#2E7055"></p>
+  </section>
+
+  <!-- ── WHAT YOU'LL GET ────────────────────────────────────────────────────── -->
+  <section id="preview-section">
+    <div class="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-3 mb-5">
+      <div>
+        <h2 class="font-display text-2xl tracking-tight" style="font-weight:800">What you'll get</h2>
+        <p class="text-soft text-sm mt-1.5 max-w-xl leading-relaxed">
+          Ten minutes is a real commitment, so here's the output before you spend it —
+          a full report for a fictional climate hardware startup.
+        </p>
+      </div>
+      <a id="link-sample" href="?demo=1" class="btn-accent self-start sm:self-auto no-underline text-center">See the sample report →</a>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+
+      <div class="card p-5">
+        <span class="eyebrow">01 — Scored shortlist</span>
+        <p class="text-sm mt-2 leading-relaxed">
+          Every grant scored on thematic fit, strategic value, and ease of application,
+          then tiered so you know what to do first.
+        </p>
+        <div class="mt-4 space-y-1.5">
+          <div class="flex items-center gap-2">
+            <span class="tier-chip tier-must">Must Pursue</span>
+            <span class="flex gap-0.5">
+              <span class="w-2 h-2 rounded-sm inline-block score-5"></span>
+              <span class="w-2 h-2 rounded-sm inline-block score-5"></span>
+              <span class="w-2 h-2 rounded-sm inline-block score-5"></span>
+              <span class="w-2 h-2 rounded-sm inline-block score-5"></span>
+              <span class="w-2 h-2 rounded-sm inline-block score-5"></span>
+            </span>
+            <span class="font-mono text-xs num text-soft">4.80</span>
+          </div>
+          <div class="flex items-center gap-2">
+            <span class="tier-chip tier-quick">Quick Win</span>
+            <span class="flex gap-0.5">
+              <span class="w-2 h-2 rounded-sm inline-block score-4"></span>
+              <span class="w-2 h-2 rounded-sm inline-block score-4"></span>
+              <span class="w-2 h-2 rounded-sm inline-block score-4"></span>
+              <span class="w-2 h-2 rounded-sm inline-block score-4"></span>
+              <span class="w-2 h-2 rounded-sm inline-block score-0"></span>
+            </span>
+            <span class="font-mono text-xs num text-soft">3.95</span>
+          </div>
+          <div class="flex items-center gap-2">
+            <span class="tier-chip tier-prep">Next Window</span>
+            <span class="flex gap-0.5">
+              <span class="w-2 h-2 rounded-sm inline-block score-3"></span>
+              <span class="w-2 h-2 rounded-sm inline-block score-3"></span>
+              <span class="w-2 h-2 rounded-sm inline-block score-3"></span>
+              <span class="w-2 h-2 rounded-sm inline-block score-0"></span>
+              <span class="w-2 h-2 rounded-sm inline-block score-0"></span>
+            </span>
+            <span class="font-mono text-xs num text-soft">3.10</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="card p-5">
+        <span class="eyebrow">02 — Checked, not guessed</span>
+        <p class="text-sm mt-2 leading-relaxed">
+          Application links are verified, deadlines and eligibility are researched, and
+          programmes you can't lead go to a watchlist instead of wasting a slot.
+        </p>
+        <div class="mt-4 flex flex-wrap gap-1.5">
+          <span class="chip chip-ok">✓ link verified</span>
+          <span class="chip chip-ok">● Open now</span>
+          <span class="chip chip-warn">◌ Likely to recur</span>
+          <span class="chip chip-info">Partner route</span>
+          <span class="chip chip-muted">TRL 4–8</span>
+        </div>
+      </div>
+
+      <div class="card p-5">
+        <span class="eyebrow">03 — A workbook you can work from</span>
+        <p class="text-sm mt-2 leading-relaxed">
+          Download the whole analysis as an Excel file — one row per grant, live scoring
+          formulas, and the strategic recommendations.
+        </p>
+        <div class="mt-4 space-y-1.5 font-mono text-xs text-soft">
+          <div class="flex items-center gap-2"><span style="color:#2E7055">▸</span> Grant Opportunities</div>
+          <div class="flex items-center gap-2"><span style="color:#2E7055">▸</span> Strategic Recommendations</div>
+          <div class="flex items-center gap-2"><span style="color:#2E7055">▸</span> Definitions &amp; acronyms</div>
+        </div>
+        <a id="link-sample-xlsx" href="/sample/kelvara-systems-grant-analysis.xlsx"
+           class="inline-block mt-4 text-sm text-pine underline hover:no-underline">
+          ↓ Download the sample XLSX
+        </a>
+      </div>
 
     </div>
   </section>
@@ -544,10 +684,22 @@
   <!-- ── RESULTS ────────────────────────────────────────────────────────────── -->
   <section id="results-section" class="hidden space-y-8 fade-up">
 
+    <!-- Demo banner — only shown for the frozen sample report -->
+    <div id="demo-banner" class="hidden card p-4 sm:p-5" style="border-color:#8A6F3A; background:rgba(138,111,58,.06)">
+      <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+        <p class="text-sm">
+          <span class="font-semibold">This is a sample report.</span>
+          <span class="text-soft">Kelvara Systems is a fictional climate hardware startup — this is a real analysis of its profile, frozen as an example.</span>
+        </p>
+        <a href="/" class="btn-primary no-underline text-center shrink-0">Analyse your company →</a>
+      </div>
+    </div>
+
     <div class="flex flex-col sm:flex-row gap-4 sm:items-start sm:justify-between">
       <div id="company-card" class="card p-6 flex-1"></div>
       <div class="flex flex-col gap-2 self-start shrink-0">
         <button id="btn-download" class="btn-accent">↓ Download XLSX</button>
+        <button id="btn-share" class="btn-ghost">⇗ Share this tool</button>
         <button id="btn-new" class="btn-ghost">+ New analysis</button>
       </div>
     </div>
@@ -621,6 +773,65 @@
       </div>
     </div>
 
+    <!-- ── FEEDBACK ─────────────────────────────────────────────────────────── -->
+    <div id="feedback-section" class="card p-6">
+      <div id="feedback-form">
+        <h2 class="font-display text-xl tracking-tight" style="font-weight:700">How useful was this shortlist?</h2>
+        <p class="text-sm text-soft mt-1">One tap. It's what makes the next one better.</p>
+
+        <div class="flex flex-wrap items-center gap-2 mt-4">
+          <button class="rating-btn" data-rating="1">1</button>
+          <button class="rating-btn" data-rating="2">2</button>
+          <button class="rating-btn" data-rating="3">3</button>
+          <button class="rating-btn" data-rating="4">4</button>
+          <button class="rating-btn" data-rating="5">5</button>
+          <span class="text-xs text-soft ml-1">1 = not useful · 5 = genuinely useful</span>
+        </div>
+
+        <div id="feedback-detail" class="hidden mt-4 space-y-3">
+          <div>
+            <label class="eyebrow block mb-1.5" for="feedback-comment">
+              Anything wrong or missing? <span class="normal-case opacity-70">— optional</span>
+            </label>
+            <textarea id="feedback-comment" rows="3" class="rev-input resize-none"
+                      placeholder="A grant we missed, one that didn't fit, anything that felt off…"></textarea>
+          </div>
+          <label class="flex items-start gap-2 text-sm cursor-pointer">
+            <input id="feedback-contact" type="checkbox" class="accent-[#2E7055] mt-0.5" />
+            <span class="text-soft">You may contact me about my experience.</span>
+          </label>
+          <div class="flex items-center gap-3">
+            <button id="btn-feedback-send" class="btn-primary">Send feedback</button>
+            <p id="feedback-error" class="hidden text-sm text-clay"></p>
+          </div>
+        </div>
+      </div>
+
+      <div id="feedback-thanks" class="hidden">
+        <h2 class="font-display text-xl tracking-tight" style="font-weight:700">Thank you — that's genuinely useful.</h2>
+        <p class="text-sm text-soft mt-1">Your feedback goes straight into the next version of the analysis.</p>
+      </div>
+    </div>
+
+    <!-- ── CONSULTING CTA ───────────────────────────────────────────────────── -->
+    <div class="card p-6 sm:p-8" style="border-color:#2E7055; background:rgba(61,140,104,.05)">
+      <span class="eyebrow">Built by a practitioner</span>
+      <h2 class="font-display text-xl tracking-tight mt-2" style="font-weight:700">
+        Want help actually winning one of these?
+      </h2>
+      <p class="text-sm mt-2 leading-relaxed max-w-2xl">
+        I'm Thomas Murray. I help climate and deeptech startups win grant funding — this tool is the
+        landscape scan I run at the start of an engagement, productised. If you want a hand turning any
+        of the grants above into a submitted application, that's the work I do.
+      </p>
+      <div class="flex flex-wrap gap-3 mt-5">
+        <a id="cta-consulting" href="https://thomasmurray.earth/startup-journey.html" target="_blank" rel="noopener"
+           class="btn-accent no-underline">Get help with your application →</a>
+        <a id="cta-email" href="mailto:thomasmurraynz@gmail.com?subject=Grant%20application%20help"
+           class="btn-ghost no-underline">Email me directly</a>
+      </div>
+    </div>
+
   </section>
 
 </main>
@@ -655,8 +866,24 @@ let _progressCount    = 0;      // progress messages already rendered
 let _autoTimer        = null;   // setInterval handle for review-card countdown
 let _autoSeconds      = 10;     // current countdown value
 let _timerPaused      = false;  // whether user paused the auto-timer
+let _demoMode         = false;  // rendering the frozen sample report
+let _rating           = 0;      // selected feedback rating
 
 const SEARCH_MSG = /^(Searching|Researching|Executing|Verifying|Checking|Finding)/;
+
+// ---------------------------------------------------------------------------
+// Funnel tracking — fire-and-forget, never blocks or breaks the UI
+// ---------------------------------------------------------------------------
+function track(event, detail = '') {
+  try {
+    fetch('/event', {
+      method:  'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body:    JSON.stringify({ event, job_id: _jobId || '', detail }),
+      keepalive: true,
+    }).catch(() => {});
+  } catch (_) { /* tracking must never break the app */ }
+}
 
 // ---------------------------------------------------------------------------
 // DOM helpers
@@ -1040,14 +1267,18 @@ async function runPhase1() {
     prizes:       $('chk-prizes').checked,
   };
 
-  const email = $('email').value.trim();
+  const email      = $('email').value.trim();
+  const newsletter = $('chk-newsletter').checked;
 
   // Show progress immediately — never block the UI on push-permission dialog
   $('form-section').classList.add('hidden');
+  $('capacity-section').classList.add('hidden');
+  $('preview-section').classList.add('hidden');
   $('progress-section').classList.remove('hidden');
   $('btn-run').disabled = true;
   setStageActive(1);
   logLine('Starting analysis…', 'info');
+  track('analysis_started');
 
   // Request push permission concurrently; give it 3 s max so it can't stall the start
   const subscription = await Promise.race([
@@ -1059,11 +1290,16 @@ async function runPhase1() {
     const resp = await fetch('/analyse', {
       method:  'POST',
       headers: { 'Content-Type': 'application/json' },
-      body:    JSON.stringify({ url, text: combined, ..._pendingPrefs, email, subscription }),
+      body:    JSON.stringify({ url, text: combined, ..._pendingPrefs, email, newsletter, subscription }),
     });
     if (!resp.ok) {
       const err = await resp.json().catch(() => ({ detail: resp.statusText }));
-      throw new Error(err.detail || 'Server error');
+      // 429 = at capacity or daily cap. Offer the waitlist rather than a dead end.
+      if (resp.status === 429) {
+        showCapacity(err.detail, email);
+        return;
+      }
+      throw new Error(typeof err.detail === 'string' ? err.detail : 'Server error');
     }
     const data = await resp.json();
     _jobId = data.job_id;
@@ -1075,6 +1311,51 @@ async function runPhase1() {
     $('btn-run').disabled = false;
   }
 }
+
+// ---------------------------------------------------------------------------
+// At capacity / rate limited — turn an overload into an email
+// ---------------------------------------------------------------------------
+function showCapacity(detail, email) {
+  const message = (detail && detail.message) ||
+    "We can't start another analysis right now. Leave your email and we'll run yours and send you the results.";
+  const reason  = (detail && detail.reason) || 'at_capacity';
+
+  $('progress-section').classList.add('hidden');
+  $('capacity-section').classList.remove('hidden');
+  $('capacity-message').textContent = message;
+  $('capacity-section').dataset.reason = reason;
+  if (email) $('waitlist-email').value = email;
+  $('btn-run').disabled = false;
+  $('capacity-section').scrollIntoView({ behavior: 'smooth', block: 'center' });
+}
+
+$('btn-waitlist').addEventListener('click', async () => {
+  const email  = $('waitlist-email').value.trim();
+  const status = $('waitlist-status');
+  if (!email.includes('@')) {
+    status.textContent = 'Please enter a valid email address.';
+    status.style.color = '#9C4A2F';
+    status.classList.remove('hidden');
+    return;
+  }
+  try {
+    const resp = await fetch('/waitlist', {
+      method:  'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body:    JSON.stringify({ email, reason: $('capacity-section').dataset.reason || '' }),
+    });
+    if (!resp.ok) throw new Error('Could not save your email');
+    status.textContent = "Got it — we'll email you when your analysis has run.";
+    status.style.color = '#2E7055';
+    status.classList.remove('hidden');
+    $('btn-waitlist').disabled = true;
+    track('waitlist_joined');
+  } catch (err) {
+    status.textContent = err.message;
+    status.style.color = '#9C4A2F';
+    status.classList.remove('hidden');
+  }
+});
 
 // ---------------------------------------------------------------------------
 // Review card
@@ -1167,13 +1448,90 @@ async function runPhase23() {
 function renderResults(result) {
   const rs = $('results-section');
   rs.classList.remove('hidden');
+  $('preview-section').classList.add('hidden');
   renderCompanyCard(result.company_profile || {});
   renderExecSummary(result.executive_summary || {});
   renderTable(result.opportunities || []);
   renderRecommendations(result.strategic_recommendations || {});
   renderWatchlist(result.strategic_watchlist || []);
+
+  // Feedback only makes sense for a real run of your own company.
+  $('feedback-section').classList.toggle('hidden', _demoMode);
+  $('demo-banner').classList.toggle('hidden', !_demoMode);
+
+  if (!_demoMode) track('results_rendered');
   rs.scrollIntoView({ behavior: 'smooth', block: 'start' });
 }
+
+// ---------------------------------------------------------------------------
+// Feedback (C5) — the price users pay while the app is free
+// ---------------------------------------------------------------------------
+document.querySelectorAll('.rating-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    _rating = parseInt(btn.dataset.rating, 10);
+    document.querySelectorAll('.rating-btn').forEach(b => b.classList.remove('selected'));
+    btn.classList.add('selected');
+    $('feedback-detail').classList.remove('hidden');
+  });
+});
+
+$('btn-feedback-send').addEventListener('click', async () => {
+  const err = $('feedback-error');
+  err.classList.add('hidden');
+  if (!_rating) {
+    err.textContent = 'Pick a score from 1 to 5 first.';
+    err.classList.remove('hidden');
+    return;
+  }
+  try {
+    const resp = await fetch('/feedback', {
+      method:  'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body:    JSON.stringify({
+        job_id:      _jobId || '',
+        rating:      _rating,
+        comment:     $('feedback-comment').value.trim(),
+        may_contact: $('feedback-contact').checked,
+        email:       localStorage.getItem('grantAnalyserEmail') || '',
+      }),
+    });
+    if (!resp.ok) throw new Error('Could not send feedback — please try again.');
+    $('feedback-form').classList.add('hidden');
+    $('feedback-thanks').classList.remove('hidden');
+  } catch (e) {
+    err.textContent = e.message;
+    err.classList.remove('hidden');
+  }
+});
+
+// ---------------------------------------------------------------------------
+// Share (C7)
+// ---------------------------------------------------------------------------
+$('btn-share').addEventListener('click', async () => {
+  const shareData = {
+    title: 'Grant Analyser',
+    text:  'This found and scored the grants my startup could actually win, in about 10 minutes:',
+    url:   window.location.origin + '/',
+  };
+  track('share_click');
+  try {
+    if (navigator.share) {
+      await navigator.share(shareData);
+    } else {
+      await navigator.clipboard.writeText(shareData.url);
+      const btn = $('btn-share');
+      const original = btn.textContent;
+      btn.textContent = '✓ Link copied';
+      setTimeout(() => { btn.textContent = original; }, 2000);
+    }
+  } catch (_) { /* user dismissed the share sheet */ }
+});
+
+// Consulting CTA clicks — the metric the whole funnel exists for
+$('cta-consulting').addEventListener('click', () => track('cta_click', 'results_consulting'));
+$('cta-email').addEventListener('click', () => track('cta_click', 'results_email'));
+$('link-sample').addEventListener('click', () => track('sample_click'));
+$('link-sample-xlsx').addEventListener('click', () => track('sample_xlsx_download'));
 
 function renderWatchlist(items) {
   const section = $('watchlist-section');
@@ -1423,6 +1781,12 @@ document.querySelectorAll('.tier-filter').forEach(btn => {
 // Download XLSX
 // ---------------------------------------------------------------------------
 $('btn-download').addEventListener('click', async () => {
+  // The sample report has a pre-generated workbook — no job to download from.
+  if (_demoMode) {
+    track('sample_xlsx_download');
+    window.location.href = '/sample/kelvara-systems-grant-analysis.xlsx';
+    return;
+  }
   if (!_jobId) return;
   try {
     const resp = await fetch('/download', {
@@ -1449,6 +1813,12 @@ $('btn-run').addEventListener('click', runPhase1);
 $('url').addEventListener('keydown', e => { if (e.key === 'Enter') runPhase1(); });
 $('btn-continue').addEventListener('click', runPhase23);
 function backToForm() {
+  // Leaving the frozen sample: go back to a clean URL so ?demo=1 doesn't
+  // re-open it on the next load.
+  if (_demoMode) {
+    window.location.href = '/';
+    return;
+  }
   stopPolling();
   stopAutoTimer();
   localStorage.removeItem('grantAnalyserJobId');
@@ -1457,10 +1827,23 @@ function backToForm() {
   $('progress-section').classList.add('hidden');
   $('results-section').classList.add('hidden');
   $('detail-panel').classList.add('hidden');
-  $('form-section').classList.remove('hidden');
+  $('capacity-section').classList.add('hidden');
+  resetFeedback();
+  backToLanding();
   $('btn-run').disabled = false;
   clearError();
   window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function resetFeedback() {
+  _rating = 0;
+  document.querySelectorAll('.rating-btn').forEach(b => b.classList.remove('selected'));
+  $('feedback-detail').classList.add('hidden');
+  $('feedback-form').classList.remove('hidden');
+  $('feedback-thanks').classList.add('hidden');
+  $('feedback-comment').value = '';
+  $('feedback-contact').checked = false;
+  $('feedback-error').classList.add('hidden');
 }
 $('btn-back').addEventListener('click', backToForm);
 $('btn-new').addEventListener('click', backToForm);
@@ -1472,9 +1855,42 @@ $('review-section').addEventListener('focusin', e => {
 });
 
 // ---------------------------------------------------------------------------
+// Sample report (?demo=1) — a real analysis of a fictional company, frozen.
+// Renders with the live result renderers, so it can never drift from the app.
+// ---------------------------------------------------------------------------
+async function loadSampleReport() {
+  try {
+    const resp = await fetch('/sample/report.json');
+    if (!resp.ok) throw new Error('Sample report unavailable');
+    _demoMode = true;
+    _result   = await resp.json();
+    $('form-section').classList.add('hidden');
+    $('preview-section').classList.add('hidden');
+    renderResults(_result);
+    track('sample_view');
+  } catch (_) {
+    // Sample missing — fall back to the normal landing page.
+    _demoMode = false;
+  }
+}
+
+function backToLanding() {
+  $('results-section').classList.add('hidden');
+  $('form-section').classList.remove('hidden');
+  $('preview-section').classList.remove('hidden');
+}
+
+// ---------------------------------------------------------------------------
 // Restore in-progress analysis on page load
 // ---------------------------------------------------------------------------
 (async function restoreFromStorage() {
+  track('landing_view');
+
+  if (new URLSearchParams(window.location.search).has('demo')) {
+    await loadSampleReport();
+    return;
+  }
+
   const savedId = localStorage.getItem('grantAnalyserJobId');
   if (!savedId) return;
 

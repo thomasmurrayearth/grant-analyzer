@@ -1,13 +1,17 @@
 """
 Generate the grant-analysis XLSX report.
 
-Two tabs, matching the exemplar workbook layout:
+Three tabs:
   1. "Grant Opportunities"   — one row per grant. Columns A–V mirror the
      exemplar exactly; W (Applicant Route) and X (Status) are appended.
-  2. "Definitions acronyms"  — acronyms/abbreviations used in tab 1.
+  2. "Strategic Recommendations" — the narrative analysis, plus the offer of
+     help writing the applications. The workbook is the artefact users forward
+     to co-founders and boards, so it has to carry the offer with it.
+  3. "Definitions acronyms"  — acronyms/abbreviations used in tab 1.
 """
 
 import io
+import os
 import re
 from datetime import datetime
 
@@ -299,7 +303,88 @@ def _tab_opportunities(wb: Workbook, opportunities: list[dict]) -> None:
 
 
 # ---------------------------------------------------------------------------
-# Tab 2 — Definitions acronyms
+# Tab 2 — Strategic Recommendations (+ the offer of help)
+# ---------------------------------------------------------------------------
+
+# Where "get help with your application" points. Overridable so the link can
+# follow a custom domain without a code change.
+CONSULTING_URL = os.environ.get(
+    "CONSULTING_URL", "https://thomasmurray.earth/startup-journey.html"
+).strip()
+CONSULTING_EMAIL = os.environ.get("CONSULTING_EMAIL", "thomasmurraynz@gmail.com").strip()
+
+_REC_FIELDS = [
+    ("best_fit_strategy",  "Best fit strategy"),
+    ("best_geographies",   "Best geographies"),
+    ("strongest_pathways", "Strongest pathways"),
+    ("key_partnerships",   "Key partnerships"),
+    ("capability_gaps",    "Capability gaps"),
+    ("key_risks",          "Key risks"),
+]
+
+_SUMMARY_FIELDS = [
+    ("company_overview",      "Company overview"),
+    ("strongest_themes",      "Strongest themes"),
+    ("strongest_geographies", "Strongest geographies"),
+    ("key_constraints",       "Key constraints"),
+]
+
+
+def _tab_recommendations(wb: Workbook, result: dict) -> None:
+    ws = wb.create_sheet("Strategic Recommendations")
+    ws.column_dimensions["A"].width = 26
+    ws.column_dimensions["B"].width = 110
+
+    ws.append(["Section", "Detail"])
+    _style_header_row(ws)
+
+    summary = result.get("executive_summary") or {}
+    recs    = result.get("strategic_recommendations") or {}
+
+    def _section(title: str, fields: list[tuple[str, str]], source: dict) -> None:
+        wrote_any = False
+        for key, label in fields:
+            value = str(source.get(key) or "").strip()
+            if not value:
+                continue
+            if not wrote_any:
+                ws.append([title, ""])
+                ws[f"A{ws.max_row}"].font = Font(bold=True)
+                wrote_any = True
+            ws.append([label, value])
+            ws[f"B{ws.max_row}"].alignment = _DATA_ALIGN
+            ws[f"A{ws.max_row}"].alignment = _DATA_ALIGN
+
+    _section("Executive summary", _SUMMARY_FIELDS, summary)
+    _section("Strategic recommendations", _REC_FIELDS, recs)
+
+    # The offer. Deliberately last: the reader has just finished the analysis.
+    ws.append([])
+    ws.append(["Get help with these applications", ""])
+    ws[f"A{ws.max_row}"].font = Font(bold=True)
+    ws.append([
+        "About this report",
+        "Built by Thomas Murray, a consultant who helps climate and deeptech "
+        "startups win grant funding. This shortlist is the same landscape scan "
+        "I run at the start of a client engagement — if you want help turning "
+        "any of these into a submitted application, get in touch.",
+    ])
+    ws[f"B{ws.max_row}"].alignment = _DATA_ALIGN
+    ws[f"A{ws.max_row}"].alignment = _DATA_ALIGN
+
+    ws.append(["Work with Thomas", CONSULTING_URL])
+    link_cell = ws[f"B{ws.max_row}"]
+    link_cell.hyperlink = CONSULTING_URL
+    link_cell.font = _LINK_FONT
+
+    ws.append(["Contact", CONSULTING_EMAIL])
+    mail_cell = ws[f"B{ws.max_row}"]
+    mail_cell.hyperlink = f"mailto:{CONSULTING_EMAIL}"
+    mail_cell.font = _LINK_FONT
+
+
+# ---------------------------------------------------------------------------
+# Tab 3 — Definitions acronyms
 # ---------------------------------------------------------------------------
 
 # Fallback dictionary of grant-world acronyms, used only when the analysis
@@ -393,6 +478,7 @@ def generate_xlsx(result: dict) -> bytes:
     )
 
     _tab_opportunities(wb, opportunities)
+    _tab_recommendations(wb, result)
     _tab_acronyms(wb, result, opportunities)
 
     buf = io.BytesIO()

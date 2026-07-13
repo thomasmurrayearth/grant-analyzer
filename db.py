@@ -6,28 +6,11 @@ Required environment variables (set in Railway / .env):
   SUPABASE_URL   — your project URL, e.g. https://xxxx.supabase.co
   SUPABASE_KEY   — your project service-role key
 
-Supabase table DDL (run once in the Supabase SQL editor):
-
-  CREATE TABLE analyses (
-    id               BIGSERIAL PRIMARY KEY,
-    created_at       TIMESTAMPTZ DEFAULT NOW(),
-    completed_at     TIMESTAMPTZ,
-    job_id           TEXT NOT NULL,
-    company_url      TEXT,
-    input_snippet    TEXT,
-    company_name     TEXT,
-    geographies      TEXT,
-    consortium       BOOLEAN,
-    accelerators     BOOLEAN,
-    prizes           BOOLEAN,
-    status           TEXT DEFAULT 'started',
-    grants_found     INTEGER,
-    profile_json     JSONB,
-    results_json     JSONB,
-    error_message    TEXT,
-    ip_address       TEXT,
-    user_email       TEXT
-  );
+The full schema, including the funnel-analytics tables added in July 2026,
+lives in `supabase_schema.sql` — run it once in the Supabase SQL editor.
+Writes that use a column the database does not have yet are retried without
+the new fields, so an un-migrated database degrades to the old behaviour
+rather than losing the row entirely.
 """
 
 import logging
@@ -37,6 +20,14 @@ logger = logging.getLogger(__name__)
 
 _supabase_client = None
 _client_initialised = False
+
+# Fields added after the original `analyses` table shipped. If an insert or
+# update fails, we retry without these so a database that has not run the
+# latest migration still records the row.
+_ANALYSES_NEW_FIELDS = (
+    "newsletter_opt_in", "cost_usd", "input_tokens", "output_tokens",
+    "cache_read_tokens", "cache_write_tokens", "api_calls",
+)
 
 
 def _client():
@@ -56,6 +47,33 @@ def _client():
     return _supabase_client
 
 
+def _write_analyses(payload: dict, job_id: str | None, what: str) -> None:
+    """Insert (job_id None) or update a row in `analyses`, retrying once
+    without the newer columns if the database does not have them yet."""
+    c = _client()
+    if not c:
+        return
+
+    def _go(data: dict) -> None:
+        if job_id is None:
+            c.table("analyses").insert(data).execute()
+        else:
+            c.table("analyses").update(data).eq("job_id", job_id).execute()
+
+    try:
+        _go(payload)
+    except Exception as exc:
+        legacy = {k: v for k, v in payload.items() if k not in _ANALYSES_NEW_FIELDS}
+        if legacy == payload:
+            logger.warning("DB %s failed: %s", what, exc)
+            return
+        logger.warning("DB %s failed (%s) — retrying without new columns", what, exc)
+        try:
+            _go(legacy)
+        except Exception as exc2:
+            logger.warning("DB %s retry failed: %s", what, exc2)
+
+
 def log_started(
     job_id: str,
     company_url: str,
@@ -66,70 +84,132 @@ def log_started(
     prizes: bool,
     ip: str | None,
     email: str | None = None,
+    newsletter_opt_in: bool = False,
+) -> None:
+    _write_analyses({
+        "job_id":            job_id,
+        "company_url":       company_url or None,
+        "input_snippet":     (input_text or "")[:500] or None,
+        "geographies":       geographies or None,
+        "consortium":        consortium,
+        "accelerators":      accelerators,
+        "prizes":            prizes,
+        "ip_address":        ip,
+        "user_email":        email or None,
+        "newsletter_opt_in": bool(newsletter_opt_in),
+        "status":            "started",
+    }, None, "log_started")
+
+
+def log_profile_ready(job_id: str, company_name: str, profile: dict) -> None:
+    _write_analyses({
+        "company_name": company_name,
+        "profile_json": profile,
+        "status":       "profile_ready",
+    }, job_id, "log_profile_ready")
+
+
+def log_completed(
+    job_id: str,
+    grants_found: int,
+    results: dict,
+    usage: dict | None = None,
+    cost_usd: float | None = None,
+) -> None:
+    from datetime import datetime, timezone
+    payload = {
+        "status":       "completed",
+        "grants_found": grants_found,
+        "results_json": results,
+        "completed_at": datetime.now(timezone.utc).isoformat(),
+    }
+    if usage:
+        payload.update({
+            "api_calls":          usage.get("api_calls"),
+            "input_tokens":       usage.get("input_tokens"),
+            "output_tokens":      usage.get("output_tokens"),
+            "cache_read_tokens":  usage.get("cache_read_tokens"),
+            "cache_write_tokens": usage.get("cache_write_tokens"),
+        })
+    if cost_usd is not None:
+        payload["cost_usd"] = cost_usd
+    _write_analyses(payload, job_id, "log_completed")
+
+
+def log_failed(job_id: str, error: str) -> None:
+    _write_analyses({
+        "status":        "failed",
+        "error_message": (error or "")[:1000],
+    }, job_id, "log_failed")
+
+
+# ---------------------------------------------------------------------------
+# Funnel analytics: events, feedback, waitlist
+# ---------------------------------------------------------------------------
+
+def log_event(
+    event: str,
+    job_id: str | None = None,
+    ip: str | None = None,
+    detail: str | None = None,
+) -> None:
+    """Record one funnel event (page view, CTA click, XLSX download, share...).
+    Deliberately schema-light: `event` is a free-text name so new funnel steps
+    can be measured without a migration."""
+    c = _client()
+    if not c:
+        return
+    try:
+        c.table("events").insert({
+            "event":      (event or "")[:60],
+            "job_id":     job_id or None,
+            "ip_address": ip,
+            "detail":     (detail or "")[:200] or None,
+        }).execute()
+    except Exception as exc:
+        logger.warning("DB log_event failed: %s", exc)
+
+
+def log_feedback(
+    job_id: str,
+    rating: int,
+    comment: str = "",
+    may_contact: bool = False,
+    email: str | None = None,
 ) -> None:
     c = _client()
     if not c:
         return
     try:
-        snippet = (input_text or "")[:500] or None
-        c.table("analyses").insert({
-            "job_id":        job_id,
-            "company_url":   company_url or None,
-            "input_snippet": snippet,
-            "geographies":   geographies or None,
-            "consortium":    consortium,
-            "accelerators":  accelerators,
-            "prizes":        prizes,
-            "ip_address":    ip,
-            "user_email":    email or None,
-            "status":        "started",
+        c.table("feedback").insert({
+            "job_id":      job_id,
+            "rating":      rating,
+            "comment":     (comment or "")[:2000] or None,
+            "may_contact": bool(may_contact),
+            "user_email":  email or None,
         }).execute()
     except Exception as exc:
-        logger.warning("DB log_started failed: %s", exc)
+        logger.warning("DB log_feedback failed: %s", exc)
 
 
-def log_profile_ready(job_id: str, company_name: str, profile: dict) -> None:
+def log_waitlist(email: str, reason: str = "", ip: str | None = None) -> None:
+    """Email left when the app turned a run away (rate limit / at capacity)."""
     c = _client()
     if not c:
         return
     try:
-        c.table("analyses").update({
-            "company_name": company_name,
-            "profile_json": profile,
-            "status":       "profile_ready",
-        }).eq("job_id", job_id).execute()
+        c.table("waitlist").insert({
+            "user_email": email,
+            "reason":     (reason or "")[:100] or None,
+            "ip_address": ip,
+        }).execute()
     except Exception as exc:
-        logger.warning("DB log_profile_ready failed: %s", exc)
+        logger.warning("DB log_waitlist failed: %s", exc)
 
 
-def log_completed(job_id: str, grants_found: int, results: dict) -> None:
-    c = _client()
-    if not c:
-        return
-    try:
-        from datetime import datetime, timezone
-        c.table("analyses").update({
-            "status":       "completed",
-            "grants_found": grants_found,
-            "results_json": results,
-            "completed_at": datetime.now(timezone.utc).isoformat(),
-        }).eq("job_id", job_id).execute()
-    except Exception as exc:
-        logger.warning("DB log_completed failed: %s", exc)
-
-
-def log_failed(job_id: str, error: str) -> None:
-    c = _client()
-    if not c:
-        return
-    try:
-        c.table("analyses").update({
-            "status":        "failed",
-            "error_message": (error or "")[:1000],
-        }).eq("job_id", job_id).execute()
-    except Exception as exc:
-        logger.warning("DB log_failed failed: %s", exc)
-
+# ---------------------------------------------------------------------------
+# Reads
+# ---------------------------------------------------------------------------
 
 def get_completed_result(job_id: str) -> dict | None:
     """Return a job-state-shaped dict for a completed analysis, read from
@@ -163,27 +243,94 @@ def get_completed_result(job_id: str) -> dict | None:
         return None
 
 
+def _since(days: int) -> str:
+    from datetime import datetime, timedelta, timezone
+    return (datetime.now(timezone.utc) - timedelta(days=days)).isoformat()
+
+
 def get_recent_analyses(days: int = 30, limit: int = 200) -> list[dict] | None:
     """Return recent analyses (newest first) for the admin stats page.
     Returns None when the database is unavailable."""
     c = _client()
     if not c:
         return None
-    try:
-        from datetime import datetime, timedelta, timezone
-        since = (datetime.now(timezone.utc) - timedelta(days=days)).isoformat()
-        rows = (
-            c.table("analyses")
-            .select(
-                "created_at,completed_at,company_name,company_url,geographies,"
-                "status,grants_found,error_message,user_email"
+    columns = (
+        "created_at,completed_at,company_name,company_url,geographies,"
+        "status,grants_found,error_message,user_email,cost_usd,newsletter_opt_in"
+    )
+    for cols in (columns, "created_at,completed_at,company_name,company_url,"
+                          "geographies,status,grants_found,error_message,user_email"):
+        try:
+            rows = (
+                c.table("analyses")
+                .select(cols)
+                .gte("created_at", _since(days))
+                .order("created_at", desc=True)
+                .limit(limit)
+                .execute()
             )
-            .gte("created_at", since)
-            .order("created_at", desc=True)
-            .limit(limit)
+            return rows.data or []
+        except Exception as exc:
+            logger.warning("DB get_recent_analyses failed (%s): %s", cols[:20], exc)
+    return None
+
+
+def get_recent_events(days: int = 30) -> list[dict]:
+    """Funnel events in the window. Empty list when unavailable — the admin
+    page still renders without them."""
+    c = _client()
+    if not c:
+        return []
+    try:
+        rows = (
+            c.table("events")
+            .select("event,created_at,job_id")
+            .gte("created_at", _since(days))
+            .limit(5000)
             .execute()
         )
         return rows.data or []
     except Exception as exc:
-        logger.warning("DB get_recent_analyses failed: %s", exc)
+        logger.warning("DB get_recent_events failed: %s", exc)
+        return []
+
+
+def get_recent_feedback(days: int = 30) -> list[dict]:
+    c = _client()
+    if not c:
+        return []
+    try:
+        rows = (
+            c.table("feedback")
+            .select("created_at,job_id,rating,comment,may_contact,user_email")
+            .gte("created_at", _since(days))
+            .order("created_at", desc=True)
+            .limit(200)
+            .execute()
+        )
+        return rows.data or []
+    except Exception as exc:
+        logger.warning("DB get_recent_feedback failed: %s", exc)
+        return []
+
+
+def count_recent_runs_for_ip(ip: str, hours: int = 24) -> int | None:
+    """How many analyses this IP has started in the window. None when the
+    database is unavailable — callers must not rate-limit on None, or a
+    database outage would lock every user out."""
+    c = _client()
+    if not c or not ip:
+        return None
+    try:
+        rows = (
+            c.table("analyses")
+            .select("job_id")
+            .eq("ip_address", ip)
+            .gte("created_at", _since(hours / 24))
+            .limit(200)
+            .execute()
+        )
+        return len(rows.data or [])
+    except Exception as exc:
+        logger.warning("DB count_recent_runs_for_ip failed: %s", exc)
         return None
