@@ -23,14 +23,27 @@ through the June–July quality overhauls, verified with the eval harness
 in `eval/`.
 
 As of 13 July 2026 the conversion and measurement layer from the launch
-plan is in place: the landing page shows what you get before you commit
-ten minutes (including a live sample report), the results page, the XLSX,
-and the completion email all carry the consulting offer, users can rate
-the shortlist, every funnel step and the API cost of every run are
-logged, and per-IP/concurrency limits cap spend during a traffic spike.
-**One manual step is outstanding — the Supabase migration in
-`supabase_schema.sql` must be run or the new tracking silently drops.**
-See `LAUNCH_SETUP.md`.
+plan (work packages WP-1 and WP-2) is **deployed to production**: the
+landing page shows what you get before you commit ten minutes (including
+a live sample report at `/?demo=1`), the results page, the XLSX, and the
+completion email all carry the consulting offer, users can rate the
+shortlist, every funnel step and the API cost of every run are logged,
+and per-IP/concurrency limits cap spend during a traffic spike. Verified
+live after deploy (commits `d12c5cb`, `961b954`).
+
+**⚠ Blocking the next step — the Supabase migration has not been run.**
+`supabase_schema.sql` must be pasted into the Supabase SQL editor and run
+(Thomas's action; instructions in `LAUNCH_SETUP.md`). Until then, feedback,
+funnel events, waitlist emails, and cost-per-run are written and silently
+dropped, so the app looks fine but produces **no measurement data** — and
+the weekly report, the pricing gates in §6 of the launch plan, and the
+WP-1 acceptance criterion ("all events visible in Supabase") all depend on
+it. Everything else in WP-1 is done except the custom domain (C1), which
+was always blocked on Thomas buying one.
+
+**Next work packages** (per the plan's sequencing): WP-3 (explainer video
+script + assets) can start now; then the Phase 1 soft launch, then WP-4
+(launch asset pack).
 
 **What the app does:** a user describes their company (URL, pasted text,
 or uploaded document) → the app researches the company, lets the user
@@ -150,21 +163,28 @@ shortlist of 10.
 
 ## Open items and known limitations
 
-- **Supabase migration not yet run (blocking the new analytics)** — the
-  feedback, events, and waitlist tables and the cost columns exist in
-  `supabase_schema.sql` but must be applied by hand in the Supabase SQL
-  editor. Until then those writes fail and are logged as warnings; the
-  analysis pipeline is unaffected by design. See `LAUNCH_SETUP.md`.
-- **Custom domain still outstanding (C1)** — the canonical, OG, and
-  Twitter URLs in `frontend/index.html` are hardcoded to the Railway
-  address and must be changed together with `APP_URL` when the domain
-  lands.
+- **⚠ Supabase migration not yet run (Thomas's action — blocks all launch
+  analytics)** — the feedback, events, and waitlist tables and the cost
+  columns exist in `supabase_schema.sql` but must be pasted into the
+  Supabase SQL editor and run. Until then those writes fail and are logged
+  as warnings; the analysis pipeline is unaffected by design, so the app
+  looks healthy while capturing nothing. Check whether it has been done by
+  loading `/admin/stats?token=…`: if the Funnel and Economics tiles are all
+  dashes/zeros after real traffic, it hasn't. See `LAUNCH_SETUP.md`.
+- **Custom domain still outstanding (C1 — Thomas's action)** — when it
+  lands, change `APP_URL` in Railway, the four absolute URLs in the
+  `<head>` of `frontend/index.html` (canonical, `og:url`, `og:image`,
+  `twitter:image` — grouped together with a comment), and bump
+  `CACHE_NAME` in `frontend/sw.js` (currently v4).
+- **Lighthouse check not run** — the WP-1 acceptance criteria mention it;
+  OG/meta tags are in place but no performance audit has been done.
 - **Sample report is thin on scored opportunities** — the frozen sample
-  run returned 4 scored grants but 21 watchlist items. That is a real
-  output, not a bug, but it suggests the pipeline routes a lot of
-  programmes to the watchlist for multi-geography hardware profiles.
-  Worth investigating as an output-quality question, and worth re-running
-  the sample if a better showcase is wanted.
+  run (Kelvara Systems) returned 4 scored grants but 21 watchlist items.
+  That is a real, unedited output, not a bug, but it suggests the pipeline
+  routes a lot of programmes to the watchlist for multi-geography hardware
+  profiles. Worth investigating as an output-quality question, and worth
+  re-running the sample (`frontend/sample/report.json` + the matching XLSX)
+  if a better showcase is wanted. Thomas has seen it and not yet objected.
 - **Watchlist table density** — the seven-column strategic watchlist gets
   very long with many items; could benefit from a condensed or
   card-based layout. Now visible in the sample report, where the
