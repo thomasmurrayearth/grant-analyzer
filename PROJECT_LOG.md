@@ -12,7 +12,7 @@ section.
 
 ---
 
-## Where we are now (last updated 2026-07-13)
+## Where we are now (last updated 2026-07-30)
 
 **Status: live in production, and now instrumented for launch.** The app
 runs at https://grant-analyzer-production.up.railway.app/ on Railway,
@@ -45,6 +45,15 @@ was always blocked on Thomas buying one.
 script + assets) can start now; then the Phase 1 soft launch, then WP-4
 (launch asset pack).
 
+As of 30 July 2026: the XLSX download now includes the strategic watchlist
+alongside the scored shortlist (previously watchlist-only items were
+invisible in the download even though they showed on the page), the header
+carries a "Back to thomasmurray.earth" link since the app is reached from
+that site, and the profile-review auto-continue timer moved from the
+browser to the server so a run finishes grant discovery even if the user
+closes the tab (the browser can still pre-empt it early or pause it while
+editing). Service worker cache bumped to v5.
+
 **What the app does:** a user describes their company (URL, pasted text,
 or uploaded document) → the app researches the company, lets the user
 review/correct the profile, searches the live funding landscape
@@ -60,6 +69,21 @@ iOS, and desktop); job logging to Supabase (`db.py`); email + web-push
 notifications when results are ready.
 
 ## Timeline
+
+**2026-07-30 — XLSX shows the watchlist too, back-to-site link, server-side auto-continue**
+The XLSX download only ever contained the scored shortlist, so anyone
+downloading it lost the strategic watchlist items visible on the results
+page; the "Grant Opportunities" tab now includes both (watchlist rows
+sort below scored ones and show "unknown" instead of a score, since they
+were never put through the 3-axis rubric), and the frozen sample workbook
+was rebuilt to match. Since the app is reached via a link from
+thomasmurray.earth, the header now carries a "← Back to
+thomasmurray.earth" link back to it. Also converted the profile-review
+auto-continue timer from a client-side countdown to a server-side one
+(`/analyse/pause` lets an open browser hold it off while editing), so a
+run's grant-discovery phase starts even if the user closes the tab —
+closing the gap where a closed-tab run just stalled forever at the review
+step. Service worker cache bumped to v5.
 
 **2026-07-13 — Consulting offer reworded (Thomas's copy)**
 Thomas rewrote the consulting call-to-action in his own voice ("Want help
@@ -175,7 +199,7 @@ shortlist of 10.
   lands, change `APP_URL` in Railway, the four absolute URLs in the
   `<head>` of `frontend/index.html` (canonical, `og:url`, `og:image`,
   `twitter:image` — grouped together with a comment), and bump
-  `CACHE_NAME` in `frontend/sw.js` (currently v4).
+  `CACHE_NAME` in `frontend/sw.js` (currently v5).
 - **Lighthouse check not run** — the WP-1 acceptance criteria mention it;
   OG/meta tags are in place but no performance audit has been done.
 - **Sample report is thin on scored opportunities** — the frozen sample

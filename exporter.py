@@ -2,8 +2,15 @@
 Generate the grant-analysis XLSX report.
 
 Three tabs:
-  1. "Grant Opportunities"   — one row per grant. Columns A–V mirror the
-     exemplar exactly; W (Applicant Route) and X (Status) are appended.
+  1. "Grant Opportunities"   — one row per grant, both the scored shortlist
+     (result["opportunities"]) and the strategic watchlist
+     (result["strategic_watchlist"]), so the download mirrors everything the
+     web page shows. Columns A–V mirror the exemplar exactly; W (Applicant
+     Route) and X (Status) are appended. Watchlist rows were never put
+     through the full 3-axis scoring rubric, so Priority Score (and the
+     Strategic Value / Ease of Execution columns) are correctly "unknown" —
+     that's what visually separates them from scored rows without a
+     dedicated tier column.
   2. "Strategic Recommendations" — the narrative analysis, plus the offer of
      help writing the applications. The workbook is the artefact users forward
      to co-founders and boards, so it has to carry the offer with it.
@@ -105,6 +112,37 @@ def _as_excel_date(text) -> datetime | None:
         except ValueError:
             continue
     return None
+
+
+# ---------------------------------------------------------------------------
+# Strategic watchlist → Grant Opportunities row shape
+#
+# Watchlist items (result["strategic_watchlist"]) carry a smaller, differently
+# named field set than scored opportunities (see analyzer.py). This maps the
+# fields that have a genuine analogue onto the opportunity keys _tab_
+# opportunities() already reads via .get(), so a watchlist row can sit in the
+# same table. Anything with no analogue is left unset — .get() then returns
+# None and the cell renders as "unknown", same as a scored opportunity with a
+# missing field.
+# ---------------------------------------------------------------------------
+
+
+def _opportunity_row_from_watchlist(item: dict) -> dict:
+    return {
+        "name":                      item.get("name", ""),
+        "thematic_fit_explanation":  item.get("thematic_relevance", ""),
+        "thematic_fit_score":        item.get("thematic_fit"),
+        "funding_type":              item.get("funding_type", ""),
+        "max_funding":               item.get("max_funding", ""),
+        "application_link":          item.get("application_link", ""),
+        "managing_body":             item.get("managing_body", ""),
+        "reason_for_inclusion":      item.get("what_would_unlock", ""),
+        "geography":                 item.get("geography", ""),
+        "application_timing":        item.get("application_timing", ""),
+        "reason_for_caution":        item.get("why_watchlist", ""),
+        "applicant_type_match":      item.get("application_route", ""),
+        "status":                    item.get("status", ""),
+    }
 
 
 # ---------------------------------------------------------------------------
@@ -471,8 +509,15 @@ def generate_xlsx(result: dict) -> bytes:
     """Return an XLSX file as bytes from a completed analysis result dict."""
     wb = Workbook()
 
+    watchlist_rows = [
+        _opportunity_row_from_watchlist(item)
+        for item in result.get("strategic_watchlist", [])
+    ]
+    # Sort by priority_score: scored shortlist rows have a real value, so
+    # they sort above watchlist rows (which lack the key and default to 0)
+    # without needing a separate tier column.
     opportunities = sorted(
-        result.get("opportunities", []),
+        list(result.get("opportunities", [])) + watchlist_rows,
         key=lambda o: o.get("priority_score", 0) or 0,
         reverse=True,
     )

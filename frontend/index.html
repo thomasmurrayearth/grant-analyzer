@@ -96,6 +96,14 @@
       transition: color .2s ease, border-color .2s ease;
     }
     .btn-ghost:hover { color: var(--ink); border-color: var(--soft); }
+    .btn-header-back {
+      display: inline-flex; align-items: center; gap: .35rem;
+      border: 1px solid rgba(247,245,240,.25); color: var(--paper);
+      font-weight: 500; font-size: .8125rem;
+      padding: .45rem .9rem; border-radius: 4px; white-space: nowrap;
+      transition: border-color .2s ease, background .2s ease;
+    }
+    .btn-header-back:hover { border-color: rgba(247,245,240,.5); background: rgba(247,245,240,.08); }
     button:focus-visible, a:focus-visible, summary:focus-visible {
       outline: 2px solid var(--moss); outline-offset: 2px;
     }
@@ -286,7 +294,7 @@
       </svg>
       <span class="font-display font-800 text-lg tracking-tight" style="font-weight:800">Grant&nbsp;Analyser</span>
     </a>
-    <span class="eyebrow hidden sm:block" style="color:#B4B1A9">Climate &amp; deeptech funding intelligence</span>
+    <a href="https://thomasmurray.earth" class="btn-header-back no-underline">&larr; <span class="hidden sm:inline">Back to </span>thomasmurray.earth</a>
   </div>
 </header>
 
@@ -305,6 +313,7 @@
 
   <!-- ── HERO + FORM ───────────────────────────────────────────────────────── -->
   <section id="form-section">
+    <span class="eyebrow block mb-2 text-left" style="color:#B4B1A9">Climate &amp; deeptech funding intelligence</span>
     <h1 class="font-display text-3xl sm:text-4xl tracking-tight leading-tight" style="font-weight:800">
       Find the grants worth<br class="hidden sm:block" /> your time.
     </h1>
@@ -662,14 +671,11 @@
 
     </div>
 
-    <!-- Auto-continue timer -->
+    <!-- Auto-continue notice (the countdown itself now runs on the server) -->
     <div id="timer-section" class="mb-4 rounded px-4 py-3" style="background:rgba(61,140,104,.08); border:1px solid rgba(61,140,104,.3)">
-      <div class="flex items-center justify-between mb-2">
-        <p id="timer-label" class="text-xs font-mono" style="color:#2E7055">Continuing automatically in <span id="timer-count">10</span>s — or edit the profile above to take your time</p>
-        <button id="btn-pause-timer" class="text-xs underline hover:no-underline" style="color:#2E7055">Pause</button>
-      </div>
-      <div class="rounded-full h-1 overflow-hidden" style="background:rgba(61,140,104,.2)">
-        <div id="timer-bar" class="h-full transition-none" style="width:100%; background:#2E7055"></div>
+      <div class="flex items-center justify-between">
+        <p id="timer-label" class="text-xs font-mono" style="color:#2E7055">Grant search will begin automatically in a few seconds — or edit the profile above and click &ldquo;Find grants&rdquo;.</p>
+        <button id="btn-pause-timer" class="text-xs underline hover:no-underline" style="color:#2E7055">Pause auto-start</button>
       </div>
     </div>
 
@@ -863,9 +869,7 @@ let _sortAsc          = false;
 let _tierFilter       = 'all';
 let _pollTimer        = null;   // setInterval handle for status polling
 let _progressCount    = 0;      // progress messages already rendered
-let _autoTimer        = null;   // setInterval handle for review-card countdown
-let _autoSeconds      = 10;     // current countdown value
-let _timerPaused      = false;  // whether user paused the auto-timer
+let _autoContinuePaused = false;  // whether we've asked the server to hold off
 let _demoMode         = false;  // rendering the frozen sample report
 let _rating           = 0;      // selected feedback rating
 
@@ -1072,7 +1076,9 @@ function handleJobUpdate(job) {
   });
   _progressCount = msgs.length;
 
-  if (job.stage) setStageActive(job.stage);
+  // While the review card is up (profile_ready) the timeline is governed by
+  // markPhase1Done(); don't let a stale stage value re-activate Stage 1.
+  if (job.stage && job.status !== 'profile_ready') setStageActive(job.stage);
 
   // Live ticker: show the latest activity on the current stage
   if (newMsgs.length && job.stage &&
@@ -1081,12 +1087,25 @@ function handleJobUpdate(job) {
   }
 
   if (job.status === 'profile_ready' && !_pendingProfile) {
-    stopPolling();
+    // Phase 1 done — show the profile for review. Keep polling (we no longer
+    // stop here) so we notice when the SERVER auto-continues into Phase 2+3,
+    // even if the user just leaves this card sitting.
     _pendingProfile = job.profile;
     logLine('✓ Company research complete — review the profile below', 'success');
     markPhase1Done();
     showReviewCard(job.profile, job.source_note || '');
     startAutoTimer();
+
+  } else if (job.status === 'phase23_running' &&
+             !$('review-section').classList.contains('hidden')) {
+    // Grant discovery has started — by the server's auto-continue or by the
+    // user — while the review card is still up. Swap it for the spinner and
+    // reset the progress counter so Phase 2+3's log starts from its first line.
+    stopAutoTimer();
+    _progressCount = 0;
+    $('review-section').classList.add('hidden');
+    resumeSpinner();
+    setStageActive(job.stage || 2);
 
   } else if (job.status === 'completed') {
     stopPolling();
@@ -1112,45 +1131,43 @@ function handleJobUpdate(job) {
 }
 
 // ---------------------------------------------------------------------------
-// Auto-continue timer (review card)
+// Auto-continue notice (review card)
+//
+// The countdown itself now runs on the SERVER, so Phase 2+3 starts even if
+// this browser tab is closed. These functions only show the notice and let
+// the user pause the server's timer while they edit the profile.
 // ---------------------------------------------------------------------------
 function startAutoTimer() {
-  stopAutoTimer();
-  _autoSeconds  = 10;
-  _timerPaused  = false;
-  $('timer-section').classList.remove('hidden');
-  $('timer-bar').style.transition = 'none';
-  $('timer-bar').style.width      = '100%';
-  updateTimerDisplay();
-
-  _autoTimer = setInterval(() => {
-    if (_timerPaused) return;
-    _autoSeconds--;
-    updateTimerDisplay();
-    $('timer-bar').style.transition = 'width 1s linear';
-    $('timer-bar').style.width      = (_autoSeconds / 10 * 100) + '%';
-    if (_autoSeconds <= 0) {
-      stopAutoTimer();
-      runPhase23();
-    }
-  }, 1000);
+  _autoContinuePaused = false;
+  const ts = $('timer-section');
+  if (ts) ts.classList.remove('hidden');
+  $('timer-label').textContent =
+    'Grant search will begin automatically in a few seconds — or edit the profile above and click "Find grants".';
+  $('btn-pause-timer').classList.remove('hidden');
 }
 
 function stopAutoTimer() {
-  if (_autoTimer) { clearInterval(_autoTimer); _autoTimer = null; }
   const ts = $('timer-section');
   if (ts) ts.classList.add('hidden');
 }
 
-function pauseAutoTimer() {
-  _timerPaused = true;
-  $('timer-label').textContent = 'Timer paused — take your time, then click "Find grants" when ready.';
+// Tell the server to hold off auto-continuing (the user is editing). Phase 2+3
+// then starts only when they click "Find grants". Best-effort: if the request
+// fails, the button still works.
+async function pauseAutoTimer() {
+  if (_autoContinuePaused) return;
+  _autoContinuePaused = true;
+  $('timer-label').textContent =
+    'Auto-start paused — take your time, then click "Find grants" when you\'re ready.';
   $('btn-pause-timer').classList.add('hidden');
-  $('timer-bar').style.transition = 'none';
-}
-
-function updateTimerDisplay() {
-  $('timer-count').textContent = _autoSeconds;
+  if (!_jobId) return;
+  try {
+    await fetch('/analyse/pause', {
+      method:  'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body:    JSON.stringify({ job_id: _jobId }),
+    });
+  } catch (_) { /* best-effort */ }
 }
 
 // ---------------------------------------------------------------------------
@@ -1923,6 +1940,8 @@ function backToLanding() {
       markPhase1Done();
       showReviewCard(job.profile, job.source_note || '');
       startAutoTimer();
+      // Keep polling so we notice when the server auto-continues into Phase 2+3.
+      startPolling(savedId);
 
     } else if (job.status === 'failed') {
       localStorage.removeItem('grantAnalyserJobId');

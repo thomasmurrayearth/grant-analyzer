@@ -52,6 +52,27 @@ _jobs: dict[str, dict] = {}
 # Completed results cache for XLSX download  {job_id: result_dict}
 _results: dict[str, dict] = {}
 
+# ---------------------------------------------------------------------------
+# Server-side auto-continue state
+#
+# When Phase 1 finishes, the server (not the browser) schedules Phase 2+3 to
+# start after a short grace period. This makes the hand-off survive the user
+# closing their browser tab. These live OUTSIDE the _jobs dict because that
+# dict is serialised to JSON by /status, and asyncio.Task objects are not
+# JSON-serialisable.
+# ---------------------------------------------------------------------------
+
+# {job_id: asyncio.Task} — the pending "start Phase 2+3 soon" timer.
+_auto_continue_tasks: dict[str, "asyncio.Task"] = {}
+
+# job_ids whose Phase 2+3 has already begun, so it can never start twice
+# (server auto-continue vs. the user clicking "Find grants").
+_phase23_started: set[str] = set()
+
+# job_ids where an open browser asked us to hold off (user is editing the
+# profile). The server timer will not fire for these.
+_auto_paused: set[str] = set()
+
 
 # ---------------------------------------------------------------------------
 # Abuse control
@@ -74,6 +95,12 @@ def _int_env(name: str, default: int) -> int:
 
 MAX_RUNS_PER_IP_PER_DAY = _int_env("MAX_RUNS_PER_IP_PER_DAY", 5)
 MAX_CONCURRENT_JOBS     = _int_env("MAX_CONCURRENT_JOBS", 4)
+
+# Seconds to wait after Phase 1 finishes before the server auto-starts Phase
+# 2+3. Long enough for an open browser to show the profile and let the user
+# start editing (which pauses this timer); short enough that a closed-browser
+# run isn't left hanging. Overridable from the environment without a redeploy.
+AUTO_CONTINUE_DELAY_SECONDS = _int_env("AUTO_CONTINUE_DELAY_SECONDS", 15)
 
 AT_CAPACITY_MESSAGE = (
     "We're at capacity right now — analyses are queued behind other users. "
@@ -162,6 +189,10 @@ class ContinueRequest(BaseModel):
     email:        str  = ""
 
 
+class PauseRequest(BaseModel):
+    job_id: str
+
+
 class DownloadRequest(BaseModel):
     job_id: str
 
@@ -225,6 +256,14 @@ async def _phase1_task(
         job["status"] = "failed"
         job["error"]  = str(exc)
         await asyncio.to_thread(db.log_failed, job_id, str(exc))
+        return
+
+    # Phase 1 finished cleanly. If a profile is ready, hand off to Phase 2+3 on
+    # a server-side timer so the analysis proceeds even if the user has closed
+    # their browser. An open browser can pre-empt this (edit + "Find grants")
+    # or pause it while editing (see /analyse/pause).
+    if job.get("status") == "profile_ready":
+        _schedule_auto_continue(job_id, preferences, email)
 
 
 async def _phase23_task(
@@ -291,6 +330,56 @@ async def _phase23_task(
         job["status"] = "failed"
         job["error"]  = str(exc)
         await asyncio.to_thread(db.log_failed, job_id, str(exc))
+
+
+def _begin_phase23(
+    job_id: str,
+    profile: dict,
+    preferences: dict,
+    email: str | None,
+) -> bool:
+    """
+    Start Phase 2+3 for a job exactly once. Returns False if it was already
+    started (e.g. the server auto-continued and then the user also clicked
+    "Find grants"). Cancels any pending auto-continue timer for the job.
+    """
+    if job_id in _phase23_started:
+        return False
+    _phase23_started.add(job_id)
+    pending = _auto_continue_tasks.pop(job_id, None)
+    if pending and not pending.done():
+        pending.cancel()
+    asyncio.create_task(_phase23_task(job_id, profile, preferences, email))
+    return True
+
+
+def _schedule_auto_continue(
+    job_id: str,
+    preferences: dict,
+    email: str | None,
+) -> None:
+    """
+    After Phase 1, wait AUTO_CONTINUE_DELAY_SECONDS and then start Phase 2+3
+    using the profile the server already has — unless the user has paused it
+    (editing) or already started it themselves. This is what makes the
+    hand-off independent of the browser staying open.
+    """
+    async def _runner() -> None:
+        try:
+            await asyncio.sleep(AUTO_CONTINUE_DELAY_SECONDS)
+        except asyncio.CancelledError:
+            return
+        # We're firing now — drop our own handle so _begin_phase23 doesn't try
+        # to cancel the task from inside itself.
+        _auto_continue_tasks.pop(job_id, None)
+        if job_id in _auto_paused:
+            return
+        job = _jobs.get(job_id)
+        if not job or job.get("status") != "profile_ready":
+            return
+        _begin_phase23(job_id, job.get("profile") or {}, preferences, email)
+
+    _auto_continue_tasks[job_id] = asyncio.create_task(_runner())
 
 
 # ---------------------------------------------------------------------------
@@ -402,7 +491,11 @@ async def analyse(req: AnalyseRequest, request: Request) -> dict:
 async def analyse_continue(req: ContinueRequest) -> dict:
     """
     Phases 2+3 — start grant discovery as a background job.
-    Returns {"job_id": "<uuid>"} immediately.
+
+    Called when the user clicks "Find grants" (optionally after editing the
+    profile). Uses the same once-only starter as the server's auto-continue,
+    so whichever fires first wins and the other becomes a no-op. Returns
+    {"job_id": "<uuid>"} immediately.
     """
     if not os.environ.get("ANTHROPIC_API_KEY"):
         raise HTTPException(status_code=500, detail="ANTHROPIC_API_KEY not set.")
@@ -410,9 +503,29 @@ async def analyse_continue(req: ContinueRequest) -> dict:
     job_id = req.job_id
     email  = req.email.strip() or (_jobs.get(job_id, {}).get("email")) or None
 
-    asyncio.create_task(_phase23_task(job_id, req.profile, _prefs(req), email))
+    # If the server already auto-continued a moment ago, this is a harmless
+    # no-op and we just report the running job.
+    _begin_phase23(job_id, req.profile, _prefs(req), email)
 
     return {"job_id": job_id}
+
+
+@app.post("/analyse/pause")
+async def analyse_pause(req: PauseRequest) -> dict:
+    """
+    Ask the server to hold off on auto-continuing Phase 2+3 for this job.
+
+    An open browser calls this when the user starts editing the reviewed
+    profile, so the grace-period timer doesn't fire mid-edit. Phase 2+3 then
+    starts only when the user clicks "Find grants". If Phase 2+3 has already
+    begun this is a harmless no-op.
+    """
+    job_id = req.job_id
+    _auto_paused.add(job_id)
+    pending = _auto_continue_tasks.pop(job_id, None)
+    if pending and not pending.done():
+        pending.cancel()
+    return {"paused": True, "job_id": job_id}
 
 
 @app.get("/status/{job_id}")

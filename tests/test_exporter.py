@@ -30,6 +30,21 @@ RESULT = {
         "application_link": "https://example.org/apply",
         "deadline": "2026-09-30",
     }],
+    "strategic_watchlist": [{
+        "name": "Example Relationship Fund",
+        "managing_body": "Example Foundation",
+        "geography": "UK",
+        "opportunity_type": "relationship_led_funder",
+        "application_route": "invitation_or_relationship_led",
+        "application_timing": "recurring_uncertain",
+        "status": "Recurring",
+        "application_link": "https://example.org/watch",
+        "funding_type": "Grant",
+        "max_funding": "£50,000",
+        "thematic_relevance": "Strong alignment with the circular economy theme.",
+        "why_watchlist": "Requires an existing relationship with the funder.",
+        "what_would_unlock": "An introduction from an existing grantee.",
+    }],
     "acronym_definitions": [{"acronym": "TRL", "definition": "Technology Readiness Level"}],
 }
 
@@ -58,6 +73,27 @@ class ExporterTest(unittest.TestCase):
         ws = self.wb["Grant Opportunities"]
         self.assertEqual(ws["A2"].value, "Example Innovation Fund")
         self.assertEqual(ws["B2"].value, "=(2*D2)+F2+H2")
+
+    def test_watchlist_items_are_folded_into_the_same_tab(self):
+        # No separate "Strategic Watchlist" tab — still exactly three sheets.
+        self.assertEqual(len(self.wb.sheetnames), 3)
+
+        ws = self.wb["Grant Opportunities"]
+        # Scored shortlist row sorts above the unscored watchlist row.
+        self.assertEqual(ws["A2"].value, "Example Innovation Fund")
+        self.assertEqual(ws["A3"].value, "Example Relationship Fund")
+
+        # Watchlist row has no 3-axis score, so Priority Score reads
+        # "unknown" rather than a formula or number — no tier column needed.
+        self.assertEqual(ws["B3"].value, "unknown")
+        self.assertEqual(ws["D3"].value, "unknown")
+
+        self.assertEqual(ws["K3"].value, "https://example.org/watch")
+        self.assertEqual(ws["L3"].value, "Example Foundation")
+        self.assertEqual(ws["T3"].value, "UK")
+        self.assertEqual(ws["X3"].value, "Recurring")
+        self.assertIn("circular economy", ws["C3"].value)
+        self.assertIn("relationship with the funder", ws["V3"].value)
 
     def _sheet_text(self, name: str) -> str:
         return "\n".join(

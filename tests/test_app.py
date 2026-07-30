@@ -194,3 +194,94 @@ class CostAccountingTest(unittest.TestCase):
         analyzer._record_usage(FakeUsage())
         self.assertIs(resumed, acc)
         self.assertEqual(acc["api_calls"], 3)
+
+
+class ServerSideAutoContinueTest(unittest.IsolatedAsyncioTestCase):
+    """
+    Phase 1 must hand off to Phase 2+3 on a SERVER-side timer, so a run finishes
+    even if the user has closed their browser. An open browser can still pre-empt
+    (Find grants) or pause (editing) the timer.
+    """
+
+    PREFS = {"geographies": None, "consortium": True,
+             "accelerators": True, "prizes": True}
+
+    def setUp(self):
+        # Fake, instant phases so no real API calls happen.
+        async def fake_phase1(url=None, extra_text=None, preferences=None):
+            yield {"type": "profile_ready",
+                   "profile": {"name": "TestCo"}, "source_note": ""}
+
+        async def fake_phase23(profile, preferences):
+            yield {"type": "complete",
+                   "result": {"opportunities": [{"n": 1}, {"n": 2}],
+                              "company_profile": {"name": "TestCo"}}}
+
+        self._saved = (main.run_phase1, main.run_phase23,
+                       main.AUTO_CONTINUE_DELAY_SECONDS)
+        main.run_phase1 = fake_phase1
+        main.run_phase23 = fake_phase23
+        main.AUTO_CONTINUE_DELAY_SECONDS = 0  # fire almost immediately in tests
+
+        self._patches = [
+            patch("main.analyzer.start_usage_tracking", lambda *a, **k: {}),
+            patch("main.analyzer.usage_cost_usd", lambda *a, **k: 0.0),
+            patch("main.db.log_profile_ready", lambda *a, **k: None),
+            patch("main.db.log_completed", lambda *a, **k: None),
+            patch("main.db.log_failed", lambda *a, **k: None),
+            patch("main.email_sender.send_results_email", lambda *a, **k: None),
+        ]
+        for p in self._patches:
+            p.start()
+
+    def tearDown(self):
+        for p in self._patches:
+            p.stop()
+        (main.run_phase1, main.run_phase23,
+         main.AUTO_CONTINUE_DELAY_SECONDS) = self._saved
+        for store in (main._jobs, main._results, main._phase23_started,
+                      main._auto_paused, main._auto_continue_tasks):
+            store.clear()
+
+    def _fresh_job(self, job_id):
+        main._jobs[job_id] = {
+            "status": "started", "progress": [], "stage": 1, "profile": None,
+            "source_note": "", "result": None, "error": None, "prefs": self.PREFS,
+        }
+
+    async def _wait_status(self, job_id, target, timeout=3.0):
+        import asyncio
+        for _ in range(int(timeout / 0.02)):
+            if main._jobs[job_id]["status"] == target:
+                return True
+            await asyncio.sleep(0.02)
+        return False
+
+    async def test_auto_continues_without_a_browser_call(self):
+        self._fresh_job("j1")
+        await main._phase1_task("j1", "https://x", None, self.PREFS, None)
+        self.assertEqual(main._jobs["j1"]["status"], "profile_ready")
+        # No /analyse/continue call — the server timer must drive it.
+        self.assertTrue(await self._wait_status("j1", "completed"),
+                        "server did not auto-continue Phase 2+3")
+
+    async def test_pause_holds_the_timer(self):
+        import asyncio
+        self._fresh_job("j2")
+        await main._phase1_task("j2", "https://x", None, self.PREFS, None)
+        await main.analyse_pause(main.PauseRequest(job_id="j2"))
+        await asyncio.sleep(0.1)  # well past the (0s) delay
+        self.assertEqual(main._jobs["j2"]["status"], "profile_ready",
+                         "paused job auto-continued anyway")
+
+    async def test_manual_continue_starts_phase23_once(self):
+        self._fresh_job("j3")
+        await main._phase1_task("j3", "https://x", None, self.PREFS, None)
+        await main.analyse_pause(main.PauseRequest(job_id="j3"))  # stop the timer
+        await main.analyse_continue(
+            main.ContinueRequest(job_id="j3", profile={"name": "TestCo"}))
+        # A racing second click must be a harmless no-op, not a second run.
+        await main.analyse_continue(
+            main.ContinueRequest(job_id="j3", profile={"name": "TestCo"}))
+        self.assertTrue(await self._wait_status("j3", "completed"))
+        self.assertIn("j3", main._phase23_started)
