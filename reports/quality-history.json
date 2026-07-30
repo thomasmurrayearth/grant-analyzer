@@ -151,6 +151,99 @@
         "Real user output had never been read: db.get_recent_analyses did not select job_id and no endpoint exposed stored results. Fixed in this commit.",
         "No mechanism produced new measurements between cycles. Fixed by the fallback self-benchmark in benchmark.py."
       ]
+    },
+    {
+      "date": "2026-07-30",
+      "cycle": 1,
+      "label": "first live cycle \u2014 blind",
+      "commit": "65bc498",
+      "source": "/admin/quality.json (unreachable); baseline carried forward from cycle 0",
+      "headline": "Analytics database unreachable. Nothing recorded since it went away; app itself healthy.",
+      "real_runs": {
+        "count": null,
+        "completed": null,
+        "stalled": null,
+        "structural_precision": null,
+        "main_count_mean": null,
+        "broken_link_rate": null,
+        "convergence_exact": null,
+        "feedback_mean": null,
+        "feedback_n": null,
+        "note": "Database unreachable \u2014 could not look. Not the same as nothing happening."
+      },
+      "benchmark": {
+        "ran": false,
+        "reason": "database unreachable, so the app cannot tell whether real runs happened; it correctly declines to spend money on a guess",
+        "per_case": {
+          "thermify": {
+            "runs": 5,
+            "date_range": [
+              "2026-07-04",
+              "2026-07-06"
+            ],
+            "recall_mean": 0.92,
+            "exclusion_accuracy_mean": 0.9,
+            "structural_precision": 0.76,
+            "main_count_range": [
+              4,
+              5
+            ],
+            "broken_link_rate": 0.11,
+            "tier_concentration": 0.51,
+            "convergence_exact": 0.209,
+            "convergence_family": 0.249,
+            "carried_forward": true
+          },
+          "germandeeptech": {
+            "runs": 1,
+            "date_range": [
+              "2026-07-04",
+              "2026-07-04"
+            ],
+            "recall_mean": 1.0,
+            "exclusion_accuracy_mean": 1.0,
+            "structural_precision": 1.0,
+            "main_count_range": [
+              5,
+              5
+            ],
+            "broken_link_rate": 0.235,
+            "tier_concentration": 0.6,
+            "convergence_exact": null,
+            "convergence_family": null,
+            "carried_forward": true
+          }
+        }
+      },
+      "verified": [],
+      "regressions": [],
+      "proposals_open": [
+        {
+          "id": 1,
+          "summary": "Make eligibility a hard gate rather than a score input",
+          "verification": "exclusion accuracy >= 0.98; zero must_not_appear violations"
+        },
+        {
+          "id": 2,
+          "summary": "Never recommend a programme whose link is known broken",
+          "verification": "broken-link rate < 0.02; specific-link rate > 0.85"
+        },
+        {
+          "id": 3,
+          "summary": "Close the gap between 10 promised and 4-5 delivered",
+          "verification": "main-list median >= 8 with structural precision not falling"
+        },
+        {
+          "id": 4,
+          "summary": "Widen the ground-truth bench beyond two companies",
+          "verification": ">= 5 real completed runs readable next cycle"
+        }
+      ],
+      "blockers": [
+        "Analytics database unreachable \u2014 Supabase hostname does not resolve. Thomas's action: restore or recreate the project, set SUPABASE_URL/SUPABASE_KEY in Railway, re-run supabase_schema.sql, confirm via /health?deep=1.",
+        "Commits 2d93700 and 65bc498 are on main locally but unpushed \u2014 no GitHub credentials in the session. /admin/quality.json is not live until they are pushed.",
+        "No real user analysis has ever been inspected for quality."
+      ]
     }
   ]
 }
