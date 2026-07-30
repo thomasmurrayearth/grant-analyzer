@@ -445,10 +445,33 @@ def vapid_public_key() -> dict:
 
 
 @app.get("/health")
-def health() -> dict:
+async def health(deep: int = 0) -> dict:
+    """Liveness, and — with `?deep=1` — whether analytics is actually recording.
+
+    The shallow check stays cheap and always returns 200 so the platform's own
+    health probe is not coupled to a third-party database: an analytics outage
+    must not roll back a deploy of a pipeline that works fine.
+
+    The deep check exists because the failure it looks for is silent by design.
+    Database writes are swallowed so a user's analysis never breaks; the price
+    is that the app looks perfectly healthy while recording nothing at all. One
+    query makes that visible. It reports state, never credentials.
+    """
     if not os.environ.get("ANTHROPIC_API_KEY"):
         return {"status": "warning", "message": "ANTHROPIC_API_KEY not set"}
-    return {"status": "ok"}
+    if not deep:
+        return {"status": "ok"}
+    db_health = await asyncio.to_thread(db.health)
+    return {
+        "status": "ok" if db_health["reachable"] else "degraded",
+        "analysis_pipeline": "ok",
+        "analytics_database": "ok" if db_health["reachable"] else "unavailable",
+        "message": (
+            "ok" if db_health["reachable"] else
+            "Analyses still run and users are unaffected, but nothing is being "
+            "recorded — no feedback, funnel, cost or output-quality data."
+        ),
+    }
 
 
 @app.post("/analyse")
@@ -711,7 +734,15 @@ async def admin_stats(token: str = "", days: int = 30) -> Response:
 
     rows = await asyncio.to_thread(db.get_recent_analyses, days)
     if rows is None:
-        raise HTTPException(status_code=503, detail="Database unavailable")
+        state = await asyncio.to_thread(db.health)
+        raise HTTPException(
+            status_code=503,
+            detail=(
+                "Analytics database unavailable — the app is still running "
+                "analyses, but nothing is being recorded. "
+                f"Diagnosis: {state['detail']}"
+            ),
+        )
     events   = await asyncio.to_thread(db.get_recent_events, days)
     feedback = await asyncio.to_thread(db.get_recent_feedback, days)
 
@@ -918,7 +949,18 @@ async def admin_quality(token: str = "", days: int = 14, runs: int = 25) -> dict
     blind_spots: list[str] = []
     analyses = await asyncio.to_thread(db.get_recent_analyses, days)
     if analyses is None:
-        raise HTTPException(status_code=503, detail="Database unavailable")
+        # Say *why*, not just "unavailable". A review cycle that reads a bare
+        # 503 can only report that it was blind; one that reads the reason can
+        # tell the owner what to fix.
+        state = await asyncio.to_thread(db.health)
+        raise HTTPException(
+            status_code=503,
+            detail=(
+                "Analytics database unavailable — no usage or output-quality data "
+                "can be read. Analyses themselves are unaffected. "
+                f"Diagnosis: {state['detail']}"
+            ),
+        )
 
     bench_events = await asyncio.to_thread(db.get_events_named, benchmark.RUN_EVENT, max(days, 60))
     cycle_events = await asyncio.to_thread(db.get_events_named, benchmark.CYCLE_EVENT, max(days, 60))

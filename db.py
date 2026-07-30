@@ -243,6 +243,53 @@ def get_completed_result(job_id: str) -> dict | None:
         return None
 
 
+def health() -> dict:
+    """Is the analytics database configured, and can we actually reach it?
+
+    Every write in this module fails quietly, on purpose: an analytics outage
+    must never break an analysis a user is waiting on. The cost of that choice
+    is that an outage is invisible — the app looks healthy while recording
+    nothing, and the first sign is a review cycle finding an empty fortnight it
+    cannot explain. This is the counterweight: one cheap read whose only job is
+    to make the silence audible.
+
+    Returns `{configured, reachable, detail}`. `detail` is a short reason, safe
+    to show to the owner but deliberately free of connection strings or keys.
+    """
+    if not (os.environ.get("SUPABASE_URL") and os.environ.get("SUPABASE_KEY")):
+        return {
+            "configured": False,
+            "reachable": False,
+            "detail": "SUPABASE_URL / SUPABASE_KEY are not set in the environment.",
+        }
+    c = _client()
+    if not c:
+        return {
+            "configured": True,
+            "reachable": False,
+            "detail": "Supabase client could not be created — check the URL and key.",
+        }
+    try:
+        c.table("analyses").select("job_id").limit(1).execute()
+        return {"configured": True, "reachable": True, "detail": "ok"}
+    except Exception as exc:  # noqa: BLE001
+        reason = str(exc)
+        hint = ""
+        lowered = reason.lower()
+        if "name or service not known" in lowered or "nodename" in lowered \
+                or "getaddrinfo" in lowered or "resolve" in lowered:
+            hint = (" The database hostname does not resolve, which usually means the "
+                    "project was deleted or its reference changed rather than a "
+                    "temporary outage.")
+        elif "401" in reason or "403" in reason or "apikey" in lowered:
+            hint = " The credentials were rejected — the key may have been rotated."
+        return {
+            "configured": True,
+            "reachable": False,
+            "detail": f"{reason[:200]}{hint}",
+        }
+
+
 def _since(days: int) -> str:
     from datetime import datetime, timedelta, timezone
     return (datetime.now(timezone.utc) - timedelta(days=days)).isoformat()

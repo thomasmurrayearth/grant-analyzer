@@ -110,6 +110,30 @@ table so a quiet fortnight is never ambiguous between "suppressed by
 design" and "the scheduler never fired". Benchmark runs are excluded from
 every usage and economics figure. 90 new tests; 153 green in total.
 
+**2026-07-30 — ⚠ The analytics database is unreachable, and now says so**
+Commit subject: *Surface analytics outages instead of swallowing them*.
+Verifying the new quality endpoint against production turned up a live
+fault: `/admin/stats` returns **503 Database unavailable**, and the
+Supabase hostname in `SUPABASE_URL` does not resolve from a browser
+either — which points at a deleted or renamed project rather than a
+passing outage. The app itself is fine: analyses run, users are
+unaffected, because every database write is deliberately swallowed so an
+analytics problem can never break a run someone is waiting on. The cost of
+that design is exactly what happened here — the app looked healthy for
+days while recording nothing, and any feedback, funnel, cost and results
+data written since is presumably gone with the project. **Thomas's action:
+restore or recreate the Supabase project, set `SUPABASE_URL` and
+`SUPABASE_KEY` in Railway, re-run `supabase_schema.sql`.** What is in the
+repo's hands is making it audible next time: `db.health()` performs one
+cheap read and classifies the failure (not configured / unreachable /
+credentials rejected, with a plain-English hint when the hostname doesn't
+resolve); `/health?deep=1` reports `degraded` with the pipeline and the
+database separated, while plain `/health` stays cheap and always 200 so a
+platform probe is never coupled to a third-party database; and both admin
+endpoints now return the diagnosis in their 503 rather than a bare
+"unavailable". Nothing is logged that could leak a connection string or
+key, and a test pins that.
+
 **2026-07-30 — Baseline: what the numbers actually say today**
 Scoring the sixteen stored Thermify runs and one German run through the
 new library (`eval/score_stored.py`, offline, no API key) gives the first
@@ -262,6 +286,14 @@ shortlist of 10.
 
 ## Open items and known limitations
 
+- **⚠ Analytics database unreachable (Thomas's action — blocks all
+  measurement)** — as at 30 July 2026 `/admin/stats` returns 503 and the
+  Supabase hostname does not resolve, so nothing is being recorded and
+  neither the launch metrics nor the fortnightly quality cycle can see
+  anything. Analyses still run normally. Fix: restore or recreate the
+  Supabase project, set `SUPABASE_URL` and `SUPABASE_KEY` in Railway,
+  re-run `supabase_schema.sql`, then confirm with
+  `/health?deep=1` (expect `"analytics_database": "ok"`).
 - **Ground truth covers two companies** — `eval/cases.py` holds Thermify
   (Wales, TRL 7–8, real) and a fictional German heat-pump company. Recall
   and exclusion accuracy are therefore directional rather than

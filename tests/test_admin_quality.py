@@ -102,9 +102,53 @@ class AdminQualityAccessTest(unittest.TestCase):
         # Silently returning zeroes here would let a cycle conclude "nothing
         # happened" when the truth is "we could not look".
         with patch.dict(os.environ, {"ADMIN_TOKEN": TOKEN}), \
-             patch.object(main.db, "get_recent_analyses", return_value=None):
+             patch.object(main.db, "get_recent_analyses", return_value=None), \
+             patch.object(main.db, "health", return_value={
+                 "configured": True, "reachable": False,
+                 "detail": "hostname does not resolve"}):
             response = self.client.get(f"/admin/quality.json?token={TOKEN}")
         self.assertEqual(response.status_code, 503)
+        self.assertIn("hostname does not resolve", response.json()["detail"])
+
+
+class HealthCheckTest(unittest.TestCase):
+    """The shallow check must never depend on analytics; the deep one must
+    surface an outage the app is designed to swallow."""
+
+    @classmethod
+    def setUpClass(cls):
+        cls.client = TestClient(app)
+
+    def test_the_shallow_check_ignores_the_database(self):
+        # Coupling the platform's health probe to a third-party database would
+        # let an analytics outage roll back a deploy of a working pipeline.
+        with patch.object(main.db, "health", side_effect=AssertionError("must not check")):
+            response = self.client.get("/health")
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.json()["status"], "ok")
+
+    def test_the_deep_check_reports_a_healthy_database(self):
+        with patch.object(main.db, "health", return_value={
+                "configured": True, "reachable": True, "detail": "ok"}):
+            payload = self.client.get("/health?deep=1").json()
+        self.assertEqual(payload["status"], "ok")
+        self.assertEqual(payload["analytics_database"], "ok")
+
+    def test_the_deep_check_reports_a_silent_outage(self):
+        with patch.object(main.db, "health", return_value={
+                "configured": True, "reachable": False, "detail": "gone"}):
+            payload = self.client.get("/health?deep=1").json()
+        self.assertEqual(payload["status"], "degraded")
+        self.assertEqual(payload["analytics_database"], "unavailable")
+        self.assertEqual(payload["analysis_pipeline"], "ok")
+
+    def test_the_deep_check_never_leaks_connection_details(self):
+        with patch.object(main.db, "health", return_value={
+                "configured": True, "reachable": False,
+                "detail": "https://secret-ref.supabase.co refused apikey=xyz"}):
+            body = self.client.get("/health?deep=1").text
+        self.assertNotIn("supabase.co", body)
+        self.assertNotIn("apikey", body)
 
 
 class AdminQualityPayloadTest(unittest.TestCase):
