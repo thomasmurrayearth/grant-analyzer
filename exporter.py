@@ -7,10 +7,11 @@ Three tabs:
      (result["strategic_watchlist"]), so the download mirrors everything the
      web page shows. Columns A–V mirror the exemplar exactly; W (Applicant
      Route) and X (Status) are appended. Watchlist rows were never put
-     through the full 3-axis scoring rubric, so Priority Score (and the
-     Strategic Value / Ease of Execution columns) are correctly "unknown" —
-     that's what visually separates them from scored rows without a
-     dedicated tier column.
+     through the full 3-axis scoring rubric, so Strategic Value and Ease of
+     Execution default to 0 and Thematic Fit falls back to the analyzer's
+     discovery-stage rating (see analyzer.py's _backfill_initial_thematic_fit)
+     — only a grant with no rating at all renders "unknown" and drops the
+     Priority Score formula.
   2. "Strategic Recommendations" — the narrative analysis, plus the offer of
      help writing the applications. The workbook is the artefact users forward
      to co-founders and boards, so it has to carry the offer with it.
@@ -254,25 +255,33 @@ def _tab_opportunities(wb: Workbook, opportunities: list[dict]) -> None:
         link = opp.get("application_link", "")
         closes = opp.get("deadline", "")
 
-        # Only write the live Priority Score formula when all three
-        # sub-scores are real numbers — a text score ("unknown") would
-        # make the formula render as #VALUE!.
-        scores = [
-            opp.get("thematic_fit_score"),
-            opp.get("strategic_value_score"),
-            opp.get("ease_score"),
-        ]
-        have_scores = all(isinstance(s, (int, float)) for s in scores)
+        # Thematic fit has no default — a grant with no rating at all (scored
+        # or the discovery-stage fallback the analyzer backfills onto
+        # unscored watchlist items) renders as "unknown" and skips the
+        # formula below (a text score would make it render as #VALUE!).
+        # Strategic value and ease of execution DO default to 0: they only
+        # exist for grants that went through the full scoring rubric, and
+        # treating an unscored grant as "0" on those axes (rather than
+        # "unknown") lets every row still get a live Priority Score driven
+        # by thematic fit.
+        thematic_fit = opp.get("thematic_fit_score")
+        strategic_value = opp.get("strategic_value_score")
+        if not isinstance(strategic_value, (int, float)):
+            strategic_value = 0
+        ease = opp.get("ease_score")
+        if not isinstance(ease, (int, float)):
+            ease = 0
+        have_scores = isinstance(thematic_fit, (int, float))
 
         ws.append([
             _txt(opp.get("name")),
             None,                                          # B — written below
             _txt(opp.get("thematic_fit_explanation")),
-            scores[0] if isinstance(scores[0], (int, float)) else "unknown",
+            thematic_fit if have_scores else "unknown",
             _txt(opp.get("strategic_value_explanation")),
-            scores[1] if isinstance(scores[1], (int, float)) else "unknown",
+            strategic_value,
             _txt(opp.get("ease_explanation")),
-            scores[2] if isinstance(scores[2], (int, float)) else "unknown",
+            ease,
             _txt(funding_explanation),
             _max_funding_eur(opp) or "unknown",
             _txt(link),

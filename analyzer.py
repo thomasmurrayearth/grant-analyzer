@@ -2320,6 +2320,44 @@ def _rescue_missing_partner_items(
     return watchlist + rescued
 
 
+def _backfill_initial_thematic_fit(
+    watchlist: list,
+    longlist: list,
+    shortlist: list,
+) -> list:
+    """
+    Attach a numeric "thematic_fit" to every watchlist item that doesn't
+    already have one.
+
+    Watchlist items never go through the full 3-axis scoring rubric, so
+    most of them have no numeric thematic-fit score at all — only the
+    discovery-stage initial_thematic_fit rating computed for every longlist
+    candidate, which the routing/rescue logic above uses internally to rank
+    and gate items but never copies onto the item itself. The XLSX export
+    (exporter.py) shows "unknown" in the Thematic Fit Score column without
+    this, and can't compute a Priority Score for the row at all. Match by
+    name against the longlist (falls back to the shortlist, since a
+    demoted/rescued shortlisted item may have been de-duplicated out of the
+    longlist) and copy the rating across.
+    """
+    pool = list(longlist) + list(shortlist)
+
+    for item in watchlist:
+        if isinstance(item.get("thematic_fit"), (int, float)):
+            continue
+        name = item.get("name") or ""
+        if not name:
+            continue
+        match = next(
+            (p for p in pool if _names_similar(name, p.get("name") or "")),
+            None,
+        )
+        if match is not None and isinstance(match.get("initial_thematic_fit"), (int, float)):
+            item["thematic_fit"] = match["initial_thematic_fit"]
+
+    return watchlist
+
+
 # ---------------------------------------------------------------------------
 # Public entry points — split into two generators for the review gate
 # ---------------------------------------------------------------------------
@@ -2590,6 +2628,17 @@ async def run_phase23(
             stage_name = "link quality gate"
             result["opportunities"] = _apply_link_quality_gate(
                 result.get("opportunities", [])
+            )
+
+            # ── Backfill discovery-stage thematic fit onto the watchlist ──
+            # Gives every watchlist item without a scored thematic fit the
+            # discovery-stage rating instead, so the XLSX export can show a
+            # number rather than "unknown" (see exporter.py).
+            stage_name = "watchlist thematic fit backfill"
+            result["strategic_watchlist"] = _backfill_initial_thematic_fit(
+                result.get("strategic_watchlist", []),
+                longlist=longlist,
+                shortlist=shortlist,
             )
 
             # ── Acronym definitions ───────────────────────────────────────

@@ -8,6 +8,7 @@ import unittest
 
 from analyzer import (
     _apply_link_quality_gate,
+    _backfill_initial_thematic_fit,
     _enforce_routing_rules,
     _mandatory_queries,
     _names_similar,
@@ -182,6 +183,52 @@ class RescueDedupTest(unittest.TestCase):
             shortlist=[], opportunities=[], watchlist=[], longlist=longlist,
         )
         self.assertEqual(watchlist, [])
+
+
+class BackfillInitialThematicFitTest(unittest.TestCase):
+    """
+    Watchlist items never go through the full scoring rubric, so most of them
+    have no numeric thematic_fit at all — only the exporter-visible
+    "unknown". This backfill copies the discovery-stage rating across by
+    name so the XLSX can show a real number instead. See exporter.py's
+    Priority Score formula, which needs a numeric thematic fit to compute.
+    """
+
+    def test_unscored_watchlist_item_gets_longlist_rating(self):
+        longlist = [{"name": "Regional Growth Fund", "initial_thematic_fit": 4}]
+        watchlist = [{"name": "Regional Growth Fund"}]
+        result = _backfill_initial_thematic_fit(watchlist, longlist=longlist, shortlist=[])
+        self.assertEqual(result[0]["thematic_fit"], 4)
+
+    def test_falls_back_to_shortlist_when_not_in_longlist(self):
+        # A shortlisted-but-dropped item may have been de-duplicated out of
+        # the longlist entirely — the shortlist is the fallback pool.
+        shortlist = [{"name": "Regional Growth Fund", "initial_thematic_fit": 5}]
+        watchlist = [{"name": "Regional Growth Fund"}]
+        result = _backfill_initial_thematic_fit(watchlist, longlist=[], shortlist=shortlist)
+        self.assertEqual(result[0]["thematic_fit"], 5)
+
+    def test_existing_numeric_thematic_fit_is_not_overwritten(self):
+        # e.g. a "between rounds" demotion that already carries its real
+        # scored thematic_fit_score forward as "thematic_fit".
+        longlist = [{"name": "Regional Growth Fund", "initial_thematic_fit": 1}]
+        watchlist = [{"name": "Regional Growth Fund", "thematic_fit": 4}]
+        result = _backfill_initial_thematic_fit(watchlist, longlist=longlist, shortlist=[])
+        self.assertEqual(result[0]["thematic_fit"], 4)
+
+    def test_no_match_leaves_thematic_fit_unset(self):
+        watchlist = [{"name": "Untraceable Programme"}]
+        result = _backfill_initial_thematic_fit(watchlist, longlist=[], shortlist=[])
+        self.assertNotIn("thematic_fit", result[0])
+
+    def test_fuzzy_name_match(self):
+        longlist = [{
+            "name": "Knowledge Transfer Partnership (KTP) Round 4",
+            "initial_thematic_fit": 3,
+        }]
+        watchlist = [{"name": "Knowledge Transfer Partnerships (KTP) — Accelerated KTP 6"}]
+        result = _backfill_initial_thematic_fit(watchlist, longlist=longlist, shortlist=[])
+        self.assertEqual(result[0]["thematic_fit"], 3)
 
 
 class LinkQualityGateTest(unittest.TestCase):

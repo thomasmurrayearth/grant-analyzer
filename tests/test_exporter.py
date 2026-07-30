@@ -44,6 +44,19 @@ RESULT = {
         "thematic_relevance": "Strong alignment with the circular economy theme.",
         "why_watchlist": "Requires an existing relationship with the funder.",
         "what_would_unlock": "An introduction from an existing grantee.",
+    }, {
+        "name": "Example Discovery-Only Programme",
+        "managing_body": "Example Council",
+        "geography": "NZ",
+        "application_link": "https://example.org/discovery-only",
+        "funding_type": "Grant",
+        "max_funding": "£20,000",
+        # Never deep-researched, so no scored thematic_fit_score — only the
+        # discovery-stage rating the analyzer backfills onto "thematic_fit".
+        "thematic_fit": 4,
+        "thematic_relevance": "Discovered but not selected for deep research.",
+        "why_watchlist": "Not selected for deep research this run.",
+        "what_would_unlock": "A future run with more shortlist slots available.",
     }],
     "acronym_definitions": [{"acronym": "TRL", "definition": "Technology Readiness Level"}],
 }
@@ -83,10 +96,15 @@ class ExporterTest(unittest.TestCase):
         self.assertEqual(ws["A2"].value, "Example Innovation Fund")
         self.assertEqual(ws["A3"].value, "Example Relationship Fund")
 
-        # Watchlist row has no 3-axis score, so Priority Score reads
-        # "unknown" rather than a formula or number — no tier column needed.
+        # Watchlist row has no thematic fit rating at all (scored or
+        # discovery-stage), so Priority Score reads "unknown" rather than a
+        # formula or number — no tier column needed.
         self.assertEqual(ws["B3"].value, "unknown")
         self.assertEqual(ws["D3"].value, "unknown")
+        # Strategic value / ease of execution default to 0, not "unknown",
+        # even when thematic fit itself is unknown.
+        self.assertEqual(ws["F3"].value, 0)
+        self.assertEqual(ws["H3"].value, 0)
 
         self.assertEqual(ws["K3"].value, "https://example.org/watch")
         self.assertEqual(ws["L3"].value, "Example Foundation")
@@ -94,6 +112,18 @@ class ExporterTest(unittest.TestCase):
         self.assertEqual(ws["X3"].value, "Recurring")
         self.assertIn("circular economy", ws["C3"].value)
         self.assertIn("relationship with the funder", ws["V3"].value)
+
+    def test_watchlist_item_with_discovery_stage_fit_gets_a_priority_score(self):
+        # A watchlist item carrying only the discovery-stage "thematic_fit"
+        # (no scored thematic_fit_score) still gets a real Thematic Fit Score
+        # and a live Priority Score formula — strategic value / ease default
+        # to 0 rather than blocking the formula with "unknown".
+        ws = self.wb["Grant Opportunities"]
+        self.assertEqual(ws["A4"].value, "Example Discovery-Only Programme")
+        self.assertEqual(ws["D4"].value, 4)
+        self.assertEqual(ws["F4"].value, 0)
+        self.assertEqual(ws["H4"].value, 0)
+        self.assertEqual(ws["B4"].value, "=(2*D4)+F4+H4")
 
     def _sheet_text(self, name: str) -> str:
         return "\n".join(

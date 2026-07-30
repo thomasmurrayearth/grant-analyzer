@@ -70,6 +70,26 @@ notifications when results are ready.
 
 ## Timeline
 
+**2026-07-30 — Watchlist rows get a real Priority Score in the XLSX**
+Thomas noticed that after the watchlist was folded into the XLSX (below),
+its rows still showed "unknown" for Thematic Fit, Strategic Value, Ease of
+Execution, and Priority Score — because watchlist items never go through
+the full 3-axis scoring rubric, so those fields are usually genuinely
+absent from the data, not just missing from the export. Two changes: (1)
+`analyzer.py` now backfills the discovery-stage `initial_thematic_fit`
+rating (computed for every longlist candidate, previously only used
+internally to rank the shortlist and then discarded) onto any watchlist
+item that lacks a real scored thematic fit, matching by name against the
+longlist/shortlist (`_backfill_initial_thematic_fit`); (2) the XLSX export
+now defaults Strategic Value and Ease of Execution to 0 (not "unknown")
+whenever they're absent, so the Priority Score formula computes a real
+number for any row with a thematic fit rating at all — scored or
+discovery-stage. Only a grant with no rating whatsoever still shows
+"unknown" and drops the formula. Frozen sample workbook rebuilt again to
+match (most of its 21 watchlist rows predate this fix and have no
+discovery-stage rating recorded, so they still show "unknown" — the 2 that
+already carried a rating now get a live score).
+
 **2026-07-30 — XLSX shows the watchlist too, back-to-site link, server-side auto-continue**
 The XLSX download only ever contained the scored shortlist, so anyone
 downloading it lost the strategic watchlist items visible on the results
