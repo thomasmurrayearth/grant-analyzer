@@ -56,123 +56,14 @@ from analyzer import run_phase1, run_phase23  # noqa: E402
 # ---------------------------------------------------------------------------
 # Ground-truth test cases
 # ---------------------------------------------------------------------------
-# Each case defines:
-#   must_appear_in_main              grants that MUST be main recommendations
-#   must_appear_in_watchlist_or_main grants that should appear SOMEWHERE
-#   must_not_appear_anywhere         grants that must be excluded entirely
-#
-# Name matching is case-insensitive substring:
-#   "Energy Catalyst" matches "Innovate UK Energy Catalyst Round 12"
-#   "Ofgem" matches "Ofgem Strategic Innovation Fund 2025"
-#
-# Keep must_appear_in_main sparse — only add entries you are certain about.
-# Wrong ground truth is worse than no ground truth.
+# The cases themselves live in eval/cases.py so that the app's fallback
+# self-benchmark and the scoring library can share exactly the same definition
+# of "right answer" without importing this harness (which pulls in the whole
+# pipeline). Add or edit cases there, not here.
 # ---------------------------------------------------------------------------
 
-TEST_CASES = [
-    {
-        "id":           "thermify",
-        "company_url":  "https://thermify.cloud/",
-        "company_name": "Thermify",
-        "notes": (
-            "Wales-registered: 39a Vale Business Park, Llandow, Cowbridge, Wales CF71 7PF. "
-            "Distributed edge-compute-as-heating hardware (HeatHub: 500 Raspberry Pi CMs in oil "
-            "bath replacing gas boilers). TRL 7-8 (live installs, GBP 2.5m contracted revenue, "
-            "aiming for 40k units/year). "
-            "Confirmed Ofgem SIF recipient — via SHIELD project led by UK Power Networks "
-            "(DNO lead applicant, Thermify as technology partner). "
-            "Facility at Sony Pencoed site, South Wales. "
-            "Active partnership: Swansea University SPECIFIC IKC. "
-            "Coverage: The Register, Data Centre Dynamics, Solar Power Portal. "
-            "SIF NOTE: Thermify cannot be SIF lead applicant (requires energy licence holder). "
-            "KTP NOTE: Thermify + Swansea University partnership already in place — KTP formalisation viable."
-        ),
-        "preferences": {
-            "geographies":  "",
-            "consortium":   True,
-            "accelerators": True,
-            "prizes":       True,
-        },
-
-        # Grants that MUST appear as main recommendations (direct applicant, high confidence)
-        "must_appear_in_main": [
-            "Innovate UK",     # Some current Innovate UK competition — direct SME applicant
-            "SMART",           # Welsh Government SMART FIS — Wales-registered, direct applicant
-        ],
-
-        # Grants that should appear SOMEWHERE (main OR watchlist — either is acceptable)
-        "must_appear_in_watchlist_or_main": [
-            "Ofgem",           # Ofgem SIF — confirmed prior recipient (as partner); must surface somewhere
-            "EIC Accelerator", # UK companies eligible for up to EUR 2.5m grant; multiple 2026 deadlines
-            "KTP",             # Knowledge Transfer Partnership — Swansea University partner already in place
-        ],
-
-        # Grants that must NOT appear anywhere (confirmed ineligible or wrong applicant geography)
-        "must_not_appear_anywhere": [
-            "Energy Catalyst",  # ODA-only — funds projects in developing countries only; UK company ineligible
-            "EIC Pathfinder",   # TRL 1-4 only; Thermify is TRL 7-8 — explicit confirmed mismatch
-        ],
-    },
-
-    {
-        # Non-UK profile shape: stress-tests geography gating. The UK/Wales
-        # mandatory discovery queries must NOT fire, UK-registration-required
-        # programmes must not be recommended as direct applications, and the
-        # EU funding landscape (EIC etc.) must surface instead.
-        #
-        # Fictional company fed via extra_text (no URL) so the test doesn't
-        # depend on a live website; Phase 1's external searches will simply
-        # find nothing and the profile is built from the text below.
-        "id":           "germandeeptech",
-        "company_url":  None,
-        "company_name": "Kaltefluss GmbH (fictional)",
-        "extra_text": (
-            "Kaltefluss GmbH is a deep-tech hardware startup registered in Munich, "
-            "Germany. It builds high-temperature industrial heat pumps (up to 200C "
-            "output) that replace gas-fired process heat in food processing and "
-            "chemical plants across Germany and Austria. Technology: proprietary "
-            "turbo-compressor with natural refrigerants. TRL 5-6: two pilot "
-            "installations running at customer sites near Augsburg, no serial "
-            "production yet. Stage: seed, 14 employees, ~EUR 2.1m raised from "
-            "German angel investors. No UK presence, no UK customers, no UK "
-            "subsidiary. Primary outcome: industrial decarbonisation - each unit "
-            "displaces roughly 1,200 tonnes CO2 per year."
-        ),
-        "notes": "Fictional German industrial heat-pump company, TRL 5-6, seed stage, no UK presence.",
-        "preferences": {
-            "geographies":  "",
-            "consortium":   True,
-            "accelerators": True,
-            "prizes":       True,
-        },
-
-        # No must_appear_in_main entries: ground truth for a fictional company
-        # is only reliable for structural checks, not specific competitions.
-        "must_appear_in_main": [],
-
-        "must_appear_in_watchlist_or_main": [
-            "EIC",             # EIC Accelerator/programmes — core fit for a German deep-tech SME
-        ],
-
-        # Programmes requiring UK registration must not be DIRECT recommendations
-        # for a company with no UK presence (watchlist partner-route is acceptable)
-        "must_not_appear_in_main": [
-            "Innovate UK",
-        ],
-
-        # Devolved-nation programmes are impossible for a German company
-        "must_not_appear_anywhere": [
-            "Welsh",           # Welsh Government SMART FIS etc. — Wales presence required
-            "Energy Catalyst", # ODA-only geography — wrong for a German/Austrian deployer too
-        ],
-    },
-
-    # -------------------------------------------------------------------------
-    # Add more test cases here as you validate other companies.
-    # Suggested next additions:
-    #   - A pre-seed UK deeptech company (tests early-TRL grant discovery)
-    # -------------------------------------------------------------------------
-]
+sys.path.insert(0, str(Path(__file__).parent))
+from cases import TEST_CASES  # noqa: E402
 
 
 # ---------------------------------------------------------------------------

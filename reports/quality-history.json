@@ -1,0 +1,156 @@
+{
+  "schema": 1,
+  "about": "Quality trend for the Grant Opportunity Analyser, one entry per fortnightly review cycle. Maintained by the grant-analyzer-health-check skill; seeded from stored eval runs so cycle one has a baseline to move against. Figures are defined in quality.py and judged against launch plan section 9a. Convergence is a diagnostic of retrieval quality, never a target: never propose caching or pinning results to raise it.",
+  "cycles": [
+    {
+      "date": "2026-07-30",
+      "cycle": 0,
+      "label": "baseline",
+      "commit": "789d374",
+      "source": "eval/results/*.json, scored offline by eval/score_stored.py",
+      "note": "Seeded, not measured live. These are the numbers the mechanism was built against; cycle one is the first reading taken through /admin/quality.json.",
+      "benchmark": {
+        "all_stored_runs": {
+          "germandeeptech": {
+            "runs": 1,
+            "date_range": [
+              "2026-07-04",
+              "2026-07-04"
+            ],
+            "recall_mean": 1.0,
+            "recall_range": [
+              1.0,
+              1.0
+            ],
+            "exclusion_accuracy_mean": 1.0,
+            "runs_with_must_not_violations": 0,
+            "structural_precision": 1.0,
+            "main_count_mean": 5.0,
+            "main_count_range": [
+              5,
+              5
+            ],
+            "watchlist_count_mean": 12.0,
+            "tier_concentration": 0.6,
+            "specific_link_rate": 0.941,
+            "broken_link_rate": 0.235,
+            "defect_totals": {},
+            "convergence_exact": null,
+            "convergence_family": null,
+            "in_every_run": null,
+            "distinct_across_runs": null,
+            "carried_forward": true
+          },
+          "thermify": {
+            "runs": 16,
+            "date_range": [
+              "2026-05-30",
+              "2026-07-06"
+            ],
+            "recall_mean": 0.775,
+            "recall_range": [
+              0.2,
+              1.0
+            ],
+            "exclusion_accuracy_mean": 0.844,
+            "runs_with_must_not_violations": 5,
+            "structural_precision": 0.805,
+            "main_count_mean": 4.312,
+            "main_count_range": [
+              2,
+              9
+            ],
+            "watchlist_count_mean": 9.75,
+            "tier_concentration": 0.608,
+            "specific_link_rate": 0.645,
+            "broken_link_rate": 0.1,
+            "defect_totals": {
+              "broken_link": 9,
+              "trl_mismatch": 2,
+              "homepage_only_link": 2
+            },
+            "convergence_exact": 0.156,
+            "convergence_family": 0.142,
+            "in_every_run": 0,
+            "distinct_across_runs": 33,
+            "carried_forward": true
+          }
+        },
+        "since_2026_07_01": {
+          "germandeeptech": {
+            "runs": 1,
+            "date_range": [
+              "2026-07-04",
+              "2026-07-04"
+            ],
+            "recall_mean": 1.0,
+            "recall_range": [
+              1.0,
+              1.0
+            ],
+            "exclusion_accuracy_mean": 1.0,
+            "runs_with_must_not_violations": 0,
+            "structural_precision": 1.0,
+            "main_count_mean": 5.0,
+            "main_count_range": [
+              5,
+              5
+            ],
+            "watchlist_count_mean": 12.0,
+            "tier_concentration": 0.6,
+            "specific_link_rate": 0.941,
+            "broken_link_rate": 0.235,
+            "defect_totals": {},
+            "convergence_exact": null,
+            "convergence_family": null,
+            "in_every_run": null,
+            "distinct_across_runs": null,
+            "carried_forward": true
+          },
+          "thermify": {
+            "runs": 5,
+            "date_range": [
+              "2026-07-04",
+              "2026-07-06"
+            ],
+            "recall_mean": 0.92,
+            "recall_range": [
+              0.8,
+              1.0
+            ],
+            "exclusion_accuracy_mean": 0.9,
+            "runs_with_must_not_violations": 1,
+            "structural_precision": 0.76,
+            "main_count_mean": 4.2,
+            "main_count_range": [
+              4,
+              5
+            ],
+            "watchlist_count_mean": 16.8,
+            "tier_concentration": 0.51,
+            "specific_link_rate": 0.766,
+            "broken_link_rate": 0.11,
+            "defect_totals": {
+              "broken_link": 5
+            },
+            "convergence_exact": 0.209,
+            "convergence_family": 0.249,
+            "in_every_run": 1,
+            "distinct_across_runs": 12,
+            "carried_forward": true
+          }
+        }
+      },
+      "real_runs": {
+        "count": null,
+        "note": "Not measurable before /admin/quality.json existed. Cycle one is the first."
+      },
+      "verified": [],
+      "regressions": [],
+      "blockers": [
+        "Real user output had never been read: db.get_recent_analyses did not select job_id and no endpoint exposed stored results. Fixed in this commit.",
+        "No mechanism produced new measurements between cycles. Fixed by the fallback self-benchmark in benchmark.py."
+      ]
+    }
+  ]
+}

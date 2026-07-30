@@ -31,19 +31,36 @@ shortlist, every funnel step and the API cost of every run are logged,
 and per-IP/concurrency limits cap spend during a traffic spike. Verified
 live after deploy (commits `d12c5cb`, `961b954`).
 
-**⚠ Blocking the next step — the Supabase migration has not been run.**
-`supabase_schema.sql` must be pasted into the Supabase SQL editor and run
-(Thomas's action; instructions in `LAUNCH_SETUP.md`). Until then, feedback,
-funnel events, waitlist emails, and cost-per-run are written and silently
-dropped, so the app looks fine but produces **no measurement data** — and
-the weekly report, the pricing gates in §6 of the launch plan, and the
-WP-1 acceptance criterion ("all events visible in Supabase") all depend on
-it. Everything else in WP-1 is done except the custom domain (C1), which
-was always blocked on Thomas buying one.
+**The Supabase migration has been run — 13 July 2026.** `supabase_schema.sql`
+was applied in the Supabase SQL editor and measurement is confirmed live:
+`/admin/stats` shows real funnel, usage, and cost data (a test run logged at
+$0.57). Feedback, funnel events, waitlist emails, and cost-per-run are all
+being recorded, so the weekly report, the pricing gates in §6 of the launch
+plan, and the WP-1 acceptance criterion ("all events visible in Supabase")
+are all unblocked. Everything else in WP-1 is done except the custom domain
+(C1), which is deliberately deferred until the soft launch proves traction.
+
+> **Corrected 30 July 2026.** This entry previously stated the migration was
+> unrun and blocking. That was wrong: it was applied on 13 July, as recorded
+> in the launch plan's WP status table and corroborated by the $0.57 cost
+> figure in `reports/digest-2026-07-20.md`, which only exists in a migrated
+> schema. The stale claim misled subsequent sessions.
 
 **Next work packages** (per the plan's sequencing): WP-3 (explainer video
 script + assets) can start now; then the Phase 1 soft launch, then WP-4
 (launch asset pack).
+
+**The app now measures its own output quality (30 July 2026).** Usage was
+already instrumented; output was not. `/admin/quality.json` returns every
+completed analysis in a window already scored by `quality.py`, and a
+fortnightly review cycle (the `grant-analyzer-health-check` skill, scheduled
+for the 1st and 15th) reads it, trends it in `reports/quality-history.json`,
+and brings Thomas proposals. When a fortnight passes with no completed user
+run — and only then — the app runs its two ground-truth companies twice each
+so the cycle is never blind. Baseline as at cycle 0: recall 0.92, exclusion
+accuracy 0.90, structural precision 0.76, shortlist 4–5 against a promised
+10, convergence 0.21. Those numbers are the standard the next cycle has to
+beat.
 
 As of 30 July 2026: the XLSX download now includes the strategic watchlist
 alongside the scored shortlist (previously watchlist-only items were
@@ -69,6 +86,44 @@ iOS, and desktop); job logging to Supabase (`db.py`); email + web-push
 notifications when results are ready.
 
 ## Timeline
+
+**2026-07-30 — The app now measures its own output quality, on a fortnight's cycle**
+Commit subject: *Measure output quality: scoring library, quality endpoint, fallback self-benchmark*.
+Until now nothing produced evidence about whether the analyses people
+actually received were any good. `/admin/stats` answered "did anyone use
+it"; the launch plan (§9a) is explicit that the two most damaging failure
+modes — output that can't be trusted, and output no better than five
+minutes with a chatbot — leave no trace in usage counts. Four pieces close
+that gap. `quality.py` defines every measure once (recall and exclusion
+accuracy against ground truth; structural precision, tier spread, link
+quality and shape for runs with no ground truth; convergence between
+repeat runs at both exact-name and programme-family level). `eval/cases.py`
+lifts the ground-truth cases out of the eval harness so the app, the
+harness and the scorer share one definition of the right answer.
+`/admin/quality.json` hands the fortnightly review every completed
+analysis in the window, already scored, plus feedback, funnel, economics
+and an explicit list of what could not be seen. `benchmark.py` runs the
+two ground-truth companies twice each — **but only when a fortnight passed
+with no completed real user run**, because live usage is better evidence
+and costs nothing; the decision, taken or not, is written to the events
+table so a quiet fortnight is never ambiguous between "suppressed by
+design" and "the scheduler never fired". Benchmark runs are excluded from
+every usage and economics figure. 90 new tests; 153 green in total.
+
+**2026-07-30 — Baseline: what the numbers actually say today**
+Scoring the sixteen stored Thermify runs and one German run through the
+new library (`eval/score_stored.py`, offline, no API key) gives the first
+honest reading of output quality. Across the five runs since 4 July:
+recall against ground truth averages 0.92 but ranges 0.8–1.0; exclusion
+accuracy is 0.90, meaning one run in five recommended a programme
+confirmed ineligible; structural precision is 0.76, almost entirely from
+broken application links; the shortlist holds 4–5 items against a promised
+10; and convergence between same-company runs is 0.21 at exact-name level
+and 0.25 at family level — the naming-variance gap is small, so the churn
+is genuine retrieval churn rather than one programme wearing several
+names. Recorded as cycle 0 in `reports/quality-history.json`. **Consistency
+is being tracked as a diagnostic, never a target: the fix for churn is
+better retrieval, never caching or pinning results.**
 
 **2026-07-30 — Watchlist rows get a real Priority Score in the XLSX**
 Thomas noticed that after the watchlist was folded into the XLSX (below),
@@ -207,14 +262,23 @@ shortlist of 10.
 
 ## Open items and known limitations
 
-- **⚠ Supabase migration not yet run (Thomas's action — blocks all launch
-  analytics)** — the feedback, events, and waitlist tables and the cost
-  columns exist in `supabase_schema.sql` but must be pasted into the
-  Supabase SQL editor and run. Until then those writes fail and are logged
-  as warnings; the analysis pipeline is unaffected by design, so the app
-  looks healthy while capturing nothing. Check whether it has been done by
-  loading `/admin/stats?token=…`: if the Funnel and Economics tiles are all
-  dashes/zeros after real traffic, it hasn't. See `LAUNCH_SETUP.md`.
+- **Ground truth covers two companies** — `eval/cases.py` holds Thermify
+  (Wales, TRL 7–8, real) and a fictional German heat-pump company. Recall
+  and exclusion accuracy are therefore directional rather than
+  statistically meaningful, and both cases sit in one sector. Widening the
+  bench is the single biggest improvement available to the measurement
+  itself; it costs research time to write correct rules, and wrong ground
+  truth is worse than none.
+- **Real user runs carry no ground truth** — nobody wrote correct answers
+  for a stranger's company, so those runs are scored structurally
+  (defensible links, applicant-type match, tier spread, shape) and read by
+  judgement. Structural precision is a floor on the defect rate, never a
+  ceiling on quality: it cannot see a programme that is simply a poor fit.
+- **Programme-family matching is heuristic** — `quality.FamilyResolver`
+  learns abbreviations from the runs it is given rather than guessing
+  them, and refuses ambiguous pairings, but it cannot guarantee two
+  wordings of one programme meet. Read exact-level convergence as the
+  conservative floor and family-level as the optimistic ceiling.
 - **Custom domain still outstanding (C1 — Thomas's action)** — when it
   lands, change `APP_URL` in Railway, the four absolute URLs in the
   `<head>` of `frontend/index.html` (canonical, `og:url`, `og:image`,

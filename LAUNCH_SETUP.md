@@ -6,10 +6,14 @@ if you don't do them — the app keeps working, you just don't get the data.
 
 ---
 
-## 1. Run the database migration (5 minutes) — **do this first**
+## 1. Run the database migration (5 minutes) — ✅ **DONE 13 July 2026**
 
-The new feedback, funnel, and cost tracking write to three new Supabase tables
-and a few new columns. They don't exist yet.
+Confirmed working via `/admin/stats`: funnel, usage, and cost data are flowing.
+Nothing further needed here. The instructions below are retained only in case the
+schema ever needs re-applying — it is safe to re-run.
+
+The feedback, funnel, and cost tracking write to three Supabase tables and a few
+extra columns.
 
 1. Go to your Supabase project → **SQL Editor** → **New query**.
 2. Open `supabase_schema.sql` from this repo, copy the whole thing, paste it in.
@@ -35,10 +39,14 @@ All have sensible defaults; set them only if you want to change behaviour.
 | Variable | Default | What it does |
 |---|---|---|
 | `MAX_RUNS_PER_IP_PER_DAY` | `5` | How many analyses one person can run per day. Raise it on launch day if you want more headroom. |
-| `MAX_CONCURRENT_JOBS` | `4` | How many analyses run at once. Anyone arriving above this is offered the waitlist instead. **This is your spend cap** — each analysis costs roughly US$1–2 in API calls. |
+| `MAX_CONCURRENT_JOBS` | `4` | How many analyses run at once. Anyone arriving above this is offered the waitlist instead. **This is your spend cap** — each analysis costs roughly US$0.57 in API calls (observed mean and p90 as at 20 July 2026; small sample, verify across ≥10 runs). |
 | `CONSULTING_URL` | `https://thomasmurray.earth/startup-journey.html` | Where "Get help with your application" points, in the app, the email, and the XLSX. |
 | `CONSULTING_EMAIL` | `thomasmurraynz@gmail.com` | The "email me directly" address. |
 | `APP_URL` | the Railway URL | Used for the "view results" link in emails. **Change this when the domain lands.** |
+| `SELF_BENCHMARK_ENABLED` | `1` | The app measures its own output quality on the 1st and 15th, **but only if no real analysis completed in the previous fortnight.** Set to `0` to stop that entirely. |
+| `SELF_BENCHMARK_REPEATS` | `2` | Runs per benchmark company. Two is the minimum that makes consistency measurable — with one run there is nothing to compare against. |
+| `SELF_BENCHMARK_MAX_RUNS` | `4` | Hard ceiling on benchmark runs per cycle. At roughly US$0.57 a run this caps a quiet fortnight at about US$2.30. |
+| `SELF_BENCHMARK_MIN_REAL_RUNS` | `1` | How many completed real analyses in a fortnight suppress the benchmark. One is deliberate: any live evidence beats a synthetic run. |
 
 ---
 
@@ -67,3 +75,26 @@ by hand.
   Now shows the funnel (views → starts → completions → emails → downloads → CTA
   clicks), cost per run, feedback scores, and flags **GATE TRIGGERED** when the
   pricing gates in §6 of the launch plan fire.
+
+---
+
+## The fortnightly quality review
+
+On the 1st and 15th at 9am, Claude reviews the app's actual output — not just
+how many people used it — and brings you findings and proposals. You decide what
+gets built; nothing user-facing changes without your say-so.
+
+**Nothing is required from you to make it work.** It runs on its own. Two things
+are worth knowing:
+
+- It reads a private endpoint, `https://<your-app>/admin/quality.json?token=<ADMIN_TOKEN>`,
+  which returns the analyses people received with quality scores attached. You
+  can open it yourself; it's dense JSON rather than a dashboard.
+- If a fortnight goes by with nobody completing an analysis, the app runs two
+  test companies twice each so the review still has something to measure. That
+  costs about US$2.30 and only happens on a silent fortnight. If real people
+  used it, it spends nothing.
+
+To run a review off-cycle, ask Claude to "run the grant analyser improvement
+cycle". Reports land in `reports/health-YYYY-MM-DD.md`, and the trend across
+cycles accumulates in `reports/quality-history.json`.

@@ -255,10 +255,10 @@ def get_recent_analyses(days: int = 30, limit: int = 200) -> list[dict] | None:
     if not c:
         return None
     columns = (
-        "created_at,completed_at,company_name,company_url,geographies,"
+        "job_id,created_at,completed_at,company_name,company_url,geographies,"
         "status,grants_found,error_message,user_email,cost_usd,newsletter_opt_in"
     )
-    for cols in (columns, "created_at,completed_at,company_name,company_url,"
+    for cols in (columns, "job_id,created_at,completed_at,company_name,company_url,"
                           "geographies,status,grants_found,error_message,user_email"):
         try:
             rows = (
@@ -284,7 +284,7 @@ def get_recent_events(days: int = 30) -> list[dict]:
     try:
         rows = (
             c.table("events")
-            .select("event,created_at,job_id")
+            .select("event,created_at,job_id,detail")
             .gte("created_at", _since(days))
             .limit(5000)
             .execute()
@@ -293,6 +293,66 @@ def get_recent_events(days: int = 30) -> list[dict]:
     except Exception as exc:
         logger.warning("DB get_recent_events failed: %s", exc)
         return []
+
+
+def get_events_named(event: str, days: int = 30, limit: int = 2000) -> list[dict]:
+    """Every event with this name in the window.
+
+    Separate from `get_recent_events` because that call is capped and dominated
+    by high-volume funnel events: a rare marker event (say, a record that a
+    scheduled job already ran) would be crowded out of it and silently read as
+    absent, which for an idempotency check means doing the work twice.
+    """
+    c = _client()
+    if not c:
+        return []
+    try:
+        rows = (
+            c.table("events")
+            .select("event,created_at,job_id,detail")
+            .eq("event", event)
+            .gte("created_at", _since(days))
+            .limit(limit)
+            .execute()
+        )
+        return rows.data or []
+    except Exception as exc:
+        logger.warning("DB get_events_named(%s) failed: %s", event, exc)
+        return []
+
+
+def get_recent_results(days: int = 30, limit: int = 60) -> list[dict] | None:
+    """Completed analyses in the window, with their full result payloads.
+
+    This is what makes output quality reviewable. Usage data can only ever show
+    that runs happened; the launch plan (§9a) is explicit that the two most
+    damaging failure modes — output that can't be trusted, and output that
+    isn't distinctive — are invisible in usage data and can only be found by
+    reading the analyses themselves.
+
+    Deliberately capped and ordered newest-first: result payloads are large, so
+    this is for reading a recent sample rather than exporting the archive.
+    Returns None when the database is unavailable, so callers can distinguish
+    "nothing ran" from "couldn't look".
+    """
+    c = _client()
+    if not c:
+        return None
+    try:
+        rows = (
+            c.table("analyses")
+            .select("job_id,created_at,completed_at,company_name,company_url,"
+                    "geographies,grants_found,cost_usd,results_json")
+            .eq("status", "completed")
+            .gte("created_at", _since(days))
+            .order("created_at", desc=True)
+            .limit(limit)
+            .execute()
+        )
+        return rows.data or []
+    except Exception as exc:
+        logger.warning("DB get_recent_results failed: %s", exc)
+        return None
 
 
 def get_recent_feedback(days: int = 30) -> list[dict]:

@@ -30,6 +30,8 @@ from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 
 import analyzer
+import benchmark
+import quality
 from analyzer import run_phase1, run_phase23
 from exporter import generate_xlsx
 
@@ -125,6 +127,39 @@ def _running_jobs() -> int:
         1 for j in _jobs.values()
         if j.get("status") in ("started", "phase1_running", "phase23_running")
     )
+
+
+async def _wait_until_idle(timeout_seconds: int = 3600) -> None:
+    """Block while any user analysis is in flight.
+
+    Used by the self-benchmark so measurement never competes with a real user
+    for the concurrency budget. Bounded, because waiting forever on a job whose
+    state got stuck would silently cancel the measurement instead of delaying it.
+    """
+    waited = 0
+    while _running_jobs() > 0 and waited < timeout_seconds:
+        await asyncio.sleep(15)
+        waited += 15
+
+
+@app.on_event("startup")
+async def _start_self_benchmark() -> None:
+    """Arm the fallback self-benchmark (see `benchmark.py`).
+
+    Runs inside the app rather than as an external scheduler because the app is
+    the only component guaranteed to be up: a laptop-side scheduler would miss
+    any cycle where the machine was closed, and the fortnight with no evidence
+    is exactly the fortnight that needs the fallback.
+    """
+    if not benchmark.enabled():
+        return
+    asyncio.create_task(benchmark.scheduler_loop(
+        run_phase1=run_phase1,
+        run_phase23=run_phase23,
+        analyzer_module=analyzer,
+        db_module=db,
+        wait_until_idle=_wait_until_idle,
+    ))
 
 
 def _ip_runs(ip: str | None) -> int:
@@ -672,19 +707,29 @@ async def admin_stats(token: str = "", days: int = 30) -> Response:
     """Private usage dashboard. Requires ADMIN_TOKEN to be set in the
     environment and passed as ?token=...; returns 404 when disabled so the
     endpoint is invisible on deployments without a token."""
-    import secrets as _secrets
-
-    admin_token = os.environ.get("ADMIN_TOKEN", "").strip()
-    if not admin_token:
-        raise HTTPException(status_code=404, detail="Not found")
-    if not _secrets.compare_digest(token, admin_token):
-        raise HTTPException(status_code=403, detail="Invalid token")
+    _require_admin(token)
 
     rows = await asyncio.to_thread(db.get_recent_analyses, days)
     if rows is None:
         raise HTTPException(status_code=503, detail="Database unavailable")
     events   = await asyncio.to_thread(db.get_recent_events, days)
     feedback = await asyncio.to_thread(db.get_recent_feedback, days)
+
+    # The app benchmarks itself when a fortnight passes with no real runs
+    # (see benchmark.py). Those runs are measurement, not demand, so they are
+    # held out of every usage and economics figure here and reported on their
+    # own line — otherwise a quiet fortnight would look like a busy one.
+    bench_events = await asyncio.to_thread(db.get_events_named, benchmark.RUN_EVENT, days)
+    bench_ids    = benchmark.benchmark_job_ids(bench_events)
+    bench_rows   = [r for r in rows if r.get("job_id") in bench_ids]
+    rows         = [r for r in rows if r.get("job_id") not in bench_ids]
+    bench_cost   = round(sum(float(r["cost_usd"]) for r in bench_rows
+                             if r.get("cost_usd") is not None), 2)
+    bench_note = (
+        f"<p style='color:#666;font-size:.85rem'>Plus {len(bench_rows)} self-benchmark "
+        f"run(s) costing ${bench_cost}, excluded from the figures above — these are "
+        f"the app measuring itself because no real runs completed in the fortnight.</p>"
+    ) if bench_rows else ""
 
     total     = len(rows)
     completed = sum(1 for r in rows if r.get("status") == "completed")
@@ -783,6 +828,7 @@ th{{background:#f5f5f5}}
 <div class="tile"><b>{avg_grants}</b><span>avg grants found</span></div>
 <div class="tile"><b>{turned_away}</b><span>turned away (at capacity)</span></div>
 </div>
+{bench_note}
 <h2>Funnel</h2>
 <div class="tiles">
 <div class="tile"><b>{views}</b><span>landing views</span></div>
@@ -808,6 +854,214 @@ th{{background:#f5f5f5}}
 {table_rows}</table>
 </body></html>"""
     return Response(content=page, media_type="text/html")
+
+
+def _require_admin(token: str) -> None:
+    """Shared gate for the private endpoints. 404 when no token is configured,
+    so the endpoints are invisible rather than merely locked."""
+    import secrets as _secrets
+
+    admin_token = os.environ.get("ADMIN_TOKEN", "").strip()
+    if not admin_token:
+        raise HTTPException(status_code=404, detail="Not found")
+    if not _secrets.compare_digest(token, admin_token):
+        raise HTTPException(status_code=403, detail="Invalid token")
+
+
+def _compact(item: dict) -> dict:
+    """The fields of one recommendation a reviewer needs to judge it.
+
+    Not the whole record: the explanations run to paragraphs and a fortnight of
+    runs would be unreadable. These are the fields that carry the quality
+    properties in §9a — what it is, who runs it, where it sits in the ranking,
+    and whether a reader could verify it in one click.
+    """
+    return {
+        "name": item.get("name"),
+        "body": item.get("managing_body"),
+        "tier": item.get("priority_tier"),
+        "score": item.get("priority_score"),
+        "geography": item.get("geography"),
+        "applicant_type_match": item.get("applicant_type_match"),
+        "timing": item.get("application_timing"),
+        "deadline": item.get("deadline"),
+        "link": item.get("application_link"),
+        "link_type": item.get("link_type"),
+        "link_status": item.get("link_status"),
+        "trl_match": item.get("trl_match"),
+        "geography_match": item.get("geography_match"),
+    }
+
+
+@app.get("/admin/quality.json")
+async def admin_quality(token: str = "", days: int = 14, runs: int = 25) -> dict:
+    """Everything the fortnightly review cycle needs, in one machine-readable call.
+
+    The usage dashboard answers "did people use it". This answers "was what they
+    got any good", which §9a of the launch plan says is the question usage data
+    structurally cannot reach: the two worst failure modes — output that can't
+    be trusted, and output indistinguishable from a chatbot's — leave no trace
+    in counts. Reading them requires reading the analyses, so this endpoint
+    hands them over already scored.
+
+    Real user runs come first and carry structural measures only, because
+    nobody wrote ground truth for their companies. Benchmark runs — which the
+    app only produces when a fortnight had no real ones — additionally carry
+    recall and exclusion accuracy against known-correct answers.
+
+    Every figure is reported with its sample size, and everything that could
+    not be seen is listed in `blind_spots` rather than omitted. A review that
+    silently drops what it couldn't measure reads as healthier than it is.
+    """
+    _require_admin(token)
+
+    blind_spots: list[str] = []
+    analyses = await asyncio.to_thread(db.get_recent_analyses, days)
+    if analyses is None:
+        raise HTTPException(status_code=503, detail="Database unavailable")
+
+    bench_events = await asyncio.to_thread(db.get_events_named, benchmark.RUN_EVENT, max(days, 60))
+    cycle_events = await asyncio.to_thread(db.get_events_named, benchmark.CYCLE_EVENT, max(days, 60))
+    feedback     = await asyncio.to_thread(db.get_recent_feedback, days)
+    results      = await asyncio.to_thread(db.get_recent_results, days, runs)
+    if results is None:
+        blind_spots.append(
+            "Could not read stored analysis payloads — output quality is unmeasured "
+            "this cycle; only counts are available."
+        )
+        results = []
+
+    bench_ids  = benchmark.benchmark_job_ids(bench_events)
+    case_of    = {e["job_id"]: e.get("detail") for e in bench_events if e.get("job_id")}
+
+    real_rows  = [r for r in results if r.get("job_id") not in bench_ids]
+    bench_rows = [r for r in results if r.get("job_id") in bench_ids]
+
+    def _describe(row: dict, with_ground_truth: bool = False) -> dict:
+        payload = row.get("results_json") or {}
+        main, watch = quality.items_of(payload)
+        record: dict[str, Any] = {
+            "job_id": row.get("job_id"),
+            "company_name": row.get("company_name"),
+            "company_url": row.get("company_url"),
+            "created_at": row.get("created_at"),
+            "cost_usd": row.get("cost_usd"),
+            "assessment": quality.assess_run(payload, promised_main=analyzer.SHORTLIST_SIZE),
+            "main": [_compact(i) for i in main],
+            "watchlist": [_compact(i) for i in watch],
+        }
+        if with_ground_truth:
+            case_id = case_of.get(row.get("job_id"))
+            case = benchmark.get_case(case_id) if case_id else None
+            if case:
+                record["case_id"] = case_id
+                record["ground_truth"] = quality.score_against_ground_truth(payload, case)
+        return record
+
+    real = [_describe(r) for r in real_rows]
+    bench = [_describe(r, with_ground_truth=True) for r in bench_rows]
+
+    # Convergence only means anything between runs of the *same* company. Read
+    # it as a diagnostic on retrieval and scoring, never as something to
+    # optimise: making output stable by caching would re-serve a poor answer
+    # and destroy the live-search differentiator (launch plan §1, §9a).
+    def _convergence_groups(rows: list[dict]) -> dict:
+        out = {}
+        for key, group in quality.group_repeat_runs(rows, key="company_url").items():
+            out[key] = {
+                "runs": len(group),
+                "main": quality.convergence([g.get("results_json") or {} for g in group], scope="main"),
+                "all": quality.convergence([g.get("results_json") or {} for g in group], scope="all"),
+            }
+        return out
+
+    ratings = [f["rating"] for f in feedback if isinstance(f.get("rating"), int)]
+    costs   = sorted(float(r["cost_usd"]) for r in analyses
+                     if r.get("cost_usd") is not None and r.get("job_id") not in bench_ids)
+
+    started   = [r for r in analyses if r.get("job_id") not in bench_ids]
+    completed = [r for r in started if r.get("status") == "completed"]
+    stalled   = [r for r in started
+                 if r.get("status") == "profile_ready" and not r.get("completed_at")]
+
+    if not real and not bench:
+        blind_spots.append(
+            "No completed analyses of any kind in the window — nothing to measure. "
+            "Check whether the self-benchmark fired (see benchmark.cycles below)."
+        )
+    if real and not any(len(g) > 1 for g in
+                        quality.group_repeat_runs(real_rows, key="company_url").values()):
+        blind_spots.append(
+            "No company was analysed twice, so convergence (Q5) is unmeasured this cycle."
+        )
+    if len(real_rows) >= runs:
+        blind_spots.append(
+            f"Result payloads were capped at {runs} runs; older runs in the window were not read."
+        )
+
+    from datetime import datetime as _datetime, timezone as _timezone
+
+    return {
+        "generated_at": _datetime.now(_timezone.utc).isoformat(),
+        "window_days": days,
+        "app": {
+            "shortlist_size": analyzer.SHORTLIST_SIZE,
+            "discovery_searches": analyzer.MAX_DISCOVERY_SEARCHES,
+        },
+        "usage": {
+            "started": len(started),
+            "completed": len(completed),
+            "failed": sum(1 for r in started if r.get("status") == "failed"),
+            "stalled_or_abandoned": len(stalled),
+            "left_email": sum(1 for r in started if r.get("user_email")),
+        },
+        "economics": {
+            "runs_with_cost": len(costs),
+            "mean_cost_usd": round(sum(costs) / len(costs), 3) if costs else None,
+            "p90_cost_usd": (round(costs[min(int(len(costs) * 0.9), len(costs) - 1)], 3)
+                             if costs else None),
+            "total_cost_usd": round(sum(costs), 2) if costs else 0,
+            "benchmark_cost_usd": round(sum(
+                float(r["cost_usd"]) for r in analyses
+                if r.get("job_id") in bench_ids and r.get("cost_usd") is not None), 2),
+        },
+        "feedback": {
+            "n": len(ratings),
+            "mean": round(sum(ratings) / len(ratings), 2) if ratings else None,
+            "comments": [
+                {"rating": f.get("rating"), "comment": f.get("comment"),
+                 "job_id": f.get("job_id"), "at": f.get("created_at")}
+                for f in feedback if (f.get("comment") or "").strip()
+            ],
+        },
+        "real_runs": {
+            "count": len(real),
+            "summary": quality.summarise([r["assessment"] for r in real]),
+            "convergence": _convergence_groups(real_rows),
+            "runs": real,
+        },
+        "benchmark": {
+            "policy": {
+                "enabled": benchmark.enabled(),
+                "cycle_days": list(benchmark.CYCLE_DAYS),
+                "lookback_days": benchmark.LOOKBACK_DAYS,
+                "repeats": benchmark.repeats(),
+                "max_runs": benchmark.max_runs(),
+                "suppressed_by_real_runs": benchmark.min_real_runs(),
+                "rule": ("Benchmarks only run when a fortnight passed with no completed "
+                         "real user runs. Real usage is better evidence and costs nothing."),
+            },
+            "cycles": [
+                {"at": e.get("created_at"), "detail": e.get("detail")}
+                for e in sorted(cycle_events, key=lambda e: e.get("created_at") or "")
+            ],
+            "count": len(bench),
+            "summary": quality.summarise([r["assessment"] for r in bench]),
+            "convergence": _convergence_groups(bench_rows),
+            "runs": bench,
+        },
+        "blind_spots": blind_spots,
+    }
 
 
 # ---------------------------------------------------------------------------
