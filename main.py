@@ -143,16 +143,19 @@ async def _wait_until_idle(timeout_seconds: int = 3600) -> None:
 
 
 @app.on_event("startup")
-async def _start_self_benchmark() -> None:
-    """Arm the fallback self-benchmark (see `benchmark.py`).
+async def _start_measurement_loop() -> None:
+    """Arm the measurement background loop (see `benchmark.py`).
 
     Runs inside the app rather than as an external scheduler because the app is
     the only component guaranteed to be up: a laptop-side scheduler would miss
     any cycle where the machine was closed, and the fortnight with no evidence
     is exactly the fortnight that needs the fallback.
+
+    Started unconditionally. The loop checks `benchmark.enabled()` itself before
+    deciding anything; its other job — keeping the analytics database from being
+    paused for inactivity — protects all measurement and must not be switched
+    off as a side effect of switching off benchmarking.
     """
-    if not benchmark.enabled():
-        return
     asyncio.create_task(benchmark.scheduler_loop(
         run_phase1=run_phase1,
         run_phase23=run_phase23,

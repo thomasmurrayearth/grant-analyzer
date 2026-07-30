@@ -278,9 +278,11 @@ def health() -> dict:
         lowered = reason.lower()
         if "name or service not known" in lowered or "nodename" in lowered \
                 or "getaddrinfo" in lowered or "resolve" in lowered:
-            hint = (" The database hostname does not resolve, which usually means the "
-                    "project was deleted or its reference changed rather than a "
-                    "temporary outage.")
+            hint = (" The database hostname does not resolve. On a free-tier project "
+                    "the usual cause is an inactivity pause — the hostname stops "
+                    "resolving entirely, and resuming from the provider's dashboard "
+                    "restores the data and keeps the same URL and key. Less commonly "
+                    "the project was deleted or its reference changed.")
         elif "401" in reason or "403" in reason or "apikey" in lowered:
             hint = " The credentials were rejected — the key may have been rotated."
         return {

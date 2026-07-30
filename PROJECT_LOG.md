@@ -110,29 +110,46 @@ table so a quiet fortnight is never ambiguous between "suppressed by
 design" and "the scheduler never fired". Benchmark runs are excluded from
 every usage and economics figure. 90 new tests; 153 green in total.
 
-**2026-07-30 — ⚠ The analytics database is unreachable, and now says so**
-Commit subject: *Surface analytics outages instead of swallowing them*.
+**2026-07-30 — ⚠ Analytics had silently stopped: the database was paused**
+Commit subjects: *Surface analytics outages instead of swallowing them* ·
+*Keep the analytics database awake*.
 Verifying the new quality endpoint against production turned up a live
-fault: `/admin/stats` returns **503 Database unavailable**, and the
-Supabase hostname in `SUPABASE_URL` does not resolve from a browser
-either — which points at a deleted or renamed project rather than a
-passing outage. The app itself is fine: analyses run, users are
-unaffected, because every database write is deliberately swallowed so an
-analytics problem can never break a run someone is waiting on. The cost of
-that design is exactly what happened here — the app looked healthy for
-days while recording nothing, and any feedback, funnel, cost and results
-data written since is presumably gone with the project. **Thomas's action:
-restore or recreate the Supabase project, set `SUPABASE_URL` and
-`SUPABASE_KEY` in Railway, re-run `supabase_schema.sql`.** What is in the
-repo's hands is making it audible next time: `db.health()` performs one
-cheap read and classifies the failure (not configured / unreachable /
-credentials rejected, with a plain-English hint when the hostname doesn't
-resolve); `/health?deep=1` reports `degraded` with the pipeline and the
-database separated, while plain `/health` stays cheap and always 200 so a
-platform probe is never coupled to a third-party database; and both admin
-endpoints now return the diagnosis in their 503 rather than a bare
-"unavailable". Nothing is logged that could leak a connection string or
-key, and a test pins that.
+fault: `/admin/stats` returned **503 Database unavailable** and the
+Supabase hostname in `SUPABASE_URL` did not resolve from a browser either.
+The cause was **the free-tier project being paused for inactivity** — a
+paused project's hostname stops resolving entirely, which reads exactly
+like a deleted one. Resumed from the Supabase dashboard on 30 July; all
+data, backups and storage were retained and the project reference, URL and
+key are unchanged, so no Railway variable and no schema re-run were
+needed.
+
+The app itself was never affected: analyses ran and users saw nothing
+wrong, because every database write is deliberately swallowed so an
+analytics problem can't break a run someone is waiting on. The cost of
+that design is exactly what happened — the app looked healthy while
+recording nothing, with no signal until someone went looking.
+
+**The trap worth naming:** the pause is triggered by inactivity, and this
+app is quietest in precisely the fortnight the fallback self-benchmark
+exists to cover. A silent fortnight pauses the database; a paused database
+makes the benchmark refuse to spend money (correctly — it can't tell
+whether real runs happened); so the improvement loop goes blind at exactly
+the moment it was designed to step in. Three changes close that off:
+
+* `benchmark.scheduler_loop` performs one indexed single-row read each
+  pass, which is enough activity to prevent the pause and costs nothing
+  worth counting. It runs whether or not benchmarking is enabled, because
+  it protects all measurement rather than just benchmarking.
+* `db.health()` does one cheap read and classifies the result — not
+  configured, client unbuildable, credentials rejected, or unreachable —
+  and names inactivity-pause as the first thing to check when a hostname
+  stops resolving.
+* `/health?deep=1` reports `degraded` and separates the pipeline from the
+  database, while plain `/health` stays cheap and always 200 so a platform
+  probe is never coupled to a third-party service. Both admin endpoints
+  now carry the diagnosis in their 503 instead of a bare "unavailable".
+
+Nothing logged can leak a connection string or key, and a test pins that.
 
 **2026-07-30 — Baseline: what the numbers actually say today**
 Scoring the sixteen stored Thermify runs and one German run through the
@@ -286,14 +303,15 @@ shortlist of 10.
 
 ## Open items and known limitations
 
-- **⚠ Analytics database unreachable (Thomas's action — blocks all
-  measurement)** — as at 30 July 2026 `/admin/stats` returns 503 and the
-  Supabase hostname does not resolve, so nothing is being recorded and
-  neither the launch metrics nor the fortnightly quality cycle can see
-  anything. Analyses still run normally. Fix: restore or recreate the
-  Supabase project, set `SUPABASE_URL` and `SUPABASE_KEY` in Railway,
-  re-run `supabase_schema.sql`, then confirm with
-  `/health?deep=1` (expect `"analytics_database": "ok"`).
+- **Free-tier database pauses for inactivity** — resolved once on 30 July
+  2026 (resumed from the dashboard, no data lost). The app now keeps it
+  awake with one read per scheduler pass, but that only works while the
+  app is deployed and running; a long Railway outage or a redeploy gap
+  could still let it lapse. If `/health?deep=1` ever reports
+  `"analytics_database": "unavailable"`, check the Supabase dashboard for
+  a paused project before assuming anything worse. Upgrading off the free
+  tier would remove the risk entirely and is a cost decision, not a
+  technical one.
 - **Ground truth covers two companies** — `eval/cases.py` holds Thermify
   (Wales, TRL 7–8, real) and a fictional German heat-pump company. Recall
   and exclusion accuracy are therefore directional rather than

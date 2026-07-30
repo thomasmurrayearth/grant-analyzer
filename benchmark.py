@@ -360,7 +360,12 @@ async def scheduler_loop(
     poll_seconds: int = POLL_SECONDS,
     iterations: int | None = None,
 ) -> None:
-    """Wake periodically, decide, and act. Started once at application start-up.
+    """Wake periodically, keep the database awake, decide, and act.
+
+    Started once at application start-up, and started **regardless of whether
+    the benchmark itself is enabled** — the keepalive below protects all
+    measurement, not just benchmarking, so turning the benchmark off must not
+    quietly turn that off too.
 
     A polling loop rather than a cron entry because the app is the only thing
     guaranteed to be running: an external scheduler would add a second system
@@ -375,6 +380,24 @@ async def scheduler_loop(
     count = 0
     while iterations is None or count < iterations:
         count += 1
+        try:
+            # Keep the analytics database awake.
+            #
+            # Managed database free tiers pause a project after a stretch with no
+            # requests, and when they do the hostname stops resolving entirely —
+            # the app carries on serving analyses while silently recording
+            # nothing. The trap is that the trigger is *quietness*, which is
+            # exactly the condition the fallback benchmark exists to measure: a
+            # silent fortnight pauses the database, the paused database makes the
+            # benchmark refuse to spend money, and the cycle goes blind precisely
+            # when it was meant to step in.
+            #
+            # One indexed single-row read per poll is enough activity to prevent
+            # that, and costs nothing worth counting.
+            await asyncio.to_thread(db_module.health)
+        except Exception as exc:  # noqa: BLE001
+            logger.warning("Database keepalive failed: %s", exc)
+
         try:
             if enabled():
                 now = datetime.now(timezone.utc)

@@ -84,8 +84,17 @@ On the 1st and 15th at 9am, Claude reviews the app's actual output — not just
 how many people used it — and brings you findings and proposals. You decide what
 gets built; nothing user-facing changes without your say-so.
 
-**Nothing is required from you to make it work.** It runs on its own. Two things
-are worth knowing:
+**Nothing is required from you to make it work.** It runs on its own. Three
+things are worth knowing:
+
+- Supabase pauses free projects that go unused for a stretch, and a paused
+  project looks identical to a deleted one from outside — that is what happened
+  on 30 July 2026. Resuming it from the Supabase dashboard restores everything
+  and keeps the same URL and key, so nothing needs changing in Railway. The app
+  now pings the database periodically to stop it happening again, but that only
+  works while the app is deployed and running. If measurement ever looks dead,
+  check `https://<your-app>/health?deep=1` first: it says outright whether the
+  pipeline or the database is the problem.
 
 - It reads a private endpoint, `https://<your-app>/admin/quality.json?token=<ADMIN_TOKEN>`,
   which returns the analyses people received with quality scores attached. You

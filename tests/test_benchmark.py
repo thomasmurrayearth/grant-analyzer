@@ -181,6 +181,11 @@ class PlanTest(unittest.TestCase):
 class FakeDB:
     def __init__(self):
         self.events, self.started, self.completed, self.failed, self.profiles = [], [], [], [], []
+        self.health_calls = 0
+
+    def health(self):
+        self.health_calls += 1
+        return {"configured": True, "reachable": True, "detail": "ok"}
 
     def log_event(self, event, job_id=None, ip=None, detail=None):
         self.events.append({"event": event, "job_id": job_id, "detail": detail})
@@ -347,6 +352,50 @@ class ExecutionTest(unittest.TestCase):
                 analyzer_module=FakeAnalyzer, db_module=DB(),
                 poll_seconds=0, iterations=1,
             ))
+
+    def test_every_pass_keeps_the_database_awake(self):
+        # A free-tier database pauses for inactivity, and the app is quietest
+        # in exactly the fortnight the benchmark exists to cover. Without this,
+        # quietness disables the measurement designed to handle quietness.
+        db = FakeDB()
+        with patch("benchmark.cycle_key", return_value=""):
+            self._run(benchmark.scheduler_loop(
+                run_phase1=fake_phase1, run_phase23=fake_phase23,
+                analyzer_module=FakeAnalyzer, db_module=db,
+                poll_seconds=0, iterations=3,
+            ))
+        self.assertEqual(db.health_calls, 3)
+
+    def test_the_keepalive_survives_the_benchmark_being_switched_off(self):
+        db = FakeDB()
+        with patch.dict(os.environ, {"SELF_BENCHMARK_ENABLED": "0"}), \
+             patch("benchmark.cycle_key", return_value="2026-08-01"):
+            self._run(benchmark.scheduler_loop(
+                run_phase1=fake_phase1, run_phase23=fake_phase23,
+                analyzer_module=FakeAnalyzer, db_module=db,
+                poll_seconds=0, iterations=2,
+            ))
+        self.assertEqual(db.health_calls, 2)
+
+    def test_a_failing_keepalive_does_not_stop_the_cycle_running(self):
+        class DB(FakeDB):
+            def health(self):
+                raise RuntimeError("database asleep")
+
+            def get_recent_analyses(self, days):
+                return []
+
+            def get_events_named(self, event, days, limit=2000):
+                return []
+
+        db = DB()
+        with patch("benchmark.cycle_key", return_value="2026-08-01"):
+            self._run(benchmark.scheduler_loop(
+                run_phase1=fake_phase1, run_phase23=fake_phase23,
+                analyzer_module=FakeAnalyzer, db_module=db,
+                poll_seconds=0, iterations=1,
+            ))
+        self.assertTrue(any(e["event"] == benchmark.RUN_EVENT for e in db.events))
 
 
 class GroundTruthWiringTest(unittest.TestCase):
