@@ -160,16 +160,28 @@
       "source": "/admin/quality.json (unreachable); baseline carried forward from cycle 0",
       "headline": "Analytics database unreachable. Nothing recorded since it went away; app itself healthy.",
       "real_runs": {
-        "count": null,
-        "completed": null,
-        "stalled": null,
-        "structural_precision": null,
-        "main_count_mean": null,
-        "broken_link_rate": null,
+        "count": 2,
+        "completed": 2,
+        "started": 3,
+        "stalled": 1,
+        "structural_precision": 0.9,
+        "main_count_mean": 4.0,
+        "main_count_range": [
+          3,
+          5
+        ],
+        "watchlist_count_mean": 25.5,
+        "broken_link_rate": 0.135,
+        "specific_link_rate": 0.644,
+        "tier_concentration": 0.433,
         "convergence_exact": null,
         "feedback_mean": null,
-        "feedback_n": null,
-        "note": "Database unreachable \u2014 could not look. Not the same as nothing happening."
+        "feedback_n": 0,
+        "companies": [
+          "Notpla (2026-07-12)",
+          "Fermeta (2026-07-13)"
+        ],
+        "note": "Read on 31 July after the database was restored; both runs predate the pause. First real user output ever inspected. Convergence unmeasurable \u2014 no company run twice."
       },
       "benchmark": {
         "ran": false,
@@ -237,13 +249,26 @@
           "id": 4,
           "summary": "Widen the ground-truth bench beyond two companies",
           "verification": ">= 5 real completed runs readable next cycle"
+        },
+        {
+          "id": 5,
+          "summary": "Require a funder-domain source for every main recommendation",
+          "verification": "zero social/aggregator domains in main recommendations; link_authority rate > 0.9"
         }
       ],
       "blockers": [
-        "Analytics database unreachable \u2014 Supabase hostname does not resolve. Thomas's action: restore or recreate the project, set SUPABASE_URL/SUPABASE_KEY in Railway, re-run supabase_schema.sql, confirm via /health?deep=1.",
-        "Commits 2d93700 and 65bc498 are on main locally but unpushed \u2014 no GitHub credentials in the session. /admin/quality.json is not live until they are pushed.",
-        "No real user analysis has ever been inspected for quality."
-      ]
+        "No real user analysis has ever been inspected for quality.",
+        "Benchmark due 1 August: no real completion inside the 14-day lookback, so ~US$2.30 of self-benchmark will run as designed."
+      ],
+      "addendum": {
+        "date": "2026-07-31",
+        "verified_live": "push deployed, /health?deep=1 analytics_database ok, /admin/quality.json returning scored analyses",
+        "new_finding": "Links resolve but are not authoritative \u2014 Facebook post, grant-aggregator, retailer blog and consultancy pages cited as sources. Invisible to structural precision because they load. Harms Q3 and \u00a79a failure mode 2.",
+        "confirmed": [
+          "shortfall against promised 10 reproduces on real companies in two countries",
+          "a main recommendation shipped with a link already marked broken"
+        ]
+      }
     }
   ]
 }
