@@ -321,6 +321,179 @@ class FamilyResolver:
 # Reading an analysis
 # ---------------------------------------------------------------------------
 
+# ---------------------------------------------------------------------------
+# Link authority (Q3)
+#
+# A link that loads is not the same as a link that can be trusted. A shortlist
+# is a claim about where money is; the citation should point at whoever holds
+# it. A Facebook post, a consultancy's summary, or a commercial grant-listing
+# site may all resolve perfectly and still tell a reader that the shortlist was
+# assembled by scraping — which is the "no better than a chatbot" judgement in
+# §9a, and the one that costs most, because the person reading is being invited
+# to consider hiring the author.
+#
+# Everything below describes *classes* of domain. No funder or programme is
+# named, so the behaviour generalises to funders never seen in testing.
+# ---------------------------------------------------------------------------
+
+#: Domain *labels* that mark a host as public sector wherever they appear.
+#: Matching on the label rather than a fixed suffix list is what makes this
+#: work for gov.uk, gov.wales, govt.nz, gouv.fr and the next country nobody
+#: thought to enumerate.
+_PUBLIC_SECTOR_LABELS = {"gov", "govt", "gouv", "gob", "govern", "nhs", "mil"}
+
+#: Suffixes for supranational and academic estates, where there is no single
+#: label to key on.
+_OFFICIAL_SUFFIXES = (
+    ".europa.eu", ".int", ".un.org", ".who.int",
+    ".ac.uk", ".ac.nz", ".edu", ".edu.au", ".edu.sg", ".gc.ca",
+)
+
+#: Platforms that host other people's writing. Authoritative for the author,
+#: never for a funding programme.
+_PUBLISHING_PLATFORMS = {
+    "facebook.com", "m.facebook.com", "twitter.com", "x.com", "instagram.com",
+    "linkedin.com", "tiktok.com", "youtube.com", "youtu.be", "reddit.com",
+    "medium.com", "substack.com", "wordpress.com", "blogspot.com",
+    "blogger.com", "tumblr.com", "wixsite.com", "notion.site",
+    "docs.google.com", "drive.google.com", "dropbox.com",
+}
+
+#: Words so common across this sector that a domain containing one proves
+#: nothing about who runs the programme. Used only to restrain substring
+#: matching; an exact token match on these still counts.
+_COMMON_SECTOR_TOKENS = {
+    "energy", "climate", "green", "clean", "carbon", "sustainability",
+    "sustainable", "innovation", "innovate", "research", "technology",
+    "science", "future", "global", "national", "european", "europe",
+    "international", "development", "enterprise", "business", "industry",
+    "industrial", "digital", "environment", "environmental", "impact",
+    "growth", "startup", "venture", "capital", "partnership", "network",
+}
+
+_GENERIC_DOMAIN_TOKENS = {
+    "www", "com", "org", "net", "eu", "int", "co", "uk", "de", "fr", "nl",
+    "info", "portal", "apply", "funding", "grants", "grant", "fund", "en",
+    "gov", "the", "and", "for", "of",
+}
+
+
+def _acronym_variants(tokens: Sequence[str]) -> set[str]:
+    """The short forms an organisation might be known by.
+
+    Initialisms don't always take one letter per word: a short word is often
+    kept whole, so a two-word body can be known both by its two initials and
+    by the first initial followed by the short word. Both are generated,
+    because a funder's own domain may use either.
+    """
+    if len(tokens) < 2:
+        return set()
+    variants = {"".join(t[0] for t in tokens)}
+    variants.add(tokens[0][0] + "".join(t for t in tokens[1:] if len(t) <= 3))
+    variants.add("".join(t if len(t) <= 3 else t[0] for t in tokens))
+    return {v for v in variants if len(v) > 1}
+
+
+def _registrable_domain(url: str) -> str:
+    """Host of a URL, lowercased, with any leading www. removed."""
+    text = (url or "").strip().lower()
+    for prefix in ("https://", "http://"):
+        if text.startswith(prefix):
+            text = text[len(prefix):]
+    host = text.split("/")[0].split("?")[0].split("#")[0].split("@")[-1]
+    return host[4:] if host.startswith("www.") else host
+
+
+def _domain_tokens(host: str) -> set[str]:
+    return {
+        t for t in re.split(r"[.\-_]", host)
+        if t and t not in _GENERIC_DOMAIN_TOKENS and len(t) > 2
+    }
+
+
+def link_authority(url: str, name: str = "", managing_body: str = "") -> str:
+    """Classify who a recommendation's link actually points at.
+
+    Returns one of:
+
+    * ``"funder"`` — an official public-sector or academic domain, or a domain
+      that shares identifying words (or an acronym) with the programme or the
+      body said to run it. Application portals often live on a domain that
+      matches neither exactly, so token overlap is tested against the
+      programme name too, not just the funder.
+    * ``"third_party"`` — a publishing or social platform. Never a funder.
+    * ``"unknown"`` — resolves somewhere unrelated: an aggregator, a
+      consultancy, a trade blog. Not proof of a bad link, but not a citation a
+      reader can lean on either.
+
+    Deliberately generous about what counts as a funder. A false "unknown" on a
+    legitimate programme costs a demotion; a false "funder" lets the defect
+    through unmeasured, and the whole point is to be able to see it.
+    """
+    host = _registrable_domain(url)
+    if not host or "." not in host:
+        return "unknown"
+
+    base = host[4:] if host.startswith("www.") else host
+    if base in _PUBLISHING_PLATFORMS or any(
+        base.endswith("." + p) or base == p for p in _PUBLISHING_PLATFORMS
+    ):
+        return "third_party"
+
+    labels = host.split(".")
+    if any(label in _PUBLIC_SECTOR_LABELS for label in labels):
+        return "funder"
+    if any(host == suffix.lstrip(".") or host.endswith(suffix)
+           for suffix in _OFFICIAL_SUFFIXES):
+        return "funder"
+
+    host_tokens = _domain_tokens(host)
+    if not host_tokens:
+        return "unknown"
+
+    # Every organisation named in the body counts, not just the first. Bodies
+    # are routinely written as "Delivery Agency / Parent Department", and a
+    # link to either one is a link to the funder.
+    significant: list[str] = []
+    aliases: set[str] = set()
+    for part in re.split(r"[/,;&]| and ", managing_body or ""):
+        part_significant, part_aliases = _body_identity(part)
+        significant.extend(part_significant)
+        aliases |= part_aliases
+        aliases |= _acronym_variants(part_significant)
+
+    claim_tokens = {t for t in normalise_name(name).split() if len(t) > 2}
+    claim_tokens |= {t for t in significant if len(t) > 2}
+    claim_tokens |= {a for a in aliases if len(a) > 2}
+    acronym = _identifying_acronym(name, aliases)
+    if acronym:
+        claim_tokens.add(acronym.lower())
+
+    if host_tokens & claim_tokens:
+        return "funder"
+
+    # A domain that is itself an acronym of the funder — "abcd.org" for
+    # "A B C D Agency" — carries the funder's identity without sharing a word.
+    joined = "".join(significant)
+    if any(t == joined or t in aliases for t in host_tokens):
+        return "funder"
+
+    # Organisations routinely run their words together in a domain, so a
+    # funder's own site can share no *token* with its name while obviously
+    # belonging to it. Substring matching recovers those — but only on
+    # distinctive words: half the climate funding world has "energy" or
+    # "innovation" in its title, and matching on those would wave through a
+    # retailer's blog on the strength of a coincidence.
+    distinctive = {
+        t for t in claim_tokens
+        if len(t) >= 5 and t not in _COMMON_SECTOR_TOKENS
+    }
+    if any(d in host_token for host_token in host_tokens for d in distinctive):
+        return "funder"
+
+    return "unknown"
+
+
 def unwrap(result: dict) -> dict:
     """Accept either a raw analysis or a stored eval file that wraps one.
 
@@ -468,6 +641,12 @@ _DEFENSIBILITY_CHECKS: list[tuple[str, Any, str]] = [
     ("homepage_only_link",
      lambda i: i.get("link_type") == "funder_homepage",
      "Q3"),
+    ("non_authoritative_link",
+     lambda i: str(i.get("application_link") or "").startswith("http")
+     and link_authority(i.get("application_link") or "",
+                        i.get("name") or "",
+                        i.get("managing_body") or "") != "funder",
+     "Q3"),
     ("deadline_passed",
      lambda i: str(i.get("application_timing") or "").lower() == "passed",
      "Q2"),
@@ -536,8 +715,15 @@ def link_quality(result: dict) -> dict:
     everything = main + watch
     by_type: dict[str, int] = {}
     by_status: dict[str, int] = {}
+    by_authority: dict[str, int] = {}
     no_url = 0
     for item in everything:
+        authority = link_authority(
+            item.get("application_link") or "",
+            item.get("name") or "",
+            item.get("managing_body") or "",
+        )
+        by_authority[authority] = by_authority.get(authority, 0) + 1
         by_type[str(item.get("link_type") or "unknown")] = \
             by_type.get(str(item.get("link_type") or "unknown"), 0) + 1
         by_status[str(item.get("link_status") or "unverified")] = \
@@ -553,6 +739,10 @@ def link_quality(result: dict) -> dict:
         "no_url": no_url,
         "specific_link_rate": round(specific / total, 3) if total else None,
         "broken_rate": round(by_status.get("broken", 0) / total, 3) if total else None,
+        "by_authority": by_authority,
+        "link_authority_rate": (round(by_authority.get("funder", 0) / total, 3)
+                                if total else None),
+        "third_party_links": by_authority.get("third_party", 0),
     }
 
 
@@ -712,6 +902,8 @@ def summarise(assessments: Sequence[dict]) -> dict:
         "distinct_tiers": _mean([a["tier_spread"]["distinct_tiers"] for a in assessments]),
         "specific_link_rate": _mean([a["links"]["specific_link_rate"] for a in assessments]),
         "broken_rate": _mean([a["links"]["broken_rate"] for a in assessments]),
+        "link_authority_rate": _mean([a["links"]["link_authority_rate"] for a in assessments]),
+        "third_party_links": sum(a["links"]["third_party_links"] for a in assessments),
         "defect_totals": _merge_counts(
             [a["defensibility"]["failures"] for a in assessments]
         ),

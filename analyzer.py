@@ -36,6 +36,8 @@ from typing import Any, AsyncGenerator, Callable
 import anthropic
 import httpx
 
+import quality
+
 _executor = ThreadPoolExecutor(max_workers=4)
 
 
@@ -1539,6 +1541,136 @@ _LINK_GATED_TIERS = {"Must Pursue", "Quick Win"}
 _LINK_GATE_DEMOTED_TIER = "Prepare for Next Window"
 
 
+async def _apply_recommendation_gates(
+    opportunities: list,
+    watchlist: list,
+    profile: dict | None = None,
+) -> tuple[list, list]:
+    """
+    Final admission test: everything left in the main list must be something
+    the reader can actually act on, and verify in one click.
+
+    A main recommendation is an instruction — *go and apply for this*. Four
+    conditions make that instruction false, and each of them is something the
+    pipeline already knows by this point and, until now, shipped anyway:
+
+    1.  **No confirmed application process.** Nothing to apply to.
+    2.  **A deadline already passed.** Nothing to apply to *now*.
+    3.  **A link verified as broken.** The claim cannot be checked, and the
+        landing page promises verified links. Re-checked once first, because
+        a single timeout is not evidence of a dead page.
+    4.  **A link that isn't the funder's.** It loads, so every automated check
+        passes, but citing a social post or a grant-listing site for a
+        programme tells the reader the shortlist was scraped — §9a's second
+        most damaging failure mode, and the one that most undercuts the
+        consulting positioning in §1.
+
+    Nothing is deleted. Failing items move to the watchlist carrying the
+    reason, because "this exists but you can't act on it yet" is exactly what
+    the watchlist is for, and silently dropping a real opportunity would trade
+    one defect for a worse one.
+    """
+    if not opportunities:
+        return opportunities, watchlist
+
+    kept: list = []
+    demoted: list = []
+
+    # A broken link gets one second chance. Verification runs against live
+    # sites; transient failures are common and demoting a good programme on a
+    # blip would cost more than the re-check does.
+    retryable = [
+        o for o in opportunities
+        if o.get("link_status") == "broken"
+        and (o.get("application_link") or "").startswith("http")
+    ]
+    if retryable:
+        rechecked = await asyncio.gather(
+            *[_check_one_link(o["application_link"]) for o in retryable],
+            return_exceptions=True,
+        )
+        for opp, status in zip(retryable, rechecked):
+            if not isinstance(status, Exception) and status == "verified":
+                opp["link_status"] = "verified"
+
+    for opp in opportunities:
+        reason = None
+
+        if opp.get("has_application_process") is False:
+            reason = (
+                "No public application process could be confirmed for this "
+                "programme. Verify directly with the funder whether one exists."
+            )
+        elif str(opp.get("application_timing") or "").lower() == "passed":
+            reason = (
+                "The application window for this round has closed. Worth "
+                "tracking for the next round rather than acting on now."
+            )
+        elif (declared := _violates_declared_eligibility(opp, profile)):
+            reason = (
+                f"Held back from the main recommendations because {declared}. "
+                "Review the criteria directly — this assessment may be wrong, "
+                "and a participation route may exist that the research missed."
+            )
+        elif opp.get("link_status") == "broken":
+            reason = (
+                "The application link could not be reached on two checks, so "
+                "the opportunity cannot be verified in one step. Locate the "
+                "official page before investing application effort."
+            )
+        else:
+            authority = quality.link_authority(
+                opp.get("application_link") or "",
+                opp.get("name") or "",
+                opp.get("managing_body") or "",
+            )
+            if authority != "funder":
+                source = ("a social media or publishing platform"
+                          if authority == "third_party"
+                          else "a third-party site rather than the funder")
+                reason = (
+                    f"The only link found for this programme points at {source}, "
+                    "so the opportunity could not be confirmed from the funder's "
+                    "own pages. Find the official programme page before relying "
+                    "on it."
+                )
+
+        if reason:
+            entry = _to_watchlist_entry(opp, reason)
+            demoted.append(entry)
+        else:
+            kept.append(opp)
+
+    return kept, watchlist + demoted
+
+
+def _to_watchlist_entry(opp: dict, why: str) -> dict:
+    """Convert a scored recommendation into a watchlist row, keeping the
+    scoring work so the export can still show a real thematic fit."""
+    return {
+        "name":               opp.get("name", ""),
+        "managing_body":      opp.get("managing_body", ""),
+        "geography":          opp.get("geography", ""),
+        "opportunity_type":   opp.get("opportunity_type", ""),
+        "application_route":  opp.get("application_route", ""),
+        "application_timing": opp.get("application_timing", "timing_unknown"),
+        "status":             opp.get("status", ""),
+        "application_link":   opp.get("application_link", "unknown"),
+        "link_type":          opp.get("link_type", "unknown"),
+        "link_status":        opp.get("link_status", "unverified"),
+        "funding_type":       opp.get("funding_type", ""),
+        "max_funding":        opp.get("max_funding", "unknown"),
+        "thematic_relevance": opp.get("thematic_fit_explanation", ""),
+        "thematic_fit":       opp.get("thematic_fit_score"),
+        "watchlist_class":    "demoted_from_main",
+        "why_watchlist":      why,
+        "what_would_unlock": (
+            "Confirm the official application page and current round status "
+            "directly with the funder."
+        ),
+    }
+
+
 def _apply_link_quality_gate(opportunities: list) -> list:
     """
     Post-verification safety net: an item in a top action tier ("Must Pursue"
@@ -1855,42 +1987,87 @@ _EXCLUDE_ENTIRELY_TYPES = {
 }
 
 
-def _violates_known_hard_gates(opp: dict, profile: dict | None) -> str | None:
+# Text that marks a programme as restricted to development assistance — money
+# for deployment in developing economies. A class of restriction, not a named
+# programme, so this catches funders never seen in testing.
+_ODA_RESTRICTION_MARKERS = (
+    "oda-eligible", "oda eligible", "oda-only", "oda only",
+    "official development assistance",
+    "developing countries", "developing country", "developing economies",
+    "least developed countries", "dac list",
+)
+
+# Where a company has to be working for a development-assistance programme to
+# be open to it.
+_DEVELOPING_MARKET_MARKERS = (
+    "africa", "south asia", "southeast asia", "south-east asia",
+    "indo-pacific", "latin america", "caribbean", "sub-saharan",
+    "developing", "global south", "low-income", "middle-income",
+)
+
+# Phrases in which the scoring model concedes, in prose, an eligibility
+# mismatch it has just recorded as a pass in its own structured fields. This is
+# the observed failure: the gate is not missing, it is overridden — the model
+# writes trl_match: true and then explains at length why the company sits
+# outside the band. Matching the concession catches the override generically,
+# without needing to parse a programme's TRL range out of free text or to know
+# which programmes exist.
+_ELIGIBILITY_CONCESSION_RE = re.compile(
+    r"(trl mismatch"
+    r"|mismatch (?:on|in) trl"
+    r"|(?:significantly |somewhat |well )?(?:beyond|above) the (?:typical|intended|usual|expected|target)"
+    r"|significantly (?:beyond|above)"
+    r"|(?:well )?below the (?:minimum|typical|required|expected)"
+    r"|outside (?:the |its )?(?:eligible|target|intended) (?:trl|range|band)"
+    r"|does not meet the (?:trl|eligibility) (?:requirement|threshold))",
+    re.IGNORECASE,
+)
+
+
+def _item_text(opp: dict) -> str:
+    """Everything the model wrote about an item, as one searchable string."""
+    return " ".join(str(opp.get(k) or "") for k in (
+        "name", "geography", "notes", "thematic_fit_explanation",
+        "ease_explanation", "strategic_value_explanation",
+        "application_route", "why_watchlist", "thematic_relevance",
+    )).lower()
+
+
+def _violates_declared_eligibility(opp: dict, profile: dict | None) -> str | None:
     """
-    Code-level mirror of _SCORING_SYSTEM's "KNOWN HARD ELIGIBILITY GATES".
+    Exclude an item whose own description says the company cannot have it.
 
-    The scoring model sometimes overrides these gates — e.g. classifying
-    Energy Catalyst geography_match=true by asserting "UK-relevant rounds"
-    exist — so the confirmed gates are re-checked here, conditioned on the
-    COMPANY profile (not applied blindly): an ODA-only programme is fine for
-    a company deploying in developing markets, and a TRL 1-4 programme is
-    fine for an early-TRL company.
+    The scoring model reliably *states* the disqualifying fact and then fails
+    to act on it — recording a structured pass while explaining in prose that
+    the company is outside the band, or noting that a programme's money is
+    reserved for developing economies while recommending it to a company that
+    works in none. Both are checked here against the company profile rather
+    than applied blindly: a development-assistance programme is a fine
+    recommendation for a company deploying in those markets, and an early-TRL
+    programme is fine for an early-TRL company.
 
-    Returns a short reason string when the item must be excluded, else None.
+    Describes classes of restriction, never a named funder, so it generalises
+    to programmes that have never appeared in testing.
+
+    Returns a short reason when the item must be excluded, else None.
     """
     if not profile:
         return None
-    name = (opp.get("name") or "").lower()
+    text = _item_text(opp)
 
-    # ODA-only programmes: fund deployment in developing countries only
-    if "energy catalyst" in name:
-        geo = " ".join(
+    if any(marker in text for marker in _ODA_RESTRICTION_MARKERS):
+        company_geo = " ".join(
             [profile.get("hq") or ""]
             + (profile.get("operational_geographies") or [])
             + (profile.get("customer_geographies") or [])
         ).lower()
-        oda_markers = (
-            "africa", "south asia", "southeast asia", "indo-pacific",
-            "latin america", "developing",
-        )
-        if not any(m in geo for m in oda_markers):
-            return "ODA-only geography: funds deployment in developing countries"
+        if not any(m in company_geo for m in _DEVELOPING_MARKET_MARKERS):
+            return ("restricted to development-assistance geographies the "
+                    "company does not operate in")
 
-    # Breakthrough-science calls: TRL 1-4 only
-    if "pathfinder" in name:
-        m = re.search(r"\d", profile.get("trl") or "")
-        if m and int(m.group()) >= 5:
-            return "TRL 1-4 only: company is at TRL 5+"
+    if _ELIGIBILITY_CONCESSION_RE.search(text):
+        return ("the assessment itself states the company falls outside this "
+                "programme's eligibility band")
 
     return None
 
@@ -1984,7 +2161,7 @@ def _enforce_routing_rules(
             continue   # Wrong deployment geography — confirmed factual, exclude
         if opp_type in _EXCLUDE_ENTIRELY_TYPES:
             continue   # Wrong category — exclude entirely
-        if _violates_known_hard_gates(opp, profile):
+        if _violates_declared_eligibility(opp, profile):
             continue   # Confirmed eligibility gate the scoring model overrode
 
         # ── Route to watchlist as partner_route ──────────────────────────
@@ -2011,7 +2188,7 @@ def _enforce_routing_rules(
     # programme should not be presented for monitoring either.
     combined_watchlist = [
         item for item in watchlist + extra_watch
-        if not _violates_known_hard_gates(item, profile)
+        if not _violates_declared_eligibility(item, profile)
     ]
     return kept_opps, combined_watchlist
 
@@ -2543,6 +2720,18 @@ async def run_phase23(
             )
             result["company_profile"] = profile
 
+            # Stage-by-stage survival counts. The app promises ten scored
+            # opportunities and has been delivering three to five; without
+            # these counters the loss is invisible, because only the first and
+            # last numbers were ever recorded and every stage in between is a
+            # plausible culprit. Cheap to keep, and the only way a review cycle
+            # can name the stage rather than guess at it.
+            funnel = {
+                "longlist": len(longlist),
+                "shortlist": len(shortlist),
+                "scored": len(result.get("opportunities", [])),
+            }
+
             # ── Hard routing enforcement ──────────────────────────────────
             # The scoring model sometimes ignores its own routing rules.
             # Enforce them in code as a post-processing safety net.
@@ -2553,6 +2742,7 @@ async def run_phase23(
                     profile=profile,
                 )
             )
+            funnel["after_eligibility_routing"] = len(result["opportunities"])
 
             # ── Partner-route rescue ──────────────────────────────────────
             # The scoring model sometimes omits partner-route programmes from
@@ -2587,6 +2777,7 @@ async def run_phase23(
                 )
                 result["opportunities"]       = opps
                 result["strategic_watchlist"] = watch
+            funnel["after_specificity_check"] = len(result.get("opportunities", []))
 
             # ── Watchlist link resolution ─────────────────────────────────
             # Rescued watchlist items were never deep-researched — their URL
@@ -2622,9 +2813,37 @@ async def run_phase23(
                 result["opportunities"]      = opps
                 result["strategic_watchlist"] = watch
 
+            # ── Recommendation admission gates ────────────────────────────
+            # Last check before the user sees anything: every main
+            # recommendation must be something they can act on and verify in
+            # one click. Failures move to the watchlist with the reason —
+            # never deleted, because "real but not yet actionable" is what the
+            # watchlist is for.
+            stage_name = "recommendation gates"
+            n_before = len(result.get("opportunities", []))
+            opps, watch = await _apply_recommendation_gates(
+                result.get("opportunities", []),
+                result.get("strategic_watchlist", []),
+                profile=profile,
+            )
+            result["opportunities"]       = opps
+            result["strategic_watchlist"] = watch
+            funnel["after_admission_gates"] = len(opps)
+            funnel["promised"] = SHORTLIST_SIZE
+            result["pipeline_funnel"] = funnel
+            if n_before - len(opps) > 0:
+                await queue.put({
+                    "type": "progress", "stage": 3,
+                    "message": (
+                        f"Moved {n_before - len(opps)} of {n_before} to the watchlist — "
+                        "eligibility or application link could not be confirmed."
+                    ),
+                })
+
             # ── Link quality gate ─────────────────────────────────────────
-            # A "Must Pursue" / "Quick Win" item with a broken or generic
-            # link is a contradiction — demote it and explain why.
+            # A "Must Pursue" / "Quick Win" item with a generic link is a
+            # contradiction — demote the tier and explain why. Broken links
+            # are already gone by this point.
             stage_name = "link quality gate"
             result["opportunities"] = _apply_link_quality_gate(
                 result.get("opportunities", [])

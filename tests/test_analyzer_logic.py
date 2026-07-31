@@ -5,15 +5,18 @@ quality gate. None of these touch the network or the Anthropic API.
 """
 
 import unittest
+from unittest.mock import AsyncMock, patch
 
+import quality
 from analyzer import (
+    _apply_recommendation_gates,
     _apply_link_quality_gate,
     _backfill_initial_thematic_fit,
     _enforce_routing_rules,
     _mandatory_queries,
     _names_similar,
     _rescue_missing_partner_items,
-    _violates_known_hard_gates,
+    _violates_declared_eligibility,
 )
 
 
@@ -266,7 +269,16 @@ class LinkQualityGateTest(unittest.TestCase):
         self.assertEqual(opps[0]["priority_tier"], "Strategic Positioning")
 
 
-class KnownHardGatesTest(unittest.TestCase):
+class DeclaredEligibilityTest(unittest.TestCase):
+    """The gate reads what an item *declares*, never what it is called.
+
+    These tests deliberately use invented programme names. The previous
+    version of this gate matched two funders by name, which meant it could
+    only ever catch the two programmes someone had already been burned by —
+    and it violated the repo rule against hardcoding a funder seen in testing.
+    Every case below would be caught for a funder nobody has heard of.
+    """
+
     UK_TRL7 = {
         "hq": "Cardiff, United Kingdom",
         "operational_geographies": ["United Kingdom"],
@@ -280,40 +292,249 @@ class KnownHardGatesTest(unittest.TestCase):
         "trl": "TRL 3 (lab prototype)",
     }
 
-    def test_energy_catalyst_excluded_for_developed_market_company(self):
-        opp = {"name": "Innovate UK Energy Catalyst — UK-relevant rounds"}
-        self.assertIsNotNone(_violates_known_hard_gates(opp, self.UK_TRL7))
+    # ── Development-assistance restriction ──────────────────────────────
+    def test_development_only_programme_excluded_for_a_developed_market_company(self):
+        opp = {
+            "name": "Northlight Clean Power Challenge",
+            "notes": "Only ODA-eligible rounds are running; funds deployment "
+                     "in developing countries.",
+        }
+        self.assertIsNotNone(_violates_declared_eligibility(opp, self.UK_TRL7))
 
-    def test_energy_catalyst_allowed_for_oda_market_company(self):
-        opp = {"name": "Innovate UK Energy Catalyst Round 12"}
-        self.assertIsNone(_violates_known_hard_gates(opp, self.ODA_TRL3))
+    def test_the_same_programme_is_allowed_for_a_company_in_those_markets(self):
+        opp = {
+            "name": "Northlight Clean Power Challenge",
+            "notes": "Only ODA-eligible rounds are running; funds deployment "
+                     "in developing countries.",
+        }
+        self.assertIsNone(_violates_declared_eligibility(opp, self.ODA_TRL3))
 
-    def test_pathfinder_excluded_for_trl5_plus_company(self):
-        opp = {"name": "EIC Pathfinder Open"}
-        self.assertIsNotNone(_violates_known_hard_gates(opp, self.UK_TRL7))
+    def test_a_passing_mention_without_the_restriction_does_not_gate(self):
+        opp = {"name": "Northlight Clean Power Challenge",
+               "notes": "Applicants may partner with overseas universities."}
+        self.assertIsNone(_violates_declared_eligibility(opp, self.UK_TRL7))
 
-    def test_pathfinder_allowed_for_early_trl_company(self):
-        opp = {"name": "EIC Pathfinder Open"}
-        self.assertIsNone(_violates_known_hard_gates(opp, self.ODA_TRL3))
+    # ── The model conceding a mismatch it then ignored ──────────────────
+    def test_prose_conceding_a_trl_mismatch_overrides_a_structured_pass(self):
+        # The observed failure: trl_match says true, the explanation says the
+        # company is outside the band, and the item ships anyway.
+        opp = {
+            "name": "Meridian Frontier Science Call",
+            "trl_match": True,
+            "thematic_fit_explanation": "The programme funds breakthrough "
+                "research at low TRL; the company is significantly beyond the "
+                "intended stage.",
+        }
+        self.assertIsNotNone(_violates_declared_eligibility(opp, self.UK_TRL7))
+
+    def test_an_explicit_trl_mismatch_note_is_caught(self):
+        opp = {"name": "Meridian Frontier Science Call", "trl_match": True,
+               "notes": "TRL mismatch is the primary reason for low priority."}
+        self.assertIsNotNone(_violates_declared_eligibility(opp, self.UK_TRL7))
+
+    def test_a_clean_assessment_passes(self):
+        opp = {
+            "name": "Meridian Frontier Science Call",
+            "trl_match": True,
+            "thematic_fit_explanation": "Strong fit: the programme funds "
+                "commercial demonstration at exactly this stage.",
+        }
+        self.assertIsNone(_violates_declared_eligibility(opp, self.UK_TRL7))
 
     def test_no_profile_means_no_gating(self):
-        opp = {"name": "Innovate UK Energy Catalyst"}
-        self.assertIsNone(_violates_known_hard_gates(opp, None))
+        # Without a company to compare against, a restriction is not a
+        # mismatch. Guessing would drop valid opportunities.
+        opp = {"name": "Northlight Clean Power Challenge",
+               "notes": "ODA-eligible rounds only."}
+        self.assertIsNone(_violates_declared_eligibility(opp, None))
 
     def test_enforce_routing_drops_gated_items_from_both_arrays(self):
         opps = [
-            {"name": "Innovate UK Energy Catalyst — UK-relevant rounds",
+            {"name": "Northlight Clean Power Challenge",
+             "notes": "ODA-eligible: funds deployment in developing countries.",
              "opportunity_type": "direct_grant", "trl_match": True,
              "geography_match": True, "applicant_type_match": "direct"},
-            {"name": "Welsh Government SMART FIS",
+            {"name": "Vantor Regional Innovation Grant",
              "opportunity_type": "direct_grant", "trl_match": True,
              "geography_match": True, "applicant_type_match": "direct"},
         ]
-        watch = [{"name": "EIC Pathfinder Open"}]
+        watch = [{"name": "Meridian Frontier Science Call",
+                  "why_watchlist": "The company is significantly beyond the "
+                                   "intended stage for this call."}]
         kept, watchlist = _enforce_routing_rules(opps, watch, profile=self.UK_TRL7)
-        self.assertEqual([o["name"] for o in kept], ["Welsh Government SMART FIS"])
+        self.assertEqual([o["name"] for o in kept],
+                         ["Vantor Regional Innovation Grant"])
         self.assertEqual(watchlist, [])
 
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class LinkAuthorityTest(unittest.TestCase):
+    """Whose site does a recommendation actually point at?
+
+    A link that loads is not a link that can be trusted. Every case here uses
+    an invented funder, because the rule has to work for programmes nobody has
+    seen — and errs toward "not the funder", since a false demotion costs a
+    watchlist row while a false pass ships the defect unmeasured.
+    """
+
+    def test_an_official_domain_is_authoritative_whatever_it_is_called(self):
+        self.assertEqual(
+            quality.link_authority("https://apply.northlight.gov.uk/scheme/12",
+                                   "Coastal Resilience Partnership", "Vantor Agency"),
+            "funder",
+        )
+
+    def test_a_domain_sharing_the_funders_name_is_authoritative(self):
+        self.assertEqual(
+            quality.link_authority("https://vantor.org/grants/crp",
+                                   "Coastal Resilience Partnership", "Vantor Agency"),
+            "funder",
+        )
+
+    def test_a_run_together_domain_still_matches(self):
+        # Organisations routinely concatenate their name into a domain.
+        self.assertEqual(
+            quality.link_authority("https://northlightfoundation.org/",
+                                   "Northlight Prize", "The Northlight Foundation"),
+            "funder",
+        )
+
+    def test_a_social_platform_is_never_the_funder(self):
+        for url in ("https://www.facebook.com/someone/posts/123",
+                    "https://medium.com/@writer/grants-2026",
+                    "https://x.com/someone/status/1"):
+            with self.subTest(url=url):
+                self.assertEqual(
+                    quality.link_authority(url, "Coastal Grant", "Vantor Agency"),
+                    "third_party",
+                )
+
+    def test_an_unrelated_commercial_site_is_not_the_funder(self):
+        # An aggregator or a consultancy's summary page. Loads fine; proves
+        # nothing about where the money is.
+        self.assertEqual(
+            quality.link_authority("https://grantfinderpro.co.uk/listings/8821",
+                                   "Coastal Resilience Partnership", "Vantor Agency"),
+            "unknown",
+        )
+
+    def test_a_shared_sector_word_alone_does_not_make_a_site_authoritative(self):
+        # Half this sector has "energy" or "innovation" in its name; matching
+        # on those would wave through a retailer's blog on a coincidence.
+        self.assertEqual(
+            quality.link_authority("https://bigenergyretailer.com/blog/grants-2026",
+                                   "Energy Innovation Fund", "Vantor Energy Agency"),
+            "unknown",
+        )
+
+    def test_a_missing_or_malformed_link_is_not_authoritative(self):
+        for url in ("", "unknown", "not a url"):
+            with self.subTest(url=url):
+                self.assertEqual(quality.link_authority(url, "X", "Y"), "unknown")
+
+
+class RecommendationGatesTest(unittest.IsolatedAsyncioTestCase):
+    """The last check before a user sees anything.
+
+    Every case asserts two things: the item leaves the main list, and it
+    arrives on the watchlist carrying a reason. Dropping a real opportunity
+    silently would trade one defect for a worse one.
+    """
+
+    PROFILE = {"hq": "Cardiff, United Kingdom",
+               "operational_geographies": ["United Kingdom"],
+               "trl": "TRL 7-8"}
+
+    @staticmethod
+    def opp(**kwargs):
+        item = {
+            "name": "Coastal Resilience Partnership",
+            "managing_body": "Vantor Agency",
+            "application_link": "https://vantor.org/apply/crp",
+            "link_type": "application_portal",
+            "link_status": "verified",
+            "has_application_process": True,
+            "application_timing": "open_now",
+            "priority_tier": "Must Pursue",
+            "thematic_fit_score": 5,
+        }
+        item.update(kwargs)
+        return item
+
+    async def _run(self, opps, watch=None):
+        return await _apply_recommendation_gates(
+            opps, watch if watch is not None else [], profile=self.PROFILE,
+        )
+
+    async def test_a_clean_recommendation_survives(self):
+        kept, watch = await self._run([self.opp()])
+        self.assertEqual(len(kept), 1)
+        self.assertEqual(watch, [])
+
+    async def test_an_item_with_no_application_process_is_demoted(self):
+        kept, watch = await self._run([self.opp(has_application_process=False)])
+        self.assertEqual(kept, [])
+        self.assertIn("application process", watch[0]["why_watchlist"])
+
+    async def test_a_passed_deadline_is_demoted(self):
+        kept, watch = await self._run([self.opp(application_timing="passed")])
+        self.assertEqual(kept, [])
+        self.assertIn("closed", watch[0]["why_watchlist"])
+
+    async def test_a_declared_eligibility_mismatch_is_demoted(self):
+        kept, watch = await self._run([self.opp(
+            notes="ODA-eligible only: funds deployment in developing countries.",
+        )])
+        self.assertEqual(kept, [])
+        self.assertIn("development-assistance", watch[0]["why_watchlist"])
+
+    async def test_a_non_funder_link_is_demoted(self):
+        kept, watch = await self._run([self.opp(
+            application_link="https://www.facebook.com/someone/posts/1",
+        )])
+        self.assertEqual(kept, [])
+        self.assertIn("social media", watch[0]["why_watchlist"])
+
+    async def test_an_aggregator_link_is_demoted(self):
+        kept, watch = await self._run([self.opp(
+            application_link="https://grantfinderpro.co.uk/listings/8821",
+        )])
+        self.assertEqual(kept, [])
+        self.assertIn("third-party", watch[0]["why_watchlist"])
+
+    async def test_a_broken_link_gets_one_recheck_before_demotion(self):
+        # A single timeout is not evidence of a dead page, and demoting a good
+        # programme on a blip costs more than the re-check does.
+        with patch("analyzer._check_one_link", new=AsyncMock(return_value="verified")):
+            kept, watch = await self._run([self.opp(link_status="broken")])
+        self.assertEqual(len(kept), 1)
+        self.assertEqual(kept[0]["link_status"], "verified")
+
+    async def test_a_link_broken_on_both_checks_is_demoted(self):
+        with patch("analyzer._check_one_link", new=AsyncMock(return_value="broken")):
+            kept, watch = await self._run([self.opp(link_status="broken")])
+        self.assertEqual(kept, [])
+        self.assertIn("two checks", watch[0]["why_watchlist"])
+
+    async def test_demoted_items_keep_their_scoring_work(self):
+        kept, watch = await self._run([self.opp(
+            has_application_process=False, thematic_fit_score=4,
+            thematic_fit_explanation="Strong thematic overlap.",
+        )])
+        self.assertEqual(watch[0]["thematic_fit"], 4)
+        self.assertEqual(watch[0]["thematic_relevance"], "Strong thematic overlap.")
+        self.assertEqual(watch[0]["watchlist_class"], "demoted_from_main")
+
+    async def test_nothing_is_ever_deleted(self):
+        opps = [self.opp(name="A", has_application_process=False),
+                self.opp(name="B", application_timing="passed"),
+                self.opp(name="C")]
+        kept, watch = await self._run(opps, watch=[{"name": "existing"}])
+        self.assertEqual([o["name"] for o in kept], ["C"])
+        self.assertEqual(len(watch), 3)   # 1 pre-existing + 2 demoted
+
+    async def test_an_empty_list_is_handled(self):
+        self.assertEqual(await self._run([]), ([], []))

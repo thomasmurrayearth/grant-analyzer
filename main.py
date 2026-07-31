@@ -992,6 +992,9 @@ async def admin_quality(token: str = "", days: int = 14, runs: int = 25) -> dict
             "created_at": row.get("created_at"),
             "cost_usd": row.get("cost_usd"),
             "assessment": quality.assess_run(payload, promised_main=analyzer.SHORTLIST_SIZE),
+            # Where candidates were lost between discovery and the final list.
+            # Absent on runs from before this was recorded.
+            "funnel": (payload or {}).get("pipeline_funnel"),
             "main": [_compact(i) for i in main],
             "watchlist": [_compact(i) for i in watch],
         }

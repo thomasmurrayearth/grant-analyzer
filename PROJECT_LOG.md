@@ -110,6 +110,54 @@ table so a quiet fortnight is never ambiguous between "suppressed by
 design" and "the scheduler never fired". Benchmark runs are excluded from
 every usage and economics figure. 90 new tests; 153 green in total.
 
+**2026-07-31 — Three approved output-quality gates, and the volume gap diagnosed**
+Commit subject: *Gate recommendations on eligibility, working links and funder-owned sources*.
+Thomas approved proposals 1, 2 and 5 from improvement cycle 1 and asked for a
+diagnosis on 3. All three gates land in one new stage,
+`_apply_recommendation_gates`, which runs after link verification and is the
+last thing between the scoring output and the user. A main recommendation is
+an instruction — *go and apply for this* — and four conditions make that
+instruction false: no confirmed application process, a deadline already
+passed, a link broken on two checks, or a link that isn't the funder's.
+Nothing is deleted; failures move to the watchlist carrying the reason,
+because "real but not yet actionable" is what the watchlist is for.
+
+Two things are worth recording about how this was built.
+
+**The eligibility gate no longer names funders.** The previous version matched
+two programmes by name, which meant it could only catch the two that had
+already caused trouble — and it broke the repo's own rule against hardcoding a
+funder seen in testing. Reading the stored runs showed the model reliably
+*states* the disqualifying fact and then ignores it: it records `trl_match:
+true` and explains at length that the company is "significantly beyond the
+intended stage". So the gate now reads the concession, and separately checks
+declared development-assistance restrictions against the company's actual
+geographies. Both describe classes of restriction, so they catch funders
+nobody has seen. Tests rewritten around invented programmes to prove it.
+
+**The link-authority classifier was wrong first, and replay caught it.**
+Before shipping, it was replayed over all seventeen stored runs. The first
+version demoted `gov.uk`, `gov.wales`, `ukri.org` and Innovate UK's own
+delivery-partner domains — false demotions of legitimate government
+programmes, which would have been worse than the defect being fixed. Three
+real bugs: a suffix list that missed a host equal to the suffix, only the
+first organisation in a "Delivery Agency / Parent Department" body being
+considered, and initialisms that keep a short word whole ("IUK") not being
+generated. Fixed and pinned with regression tests. Demotion across stored runs
+fell from 32% to 15% — nine broken links and two genuinely non-authoritative
+sources, which is the real defect rate.
+
+**On proposal 3 (ten promised, three delivered):** diagnosed in
+`reports/diagnosis-shortlist-volume-2026-07-31.md`. Ten is not a target the
+pipeline aims at — it is the batch size handed to scoring, after which four
+stages remove items and nothing puts any back. The honest gap is that only the
+first and last counts were ever recorded, so which stage loses the most is
+unknown. Stage-by-stage counters (`pipeline_funnel`, surfaced in
+`/admin/quality.json`) now ship with every run, and the recommendation is to
+let the 15 August cycle name the guilty stage before spending money inflating
+the input. Also noted: `WATCHLIST_CAP = 10` is declared and never used, which
+is why watchlists run to 27 rows.
+
 **2026-07-30 — ⚠ Analytics had silently stopped: the database was paused**
 Commit subjects: *Surface analytics outages instead of swallowing them* ·
 *Keep the analytics database awake*.

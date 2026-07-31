@@ -25,7 +25,10 @@ def opp(name, body="", **kwargs):
         "managing_body": body,
         "priority_tier": kwargs.pop("tier", "Quick Win"),
         "priority_score": kwargs.pop("score", 3.5),
-        "application_link": kwargs.pop("link", "https://example.org/apply"),
+        # An official-suffix domain, so the fixture is authoritative whatever
+        # name or body a test gives it — otherwise every test would be
+        # accidentally asserting the link-authority check as well as its own.
+        "application_link": kwargs.pop("link", "https://example.gov.uk/apply"),
         "link_type": kwargs.pop("link_type", "application_portal"),
         "link_status": kwargs.pop("link_status", "verified"),
         "applicant_type_match": kwargs.pop("applicant_type_match", "direct"),
@@ -365,3 +368,71 @@ class UnwrapTest(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class LinkAuthorityGeneralisationTest(unittest.TestCase):
+    """Regression guards for the ways this classifier was wrong first time.
+
+    Every case below was a real misclassification found by replaying the
+    classifier over stored runs before it shipped. A false "not the funder" is
+    not a harmless conservative call — it demotes a legitimate government
+    programme out of the shortlist, which is worse than the defect it was
+    written to catch.
+    """
+
+    def test_a_bare_public_sector_domain_is_official(self):
+        # Matching on a fixed suffix list missed a host that *was* the suffix.
+        self.assertEqual(
+            quality.link_authority("https://www.gov.uk/some-scheme",
+                                   "Industrial Fund", "A Government Department"),
+            "funder",
+        )
+
+    def test_public_sector_labels_are_recognised_beyond_one_country(self):
+        for host in ("https://gov.wales/x", "https://www.govt.nz/x",
+                     "https://service.gouv.fr/x", "https://trust.nhs.uk/x"):
+            with self.subTest(host=host):
+                self.assertEqual(quality.link_authority(host, "Fund", "Body"), "funder")
+
+    def test_any_organisation_named_in_the_body_counts(self):
+        # Bodies are routinely "Delivery Agency / Parent Department", and a
+        # link to either is a link to the funder.
+        self.assertEqual(
+            quality.link_authority("https://www.meridian.org/apply",
+                                   "Some Grant", "Vantor Agency / Meridian Council"),
+            "funder",
+        )
+
+    def test_an_initialism_keeping_a_short_word_whole_is_recognised(self):
+        # "Vantor UK" is known as vuk as well as vu — funders use both.
+        self.assertEqual(
+            quality.link_authority("https://vuk-connect.org.uk/comp/1",
+                                   "Programme", "Vantor UK"),
+            "funder",
+        )
+
+    def test_an_aggregator_is_still_rejected_after_all_that_generosity(self):
+        self.assertEqual(
+            quality.link_authority("https://grantfinderpro.co.uk/x",
+                                   "Vantor Retail Fund", "Vantor UK"),
+            "unknown",
+        )
+
+
+class LinkAuthorityMeasureTest(unittest.TestCase):
+    def test_authority_is_reported_alongside_the_other_link_measures(self):
+        stats = quality.link_quality(result(main=[
+            opp("A", link="https://vantor.gov.uk/apply"),
+            opp("B", link="https://www.facebook.com/p/1"),
+            opp("C", link="https://randomblog.example/post"),
+        ]))
+        self.assertEqual(stats["by_authority"]["funder"], 1)
+        self.assertEqual(stats["third_party_links"], 1)
+        self.assertAlmostEqual(stats["link_authority_rate"], 0.333, places=2)
+
+    def test_a_non_authoritative_link_counts_as_a_defect(self):
+        d = quality.defensibility(result(main=[
+            opp("A", link="https://randomblog.example/post"),
+        ]))
+        self.assertIn("non_authoritative_link", d["failures"])
+        self.assertEqual(d["structural_precision"], 0.0)
