@@ -12,7 +12,18 @@ section.
 
 ---
 
-## Where we are now (last updated 2026-07-30)
+## Where we are now (last updated 2026-08-01)
+
+**The improvement loop can finally see.** As of 1 August 2026 a GitHub
+Actions job snapshots `/admin/quality.json` every morning at 07:00 UTC and
+commits it to `reports/snapshots/`. The fortnightly review reads those files
+rather than calling the live app, which is what made cycles 1 and 2 blind.
+One action is outstanding for Thomas: add `ADMIN_TOKEN` as a GitHub
+repository secret (LAUNCH_SETUP.md §3). Until that is done the workflow runs
+and fails, loudly, every morning. Also on 1 August the results email was
+removed — it had never sent a single message, because no mail provider was
+ever configured.
+
 
 **Status: live in production, and now instrumented for launch.** The app
 runs at https://grant-analyzer-production.up.railway.app/ on Railway,
@@ -86,6 +97,57 @@ iOS, and desktop); job logging to Supabase (`db.py`); email + web-push
 notifications when results are ready.
 
 ## Timeline
+
+**2026-08-01 — The review reads a committed file instead of calling the live app**
+Commit subject: *Snapshot quality daily from CI; drop the results email*.
+Two improvement cycles in a row produced no measurement at all. Cycle 1 was
+blind because the free-tier database had paused for inactivity; cycle 2 was
+blind because the review session could not reach the app — its fetch tool
+only accepts URLs it has been handed, and the admin URL carries a token that
+must never be pasted into a prompt. Different causes, one shared root: the
+reviewer depended on making a live authenticated network call at the moment
+of review. After two cycles the loop had never once verified that a change it
+recommended actually worked. The fix is the ordinary one that scheduled
+reporting has always used — a CI job holds the secret and commits the data.
+`.github/workflows/quality-snapshot.yml` runs daily at 07:00 UTC, reads
+`ADMIN_TOKEN` from GitHub Actions secrets, fetches `/admin/quality.json` and
+`/health?deep=1`, and commits `reports/snapshots/quality-YYYY-MM-DD.json`. The
+review now reads a file: no network, no token, no secret in any prompt. Three
+properties earn their keep. A failed fetch is *still committed*, with its HTTP
+status and the unauthenticated health payload, so an outage becomes data and
+the day it started is visible rather than a gap. The job commits every day,
+and a commit is the only thing GitHub counts as activity against its 60-day
+auto-disable rule for scheduled workflows — so the mechanism cannot be
+switched off by the quiet fortnights it exists to cover, which is exactly the
+trap cycle 1 fell into. And the run exits non-zero on a bad snapshot, so
+GitHub emails the owner: the alarm that was missing both times measurement
+died silently. `snapshots.py` is the offline read library (`health_report`,
+`staleness_days`, `series`, `movement`) and `eval/read_snapshots.py` the CLI,
+which exits non-zero when the newest usable snapshot is missing or more than
+two days old — so a blind cycle is caught in the first thirty seconds instead
+of after an hour. Staleness is treated as the primary hazard throughout:
+reporting an old snapshot as current is worse than reporting nothing, because
+it manufactures confidence that isn't there. Requires a one-time step from
+Thomas: add `ADMIN_TOKEN` as a GitHub repository secret (LAUNCH_SETUP.md §3).
+31 new tests; 218 green.
+
+**2026-08-01 — The results email is gone, because it never worked**
+Same commit. The landing page told people *"Email me my results when they're
+ready. Analysis takes 7–10 minutes — you can safely lock your screen."* The app
+sent nothing, to anyone, ever: `RESEND_API_KEY` and `RESEND_FROM_EMAIL` were
+never set in Railway, were never listed in LAUNCH_SETUP.md among the variables
+to set, and `email_sender.py` returned silently when either was missing — the
+same swallow-the-failure pattern that hid the database outage. Anyone who left
+an address and locked their phone got nothing back. Removed at Thomas's
+instruction rather than fixed: results appear in the page, and web push (which
+is configured and does work) is the notification path for a locked screen. The
+address field stays, but now only for the grant-deadline digest, and the
+address is stored *only* when that consent is given — with the results-delivery
+purpose gone, an address typed without ticking the box has no purpose to be
+kept for. Capacity and waitlist copy now promise a human getting in touch
+rather than an automated send. `email_sender.py` is a tombstone pending
+`git rm` (this environment cannot delete files). `tests/test_app.py` gains a
+`NoResultsEmailTest` class so the promise cannot return by accident.
 
 **2026-07-30 — The app now measures its own output quality, on a fortnight's cycle**
 Commit subject: *Measure output quality: scoring library, quality endpoint, fallback self-benchmark*.

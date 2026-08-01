@@ -22,7 +22,6 @@ if _env_file.exists():
                 os.environ[_k.strip()] = _v
 
 import db
-import email_sender
 from fastapi import FastAPI, HTTPException, Request, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import Response, StreamingResponse
@@ -104,13 +103,16 @@ MAX_CONCURRENT_JOBS     = _int_env("MAX_CONCURRENT_JOBS", 4)
 # run isn't left hanging. Overridable from the environment without a redeploy.
 AUTO_CONTINUE_DELAY_SECONDS = _int_env("AUTO_CONTINUE_DELAY_SECONDS", 15)
 
+# These promise a human follow-up, not an automated send. The app has no
+# mail provider configured and deliberately no results email, so any copy
+# that implies the machine will write to you is a promise it cannot keep.
 AT_CAPACITY_MESSAGE = (
     "We're at capacity right now — analyses are queued behind other users. "
-    "Leave your email and we'll run yours and send you the results."
+    "Leave your email and Thomas will get in touch when there's room."
 )
 DAILY_LIMIT_MESSAGE = (
     f"You've reached the limit of {MAX_RUNS_PER_IP_PER_DAY} analyses per day. "
-    "Leave your email if you need more and we'll sort it out."
+    "Leave your email if you need more and Thomas will sort it out."
 )
 
 # {(ip, YYYY-MM-DD): count} — reset naturally as the date key changes.
@@ -193,6 +195,8 @@ class AnalyseRequest(BaseModel):
     consortium:   bool       = True
     accelerators: bool       = True
     prizes:       bool       = True
+    # Collected only for the optional grant-deadline digest — never for
+    # delivering results. Stored only when `newsletter` is true.
     email:        str        = ""
     newsletter:   bool       = False   # explicit consent to the deadline digest
     subscription: dict | None = None   # browser push subscription object
@@ -224,6 +228,9 @@ class ContinueRequest(BaseModel):
     consortium:   bool = True
     accelerators: bool = True
     prizes:       bool = True
+    # `email` is accepted and ignored: older cached frontends still post it,
+    # and rejecting the field would break a run for anyone holding a stale
+    # service-worker copy of the page. Nothing reads it.
     email:        str  = ""
 
 
@@ -264,7 +271,6 @@ async def _phase1_task(
     url: str | None,
     text: str | None,
     preferences: dict,
-    email: str | None,
 ) -> None:
     job = _jobs[job_id]
     job["status"] = "phase1_running"
@@ -301,14 +307,13 @@ async def _phase1_task(
     # their browser. An open browser can pre-empt this (edit + "Find grants")
     # or pause it while editing (see /analyse/pause).
     if job.get("status") == "profile_ready":
-        _schedule_auto_continue(job_id, preferences, email)
+        _schedule_auto_continue(job_id, preferences)
 
 
 async def _phase23_task(
     job_id: str,
     profile: dict,
     preferences: dict,
-    email: str | None,
 ) -> None:
     job = _jobs.setdefault(job_id, {
         "status":      "phase23_running",
@@ -347,11 +352,12 @@ async def _phase23_task(
                 )
                 company = result.get("company_profile", {}).get("name", "your company")
                 noun    = "opportunity" if grants_found == 1 else "opportunities"
-                if email:
-                    await asyncio.to_thread(
-                        email_sender.send_results_email,
-                        email, company, grants_found, result, job_id,
-                    )
+                # Results are delivered in the page and, if the user opted in,
+                # by web push. There is deliberately no results email: the app
+                # promised one for weeks while no mail provider was configured,
+                # so anyone who left an address and locked their screen got
+                # nothing. A promise the app cannot keep is worse than no
+                # promise. Push is the notification path that actually works.
                 subscription = _jobs.get(job_id, {}).get("subscription")
                 if subscription:
                     await asyncio.to_thread(
@@ -374,7 +380,6 @@ def _begin_phase23(
     job_id: str,
     profile: dict,
     preferences: dict,
-    email: str | None,
 ) -> bool:
     """
     Start Phase 2+3 for a job exactly once. Returns False if it was already
@@ -387,14 +392,13 @@ def _begin_phase23(
     pending = _auto_continue_tasks.pop(job_id, None)
     if pending and not pending.done():
         pending.cancel()
-    asyncio.create_task(_phase23_task(job_id, profile, preferences, email))
+    asyncio.create_task(_phase23_task(job_id, profile, preferences))
     return True
 
 
 def _schedule_auto_continue(
     job_id: str,
     preferences: dict,
-    email: str | None,
 ) -> None:
     """
     After Phase 1, wait AUTO_CONTINUE_DELAY_SECONDS and then start Phase 2+3
@@ -415,7 +419,7 @@ def _schedule_auto_continue(
         job = _jobs.get(job_id)
         if not job or job.get("status") != "profile_ready":
             return
-        _begin_phase23(job_id, job.get("profile") or {}, preferences, email)
+        _begin_phase23(job_id, job.get("profile") or {}, preferences)
 
     _auto_continue_tasks[job_id] = asyncio.create_task(_runner())
 
@@ -491,8 +495,12 @@ async def analyse(req: AnalyseRequest, request: Request) -> dict:
             detail="Please provide a website URL, paste some company text, or upload a document.",
         )
 
-    ip    = _get_ip(request)
-    email = req.email.strip() or None
+    ip = _get_ip(request)
+    # The address is now only ever collected for the deadline digest, so it is
+    # only stored when that consent is actually given. Before this change the
+    # field doubled as "email me my results"; with that gone, an address typed
+    # without ticking the box has no purpose to be kept for.
+    email = (req.email.strip() or None) if req.newsletter else None
 
     # Abuse / cost control. 429 carries a machine-readable reason so the
     # frontend can offer the waitlist rather than showing a dead end.
@@ -542,7 +550,6 @@ async def analyse(req: AnalyseRequest, request: Request) -> dict:
         req.url.strip() or None,
         req.text.strip() or None,
         _prefs(req),
-        email,
     ))
 
     return {"job_id": job_id}
@@ -562,11 +569,10 @@ async def analyse_continue(req: ContinueRequest) -> dict:
         raise HTTPException(status_code=500, detail="ANTHROPIC_API_KEY not set.")
 
     job_id = req.job_id
-    email  = req.email.strip() or (_jobs.get(job_id, {}).get("email")) or None
 
     # If the server already auto-continued a moment ago, this is a harmless
     # no-op and we just report the running job.
-    _begin_phase23(job_id, req.profile, _prefs(req), email)
+    _begin_phase23(job_id, req.profile, _prefs(req))
 
     return {"job_id": job_id}
 

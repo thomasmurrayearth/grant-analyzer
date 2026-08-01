@@ -1,5 +1,30 @@
 # Instructions for AI assistants working on this repository
 
+## How to give Thomas instructions — read this first
+
+Thomas owns this app but is not a developer. Instructions written for a
+developer are useless to him, and telling him to go and read a file is not an
+instruction at all.
+
+Every instruction must be:
+
+- **Numbered, in order, one action per step.** No "then configure the secret" —
+  say which button, on which page.
+- **Self-contained in the message.** Never say "see LAUNCH_SETUP.md §3" or
+  "follow the steps in the README". Paste the steps into the reply. Reference
+  the file only as an afterwards-if-you-want-it.
+- **Free of jargon.** Do not assume he knows what push, commit, pull, branch,
+  repo, terminal, bash, CLI, environment variable, or secret mean. Say "send
+  your changes to GitHub", "the Variables tab in Railway", "the file at
+  C:\Users\thoma\grant-analyzer".
+- **Given as full clickable URLs**, deep-linked to the exact page, not
+  "go to Settings → Secrets".
+- **Explicit about what success looks like** and what to do when it fails.
+
+If a step depends on which tool he uses (e.g. how he sends changes to GitHub),
+**ask him which one he uses** rather than guessing or writing three variants.
+
+
 ## Project log — mandatory
 
 `PROJECT_LOG.md` is the single human-readable record of what has been done

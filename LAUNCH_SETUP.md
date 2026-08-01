@@ -50,7 +50,36 @@ All have sensible defaults; set them only if you want to change behaviour.
 
 ---
 
-## 3. When you buy the domain (C1 — still open)
+## 3. Add the ADMIN_TOKEN secret to GitHub (2 minutes) — **DO THIS ONCE**
+
+Without it the daily quality snapshot cannot run, and the fortnightly review
+goes blind again.
+
+1. GitHub → your `grant-analyzer` repo → **Settings** → **Secrets and
+   variables** → **Actions**.
+2. **New repository secret**.
+3. Name: `ADMIN_TOKEN`. Value: exactly the same string as `ADMIN_TOKEN` in
+   Railway → Variables.
+4. **Add secret**.
+
+**How to check it worked:** repo → **Actions** tab → **Quality snapshot** →
+**Run workflow**. It should go green in under a minute and add a file at
+`reports/snapshots/quality-<today>.json`. If it goes red, open the run — the
+error line says whether the secret is missing or the app refused the token.
+
+**If you ever change `ADMIN_TOKEN`,** change it in both places. Changing it in
+Railway alone makes every snapshot fail with a 403 — which the workflow will
+email you about, so you will not lose a fortnight to it.
+
+**What this replaces:** the review used to fetch the admin endpoint live, at
+review time, which meant a token had to reach the reviewer somehow and the app
+had to be reachable at that exact moment. Now GitHub holds the secret, takes a
+snapshot every morning at 07:00 UTC, and commits it to the repo. The review
+reads a file. See `reports/snapshots/README.md`.
+
+---
+
+## 4. When you buy the domain (C1 — still open)
 
 Buy it, attach it in Railway, then:
 
@@ -84,8 +113,8 @@ On the 1st and 15th at 9am, Claude reviews the app's actual output — not just
 how many people used it — and brings you findings and proposals. You decide what
 gets built; nothing user-facing changes without your say-so.
 
-**Nothing is required from you to make it work.** It runs on its own. Three
-things are worth knowing:
+**One thing is required from you: §3 above, the GitHub secret.** After that it
+runs on its own. Three things are worth knowing:
 
 - Supabase pauses free projects that go unused for a stretch, and a paused
   project looks identical to a deleted one from outside — that is what happened
@@ -96,9 +125,13 @@ things are worth knowing:
   check `https://<your-app>/health?deep=1` first: it says outright whether the
   pipeline or the database is the problem.
 
-- It reads a private endpoint, `https://<your-app>/admin/quality.json?token=<ADMIN_TOKEN>`,
-  which returns the analyses people received with quality scores attached. You
-  can open it yourself; it's dense JSON rather than a dashboard.
+- It reads yesterday's committed snapshot in `reports/snapshots/`, not the live
+  app. The snapshot comes from a private endpoint,
+  `https://<your-app>/admin/quality.json?token=<ADMIN_TOKEN>`, which returns the
+  analyses people received with quality scores attached. You can still open that
+  yourself; it's dense JSON rather than a dashboard. The review reads files so
+  that it cannot be blinded by the app being briefly unreachable, which is what
+  happened on 1 August 2026.
 - If a fortnight goes by with nobody completing an analysis, the app runs two
   test companies twice each so the review still has something to measure. That
   costs about US$2.30 and only happens on a silent fortnight. If real people

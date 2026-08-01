@@ -269,6 +269,186 @@
           "a main recommendation shipped with a link already marked broken"
         ]
       }
+    },
+    {
+      "date": "2026-08-01",
+      "cycle": 2,
+      "label": "blind — review session could not reach the deployed app",
+      "commit": "a2ae123",
+      "source": "none live. /admin/quality.json, /admin/stats and /health?deep=1 all unreachable from this session; offline re-derivation via eval/score_stored.py only",
+      "headline": "Second consecutive cycle with no live reading, from a different cause. Cycle 1: database paused. Cycle 2: web_fetch provenance-restricted and no Chrome browser connected. App and instrument both verified sound at code level; 187 tests green.",
+      "real_runs": {
+        "count": null,
+        "completed": null,
+        "stalled": null,
+        "structural_precision": null,
+        "main_count_mean": null,
+        "broken_link_rate": null,
+        "convergence_exact": null,
+        "feedback_mean": null,
+        "feedback_n": null,
+        "note": "Unreadable. No real user output from this fortnight was inspected; the two runs read in cycle 1 predate this window."
+      },
+      "benchmark": {
+        "ran": null,
+        "reason": "unknown — policy dictated ~4 runs before 06:00 UTC on 1 August, but benchmark.cycles could not be read. Ran / suppressed / never fired are indistinguishable from here. ~US$2.30 possibly spent invisibly.",
+        "per_case": {
+          "thermify": {
+            "runs": 16,
+            "date_range": ["2026-05-30", "2026-07-06"],
+            "structural_precision": 0.777,
+            "structural_precision_restated_from": 0.805,
+            "restatement_reason": "identical stored inputs, stricter scorer: quality.link_authority shipped in a2ae123 and detects 3 non_authoritative_link defects the previous scorer could not see. Not a regression. 0.777 is the honest baseline from here; comparisons against 0.805 compare two different rulers.",
+            "main_count_mean": 4.312,
+            "main_count_range": [2, 9],
+            "watchlist_count_mean": 9.75,
+            "tier_concentration": 0.608,
+            "specific_link_rate": 0.645,
+            "broken_link_rate": 0.1,
+            "recall_mean": 0.775,
+            "exclusion_accuracy_mean": 0.844,
+            "convergence_exact": 0.156,
+            "convergence_family": 0.142,
+            "defect_totals": {
+              "broken_link": 9,
+              "non_authoritative_link": 3,
+              "trl_mismatch": 2,
+              "homepage_only_link": 2
+            },
+            "source": "eval/score_stored.py over stored runs, all dated on or before 2026-07-06 — every one predates the a2ae123 gates",
+            "carried_forward": true
+          },
+          "germandeeptech": {
+            "runs": 1,
+            "date_range": ["2026-07-04", "2026-07-04"],
+            "structural_precision": 1.0,
+            "recall_mean": 1.0,
+            "exclusion_accuracy_mean": 1.0,
+            "main_count_range": [5, 5],
+            "broken_link_rate": 0.235,
+            "tier_concentration": 0.6,
+            "convergence_exact": null,
+            "convergence_family": null,
+            "carried_forward": true
+          }
+        }
+      },
+      "verified": [
+        {
+          "change": "Proposal 1 — eligibility as a hard gate",
+          "shipped_commit": "a2ae123",
+          "expected": "exclusion accuracy >= 0.98; zero must_not_appear violations",
+          "observed": null,
+          "verdict": "shipped as specified; effect not measurable",
+          "code_check": "_violates_declared_eligibility + _enforce_routing_rules run after scoring; describe classes of restriction, name no funder, per CLAUDE.md"
+        },
+        {
+          "change": "Proposal 2 — never recommend a known-broken link",
+          "shipped_commit": "a2ae123",
+          "expected": "broken-link rate < 0.02; specific-link rate > 0.85",
+          "observed": null,
+          "verdict": "shipped as specified, via the recommended option (b then a): one re-check, then demote",
+          "code_check": "_apply_recommendation_gates with _check_one_link retry"
+        },
+        {
+          "change": "Proposal 5 — require a funder-owned source",
+          "shipped_commit": "a2ae123",
+          "expected": "zero social/aggregator domains in main; link_authority rate > 0.9",
+          "observed": "detector confirmed working on historical data: 3 non_authoritative_link defects found across 17 stored runs",
+          "verdict": "shipped as specified; detection verified offline, effect on live output not measurable"
+        },
+        {
+          "change": "Proposal 3 — shortlist volume",
+          "shipped_commit": "a2ae123",
+          "expected": "main-list median >= 8 with structural precision not falling",
+          "observed": null,
+          "verdict": "diagnosed not fixed, as recommended; pipeline_funnel instrumentation traced end to end and confirmed complete (analyzer.py:2729-2832 -> db.py results_json JSONB -> main.py:997)"
+        },
+        {
+          "change": "Proposal 4 — widen the ground-truth bench",
+          "shipped_commit": null,
+          "expected": ">= 5 real completed runs readable next cycle",
+          "observed": null,
+          "verdict": "deferred as recommended, awaiting soft launch"
+        }
+      ],
+      "regressions": [],
+      "proposals_open": [
+        {
+          "id": 1,
+          "summary": "Make each cycle's measurements survive the session that took them",
+          "status": "BUILT 2026-08-01, awaiting push by Thomas",
+          "solution": "GitHub Actions workflow (.github/workflows/quality-snapshot.yml) snapshots /admin/quality.json and /health?deep=1 daily at 07:00 UTC and commits reports/snapshots/quality-YYYY-MM-DD.json. The review reads a committed file: no network, no token, no secret in any prompt. Read path is snapshots.py + eval/read_snapshots.py, covered by tests/test_snapshots.py.",
+          "rejected_alternative": "Putting the real tokenised admin URL in the scheduled-task file so web_fetch's provenance check would accept it. Thomas rejected it: a secret must never travel through a prompt. That constraint makes any authenticated pull structurally impossible, which is what forced the CI answer. Do not re-propose it.",
+          "requires_from_thomas": "Add ADMIN_TOKEN as a GitHub repository secret (LAUNCH_SETUP.md §3). Until then the workflow fails daily and emails him.",
+          "verification": "cycle 3 reports live figures read from reports/snapshots/, with staleness_days <= 2 and no web_fetch or browser involved"
+        },
+        {
+          "id": 2,
+          "summary": "Make 'did the benchmark fire?' answerable without the admin endpoint",
+          "status": "BUILT 2026-08-01, awaiting push by Thomas",
+          "solution": "The snapshot carries the whole quality payload, benchmark.cycles included, so the cycle decision and its cost land in a committed file every morning.",
+          "verification": "cycle 3 states the 15 August benchmark decision and its cost from reports/snapshots/"
+        },
+        {
+          "id": 3,
+          "summary": "Generalise discovery beyond named UK funders (analyzer.py:269-289, :575)",
+          "recommended": "wait for funnel counters, then fix the cause",
+          "verification": "longlist size for non-UK companies within 20% of UK ones; main-list count no longer correlated with HQ country"
+        },
+        {
+          "id": 4,
+          "summary": "Decide what WATCHLIST_CAP means — enforce it or delete it (analyzer.py:190)",
+          "recommended": "option (a), enforce at 10",
+          "decision": {
+            "date": "2026-08-01",
+            "by": "Thomas",
+            "chosen": "option (b) — raise WATCHLIST_CAP to 20 and enforce it",
+            "status": "APPROVED, NOT YET IMPLEMENTED — do not build until Thomas says go",
+            "reasoning": "The main shortlist is currently too short to be useful, so information should not be discarded from the watchlist to make the output look tidier. A watchlist can run longer than 10 and still be useful to a reader; the binding problem is the 3-5 item main list, not the length of the tail.",
+            "overrides": "my recommendation of a cap at 10"
+          },
+          "implementation_notes": "Enforce AFTER all five watchlist entrances, not at any one of them: triage (the only path that currently applies STRONG_FIT_MIN), _enforce_routing_rules, _validate_application_specificity, _rescue_missing_partner_items, and _apply_recommendation_gates. Rank by initial_thematic_fit, which is already backfilled onto watchlist rows at analyzer.py:2857. Consider also _MAX_TRIAGE_SEARCHES (analyzer.py:191), declared and never used — same dead-constant family.",
+          "verification": "watchlist median <= 20; main-list count unchanged"
+        },
+        {
+          "id": 5,
+          "summary": "Mount the launch plan folder so cycles can read §9a from source",
+          "verification": "cycle 3 quotes §9a from source"
+        }
+      ],
+      "carried_forward": [
+        "Cycle 1 proposal 3 (10 promised vs 4-5 delivered) remains undecided. Its diagnosis recommended option D (wait for funnel counters) with option C (fix the promise copy) as a free interim. Neither actioned."
+      ],
+      "plumbing_built_this_cycle": {
+        "summary": "Replaced the review's live-network read path with committed daily snapshots. Root cause of both blind cycles was the same: the reviewer depended on making a live authenticated network call at the moment of review.",
+        "artefacts": [
+          ".github/workflows/quality-snapshot.yml — daily 07:00 UTC, ADMIN_TOKEN from GitHub Actions secrets, commits reports/snapshots/quality-YYYY-MM-DD.json",
+          "snapshots.py — offline read library: health_report, staleness_days, series, movement",
+          "eval/read_snapshots.py — CLI; exits non-zero when the newest usable snapshot is missing or >2 days old",
+          "tests/test_snapshots.py — 31 tests, weighted toward the not-measuring cases",
+          "reports/snapshots/README.md, LAUNCH_SETUP.md §3"
+        ],
+        "properties": [
+          "A failed fetch is still committed with its HTTP status, so an outage is data rather than a gap",
+          "Daily commits are the activity that prevents GitHub's 60-day auto-disable of scheduled workflows, so the mechanism cannot be killed by the quiet fortnights it covers",
+          "A bad snapshot exits non-zero, so GitHub emails Thomas — the alarm missing from both blind cycles"
+        ],
+        "tests": "218 green, up from 187",
+        "pushed": false
+      },
+      "also_shipped": {
+        "change": "Removed the results email at Thomas's instruction",
+        "reason": "The landing page promised 'Email me my results when they're ready — you can safely lock your screen'. The app never sent a single message: RESEND_API_KEY and RESEND_FROM_EMAIL were never set in Railway and were never listed in LAUNCH_SETUP.md, and the send path returned silently when either was missing. Anyone who left an address and locked their phone got nothing, invisibly.",
+        "detail": "Address field retained for the grant-deadline digest only, and stored only with that consent. Capacity and waitlist copy now promise a human, not an automated send. email_sender.py left as a tombstone pending git rm (sandbox cannot delete files). NoResultsEmailTest added so the promise cannot return by accident.",
+        "pushed": false
+      },
+      "blockers": [
+        "RESOLVED BY THIS CYCLE'S BUILD (pending push): review session cannot reach the deployed app — web_fetch refuses URLs not in its provenance set (admin URLs were supplied with a <TOKEN> placeholder), and Claude-in-Chrome has no connected browser. The sandbox shell cannot reach it either. Snapshots remove the need for any of these.",
+        "Cannot commit or push from this sandbox: .git/index.lock cannot be removed (Operation not permitted on the mount) and there are no GitHub credentials. No plumbing fix could ship this cycle.",
+        "GRANT_ANALYZER_LAUNCH_PLAN.md is not mounted; §9a applied from cycle 1's summaries rather than from source.",
+        "The improvement loop has now run twice and has never once completed a verification step."
+      ]
     }
   ]
 }

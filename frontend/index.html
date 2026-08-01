@@ -412,17 +412,21 @@
         </div>
       </details>
 
-      <!-- Email notification -->
+      <!-- Grant-deadline digest. Deliberately NOT a results-delivery address:
+           results appear on this page, and the notification path is web push.
+           See PROJECT_LOG 1 August 2026. -->
       <div>
         <label class="eyebrow block mb-1.5" for="email">Email <span class="normal-case opacity-70">— optional</span></label>
         <input id="email" type="email" placeholder="your@email.com" class="field" />
-        <p class="text-xs text-soft mt-1.5">
-          Email me my results when they're ready. Analysis takes 7–10 minutes — you can safely lock your screen.
-        </p>
         <label class="flex items-start gap-2 mt-2.5 text-xs text-soft cursor-pointer">
           <input id="chk-newsletter" type="checkbox" class="accent-[#2E7055] mt-0.5" />
-          <span>Also send me occasional high-value grant deadlines for companies like mine. No spam, unsubscribe anytime.</span>
+          <span>Send me occasional high-value grant deadlines for companies like mine. No spam, unsubscribe anytime.</span>
         </label>
+        <p class="text-xs text-soft mt-2">
+          Your results appear on this page as soon as they're ready. The analysis keeps
+          running for 7–10 minutes even if you lock your screen — allow notifications
+          and we'll ping you when it's done.
+        </p>
       </div>
 
       <div class="flex items-center gap-3 pt-1">
@@ -443,10 +447,11 @@
   <!-- Shown instead of a dead-end error when a run is turned away. -->
   <section id="capacity-section" class="hidden card p-6 sm:p-8 fade-up" style="border-color:#8A6F3A">
     <h2 class="font-display text-xl tracking-tight" style="font-weight:700">Not right now — but leave your email</h2>
+    <!-- A human follow-up, not an automated send: the app has no mail provider. -->
     <p id="capacity-message" class="text-sm text-soft mt-2"></p>
     <div class="flex flex-col sm:flex-row gap-3 mt-4">
       <input id="waitlist-email" type="email" placeholder="your@email.com" class="field sm:max-w-xs" />
-      <button id="btn-waitlist" class="btn-accent">Email me when there's room</button>
+      <button id="btn-waitlist" class="btn-accent">Let me know when there's room</button>
     </div>
     <p id="waitlist-status" class="hidden text-sm mt-3" style="color:#2E7055"></p>
   </section>
@@ -1321,7 +1326,9 @@ async function runPhase1() {
     const data = await resp.json();
     _jobId = data.job_id;
     localStorage.setItem('grantAnalyserJobId', _jobId);
-    if (email) localStorage.setItem('grantAnalyserEmail', email);
+    // Kept only when the digest was consented to, mirroring what the server
+    // stores. Used to prefill the feedback form, never to deliver results.
+    if (email && newsletter) localStorage.setItem('grantAnalyserEmail', email);
     startPolling(_jobId);
   } catch (err) {
     logLine('ERROR: ' + err.message, 'error');
@@ -1330,11 +1337,13 @@ async function runPhase1() {
 }
 
 // ---------------------------------------------------------------------------
-// At capacity / rate limited — turn an overload into an email
+// At capacity / rate limited — turn an overload into a contact request.
+// Promises a human getting in touch, never an automated send: there is no
+// mail provider configured and no results email.
 // ---------------------------------------------------------------------------
 function showCapacity(detail, email) {
   const message = (detail && detail.message) ||
-    "We can't start another analysis right now. Leave your email and we'll run yours and send you the results.";
+    "We can't start another analysis right now. Leave your email and Thomas will get in touch when there's room.";
   const reason  = (detail && detail.reason) || 'at_capacity';
 
   $('progress-section').classList.add('hidden');
@@ -1362,7 +1371,7 @@ $('btn-waitlist').addEventListener('click', async () => {
       body:    JSON.stringify({ email, reason: $('capacity-section').dataset.reason || '' }),
     });
     if (!resp.ok) throw new Error('Could not save your email');
-    status.textContent = "Got it — we'll email you when your analysis has run.";
+    status.textContent = "Got it — Thomas will be in touch when there's room.";
     status.style.color = '#2E7055';
     status.classList.remove('hidden');
     $('btn-waitlist').disabled = true;
@@ -1432,7 +1441,6 @@ async function runPhase23() {
 
   stopAutoTimer();
   const profile = collectReviewedProfile();
-  const email   = localStorage.getItem('grantAnalyserEmail') || '';
 
   $('review-section').classList.add('hidden');
   resumeSpinner();
@@ -1444,7 +1452,7 @@ async function runPhase23() {
     const resp = await fetch('/analyse/continue', {
       method:  'POST',
       headers: { 'Content-Type': 'application/json' },
-      body:    JSON.stringify({ job_id: _jobId, profile, ..._pendingPrefs, email }),
+      body:    JSON.stringify({ job_id: _jobId, profile, ..._pendingPrefs }),
     });
     if (!resp.ok) {
       const err = await resp.json().catch(() => ({ detail: resp.statusText }));

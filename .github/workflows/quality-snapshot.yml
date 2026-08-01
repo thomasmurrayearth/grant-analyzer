@@ -1,0 +1,150 @@
+# Daily quality snapshot.
+#
+# Why this exists
+# ---------------
+# The fortnightly improvement cycle needs to read production telemetry. Twice
+# it read nothing at all: once because the analytics database had paused, once
+# because the review session could not reach the app (its fetch tool refuses
+# URLs it has not been given, and the admin URL needs a token that must never
+# be pasted into a prompt). Both times a fortnight of evidence was lost with no
+# warning, and the loop has never completed a verification.
+#
+# The fix is the ordinary one: a scheduled CI job holds the secret, pulls the
+# telemetry, and commits it to the repo as a plain file. The reviewer then
+# reads a file instead of making a network call. No secret ever travels
+# through a prompt, and git history becomes a permanent, versioned archive of
+# what the app looked like on every single day rather than a fortnightly
+# sample.
+#
+# Three properties worth knowing:
+#
+#   * A failed fetch is still committed, with its HTTP status. A missing file
+#     and a broken database used to look identical; now an outage is data, and
+#     you can see the exact day it started.
+#   * The job commits every day, and a commit is the only thing that counts as
+#     "activity" for GitHub's rule that disables scheduled workflows after 60
+#     days of inactivity. So this workflow keeps itself alive.
+#   * If the job itself fails, GitHub emails the repository owner. That is the
+#     alarm that was missing both times measurement died silently.
+#
+# One-time setup: Settings → Secrets and variables → Actions → New repository
+# secret, named ADMIN_TOKEN, set to the same value as ADMIN_TOKEN in Railway.
+# See LAUNCH_SETUP.md §4.
+
+name: Quality snapshot
+
+on:
+  schedule:
+    # 07:00 UTC daily. After the self-benchmark's 00:00–06:00 window on the
+    # 1st and 15th, and before the 09:00 review, so a cycle day's snapshot
+    # always contains that morning's benchmark runs.
+    - cron: "0 7 * * *"
+  workflow_dispatch:        # lets you take a snapshot by hand from the Actions tab
+
+concurrency:
+  group: quality-snapshot
+  cancel-in-progress: false
+
+permissions:
+  contents: write           # required to commit the snapshot back to main
+
+jobs:
+  snapshot:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Check out the repository
+        uses: actions/checkout@v4
+
+      - name: Fetch the quality snapshot
+        env:
+          ADMIN_TOKEN: ${{ secrets.ADMIN_TOKEN }}
+          APP_URL: https://grant-analyzer-production.up.railway.app
+        run: |
+          set -uo pipefail
+          mkdir -p reports/snapshots
+          DATE="$(date -u +%Y-%m-%d)"
+          FETCHED_AT="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+          OUT="reports/snapshots/quality-${DATE}.json"
+
+          if [ -z "${ADMIN_TOKEN}" ]; then
+            echo "::error::ADMIN_TOKEN secret is not set — see LAUNCH_SETUP.md §4"
+            STATUS="no-token"
+            BODY=""
+          else
+            # --fail is deliberately NOT used: a 403/503 body carries the
+            # app's own diagnosis and is worth capturing verbatim.
+            BODY="$(curl -sS --max-time 120 \
+                      -w '\n%{http_code}' \
+                      "${APP_URL}/admin/quality.json?token=${ADMIN_TOKEN}&days=14" \
+                    || printf '\n000')"
+            STATUS="$(printf '%s' "${BODY}" | tail -n1)"
+            BODY="$(printf '%s' "${BODY}" | sed '$d')"
+          fi
+
+          echo "HTTP status: ${STATUS}"
+
+          # Health is unauthenticated, so it can always be recorded and
+          # separates "the app is down" from "the database is down".
+          HEALTH="$(curl -sS --max-time 30 "${APP_URL}/health?deep=1" || echo '{}')"
+
+          if [ "${STATUS}" = "200" ] && [ -n "${BODY}" ]; then
+            printf '%s' "${BODY}" > /tmp/payload.json
+            if ! jq empty /tmp/payload.json 2>/dev/null; then
+              echo "::warning::response was not valid JSON"
+              STATUS="bad-json"
+            fi
+          fi
+
+          jq -n \
+            --arg date "${DATE}" \
+            --arg fetched_at "${FETCHED_AT}" \
+            --arg status "${STATUS}" \
+            --argjson health "$(printf '%s' "${HEALTH}" | jq -c . 2>/dev/null || echo '{}')" \
+            --argjson quality "$(cat /tmp/payload.json 2>/dev/null | jq -c . 2>/dev/null || echo 'null')" \
+            '{
+               schema: 1,
+               date: $date,
+               fetched_at: $fetched_at,
+               source: "/admin/quality.json?days=14",
+               http_status: $status,
+               ok: ($status == "200" and $quality != null),
+               health: $health,
+               quality: $quality
+             }' > "${OUT}"
+
+          cp "${OUT}" reports/snapshots/latest.json
+          echo "Wrote ${OUT}"
+
+          # Surface a failed fetch in the Actions UI so the owner gets an
+          # email, while still committing the record of the failure below.
+          if [ "${STATUS}" != "200" ]; then
+            echo "::error::quality.json fetch failed with status ${STATUS} — snapshot records the failure"
+          fi
+
+      - name: Commit the snapshot
+        run: |
+          set -euo pipefail
+          git config user.name  "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add reports/snapshots/
+          if git diff --cached --quiet; then
+            echo "No change to commit."
+            exit 0
+          fi
+          git commit -m "Quality snapshot $(date -u +%Y-%m-%d)"
+          # Rebase rather than force: a human may have pushed since checkout.
+          git pull --rebase --autostash origin main
+          git push origin HEAD:main
+
+      - name: Fail the run if the snapshot was not usable
+        run: |
+          set -euo pipefail
+          OK="$(jq -r '.ok' reports/snapshots/latest.json)"
+          if [ "${OK}" != "true" ]; then
+            echo "Snapshot committed, but it records a failed fetch."
+            echo "The improvement cycle will see this and report it as an outage."
+            exit 1
+          fi
+          echo "Snapshot OK."

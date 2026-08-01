@@ -229,7 +229,6 @@ class ServerSideAutoContinueTest(unittest.IsolatedAsyncioTestCase):
             patch("main.db.log_profile_ready", lambda *a, **k: None),
             patch("main.db.log_completed", lambda *a, **k: None),
             patch("main.db.log_failed", lambda *a, **k: None),
-            patch("main.email_sender.send_results_email", lambda *a, **k: None),
         ]
         for p in self._patches:
             p.start()
@@ -259,7 +258,7 @@ class ServerSideAutoContinueTest(unittest.IsolatedAsyncioTestCase):
 
     async def test_auto_continues_without_a_browser_call(self):
         self._fresh_job("j1")
-        await main._phase1_task("j1", "https://x", None, self.PREFS, None)
+        await main._phase1_task("j1", "https://x", None, self.PREFS)
         self.assertEqual(main._jobs["j1"]["status"], "profile_ready")
         # No /analyse/continue call — the server timer must drive it.
         self.assertTrue(await self._wait_status("j1", "completed"),
@@ -268,7 +267,7 @@ class ServerSideAutoContinueTest(unittest.IsolatedAsyncioTestCase):
     async def test_pause_holds_the_timer(self):
         import asyncio
         self._fresh_job("j2")
-        await main._phase1_task("j2", "https://x", None, self.PREFS, None)
+        await main._phase1_task("j2", "https://x", None, self.PREFS)
         await main.analyse_pause(main.PauseRequest(job_id="j2"))
         await asyncio.sleep(0.1)  # well past the (0s) delay
         self.assertEqual(main._jobs["j2"]["status"], "profile_ready",
@@ -276,7 +275,7 @@ class ServerSideAutoContinueTest(unittest.IsolatedAsyncioTestCase):
 
     async def test_manual_continue_starts_phase23_once(self):
         self._fresh_job("j3")
-        await main._phase1_task("j3", "https://x", None, self.PREFS, None)
+        await main._phase1_task("j3", "https://x", None, self.PREFS)
         await main.analyse_pause(main.PauseRequest(job_id="j3"))  # stop the timer
         await main.analyse_continue(
             main.ContinueRequest(job_id="j3", profile={"name": "TestCo"}))
@@ -285,3 +284,101 @@ class ServerSideAutoContinueTest(unittest.IsolatedAsyncioTestCase):
             main.ContinueRequest(job_id="j3", profile={"name": "TestCo"}))
         self.assertTrue(await self._wait_status("j3", "completed"))
         self.assertIn("j3", main._phase23_started)
+
+
+class NoResultsEmailTest(unittest.TestCase):
+    """
+    The app must never promise to email anyone their results.
+
+    Removed 1 August 2026: no mail provider was ever configured, so the
+    landing page's "Email me my results when they're ready — you can safely
+    lock your screen" was a promise the app could not keep. Anyone who left an
+    address and locked their phone got nothing, and the failure was invisible
+    because the send path returned silently when the provider was unset.
+
+    These tests exist so the promise cannot come back without someone
+    deliberately deleting them.
+    """
+
+    @classmethod
+    def setUpClass(cls):
+        cls.client = TestClient(app)
+        cls.html = cls.client.get("/").text
+
+    def tearDown(self):
+        main._jobs.clear()
+        main._ip_runs_today.clear()
+
+    def test_no_mail_sending_module_is_wired_into_the_app(self):
+        self.assertFalse(
+            hasattr(main, "email_sender"),
+            "main imports a mail sender again — if a provider is now "
+            "configured, update these tests deliberately rather than by "
+            "accident.",
+        )
+
+    def test_landing_page_does_not_promise_to_email_results(self):
+        lowered = self.html.lower()
+        for phrase in (
+            "email me my results",
+            "send you the results",
+            "email you your results",
+            "we'll email you when your analysis",
+        ):
+            self.assertNotIn(
+                phrase, lowered,
+                f"landing page promises a results email: {phrase!r}",
+            )
+
+    def test_landing_page_still_explains_how_results_arrive(self):
+        # Removing the promise must not leave the user wondering what happens
+        # if they lock their screen — push is the path that actually works.
+        lowered = self.html.lower()
+        self.assertIn("appear on this page", lowered)
+        self.assertIn("notification", lowered)
+
+    def test_digest_consent_is_still_offered(self):
+        # The address is still collected for the deadline digest, which is a
+        # §1 lead-magnet function and is not a delivery promise.
+        self.assertIn("chk-newsletter", self.html)
+        self.assertIn("unsubscribe anytime", self.html)
+
+    def test_address_is_stored_only_with_digest_consent(self):
+        with patch("main.db.log_started") as log_started, \
+             patch("main.db.count_recent_runs_for_ip", return_value=0), \
+             patch("main.analyzer.start_usage_tracking", lambda *a, **k: {}):
+            self.client.post("/analyse", json={
+                "text": "a climate startup",
+                "email": "founder@example.com",
+                "newsletter": True,
+            })
+        self.assertEqual(log_started.call_args[0][8], "founder@example.com")
+
+    def test_address_is_discarded_without_digest_consent(self):
+        # Before this change the field doubled as "email me my results", so an
+        # address typed without ticking the box still had a purpose. It no
+        # longer does, so it must not be kept.
+        with patch("main.db.log_started") as log_started, \
+             patch("main.db.count_recent_runs_for_ip", return_value=0), \
+             patch("main.analyzer.start_usage_tracking", lambda *a, **k: {}):
+            self.client.post("/analyse", json={
+                "text": "a climate startup",
+                "email": "founder@example.com",
+                "newsletter": False,
+            })
+        self.assertIsNone(log_started.call_args[0][8])
+
+    def test_continue_still_accepts_a_stale_email_field(self):
+        # Installed PWAs cache the frontend. A client holding the old page will
+        # keep posting `email` to /analyse/continue; that must not 422.
+        req = main.ContinueRequest(
+            job_id="stale", profile={"name": "TestCo"},
+            email="founder@example.com",
+        )
+        self.assertEqual(req.email, "founder@example.com")
+
+    def test_capacity_copy_promises_a_human_not_an_automated_send(self):
+        for message in (main.AT_CAPACITY_MESSAGE, main.DAILY_LIMIT_MESSAGE):
+            lowered = message.lower()
+            self.assertNotIn("send you the results", lowered)
+            self.assertIn("thomas", lowered)

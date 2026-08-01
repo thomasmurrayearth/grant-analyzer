@@ -1,4 +1,4 @@
-const CACHE_NAME = 'grant-analyser-static-v5';
+const CACHE_NAME = 'grant-analyser-static-v6';
 const OFFLINE_ASSETS = [
   '/',
   '/index.html',
