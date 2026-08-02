@@ -1,0 +1,15 @@
+{
+  "schema": 1,
+  "date": "2026-08-02",
+  "fetched_at": "2026-08-02T09:06:20Z",
+  "source": "/admin/quality.json?days=14",
+  "http_status": "no-token",
+  "ok": false,
+  "health": {
+    "status": "ok",
+    "analysis_pipeline": "ok",
+    "analytics_database": "ok",
+    "message": "ok"
+  },
+  "quality": null
+}
