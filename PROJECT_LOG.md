@@ -98,6 +98,71 @@ notifications when results are ready.
 
 ## Timeline
 
+**2026-08-03 — Recovering the shortlist: "likely" stays, and doubt is no longer a barrier**
+Commit subject: *Keep between-rounds programmes in the shortlist; require the
+scorer to place every item*. Approved by Thomas after the funnel counters
+named the two stages losing the shortlist. Two changes, aimed at the two
+largest drops.
+
+**The specificity check (5→2 and 4→2).** `_validate_application_specificity`
+returns one of three verdicts, and "likely" — an established programme with no
+round confirmed open — was demoted off the main list, or dropped outright when
+thematic fit was below `STRONG_FIT_MIN`. That verdict is the ordinary state of
+a recurring programme between calls, and demoting it is what discarded
+Innovate UK Smart Grants, KTP, WRAP Resource Action Fund and the Defra Farming
+Investment Fund from a UK agrifood company's shortlist while an accelerator
+with "funding status uncertain" survived as the only recommendation. "Likely"
+now stays, with `application_timing` forced to `recurring_uncertain`, any
+"Must Pursue" or "Quick Win" tier demoted to "Prepare for Next Window", and a
+`timing_caveat` telling the reader no round is currently open — keeping the
+item must not import a false "apply now" framing. "Unconfirmed" is untouched
+and still earns neither list: that distinction is the entire safeguard, and
+`tests/test_specificity_validation.py` pins both sides of it.
+
+**The scoring model (10→5 and 10→4).** The largest single drop, and it happens
+before any gate runs. Two prompt changes. A completeness contract: every
+shortlisted programme must appear in exactly one output array, never neither,
+with an explicit instruction to count before returning — silent omission is
+invisible to the reader and so the most damaging error available. And a
+routing correction: the watchlist route read "has_application_process is false
+or unclear", which routes on absence of evidence. It now requires positive
+evidence that no public route exists, under a heading stating that the
+watchlist is for barriers, not for doubt, and that an unconfirmed process
+belongs in the main list with a caveat. The `_apply_recommendation_gates`
+backstop still catches `has_application_process is False` in code, so
+loosening the prompt cannot ship an unusable recommendation.
+
+Both are user-visible changes and were Thomas's call. Effect is unverified
+until real runs land — the verification measure is main-list median ≥ 8 with
+structural precision holding at 1.0, and the daily snapshots mean that reads
+within a week rather than a fortnight. 18 new tests; 251 green.
+
+**2026-08-03 — First real reading off the new snapshot pipeline: the shortlist has collapsed to one**
+Commit subject: *Enforce WATCHLIST_CAP at 20, ranked and deterministic*.
+The snapshot pipeline built on 1 August paid for itself on its first working
+day. Two real user analyses of the same company (F2F Systems, a UK agrifood
+business) on 31 July, both **post-gates**, returned **one** main
+recommendation each against a promised ten, with watchlists of 29 and 34. The
+`pipeline_funnel` counters shipped in `a2ae123` named the stages, which the
+31 July diagnosis could only guess at — and the answer was not what that
+diagnosis predicted. Loss is not spread evenly: `10 shortlisted → 5 scored →
+5 after eligibility → 2 after specificity → 1 after admission gates`. The
+single largest drop is the **scoring model itself**, returning four or five
+opportunities from ten shortlisted before any gate runs, which the diagnosis
+had assumed produced "~10 items". The second is
+`_validate_application_specificity`, taking 5→2 and 4→2. Eligibility routing
+cost nothing at all. Structural precision on the survivors is 1.0, so the
+gates are working exactly as designed — the app now ships one immaculate
+recommendation instead of five doubtful ones. Reading the output makes it
+worse than the counts suggest: the watchlists contain Innovate UK Smart
+Grants, Innovate UK Sustainable Agriculture and Food Innovation, KTP, WRAP
+Resource Action Fund, EPSRC-Defra Reimagining Circularity and the Defra
+Farming Investment Fund — the obvious direct-application UK grants for this
+company — while the single main recommendation is an accelerator with
+"funding status uncertain" and an unknown deadline. That is a Q6 failure and
+fails the credibility test outright. Recorded as findings for decision, not
+fixed: shortlist volume is user-visible behaviour and Thomas's call.
+
 **2026-08-03 — The watchlist cap is enforced, at 20**
 Commit subject: *Enforce WATCHLIST_CAP at 20, ranked and deterministic*.
 `WATCHLIST_CAP = 10` had been declared in `analyzer.py` for months and never
@@ -122,7 +187,16 @@ defensible if the list is ordered by relevance to begin with. Trimming is not
 silent: `watchlist_trimmed` lands on the result and `watchlist_before_cap` /
 `watchlist_after_cap` on `pipeline_funnel`, so the next review can see
 whether the cap is discarding also-rans or half the findings. A non-positive
-cap degrades to "no cap" rather than "no output". 13 new tests; 231 green.
+cap degrades to "no cap" rather than "no output". Real data immediately
+corrected the first draft of the ranking: the snapshot showed watchlists with
+no thematic fit on any entry, where an alphabetical tiebreak would have
+discarded the tail of the alphabet — losing Innovate UK Smart Grants to an
+also-ran on its initial letter. Ranking now falls back to
+`initial_thematic_fit` and then to upstream order, never the alphabet. Two
+measurement gaps closed in the same change: `thematic_fit` and
+`why_watchlist` now travel in `_compact`, without which a review can see that
+a cap was applied but not whether it kept the right entries. 15 new tests;
+233 green.
 
 **2026-08-01 — The review reads a committed file instead of calling the live app**
 Commit subject: *Snapshot quality daily from CI; drop the results email*.

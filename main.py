@@ -921,6 +921,14 @@ def _compact(item: dict) -> dict:
         "body": item.get("managing_body"),
         "tier": item.get("priority_tier"),
         "score": item.get("priority_score"),
+        # Watchlist rows are ranked and capped by thematic fit, so without
+        # these two the review cannot check whether the cap kept the right
+        # entries — it would only see that a cap was applied. `why_watchlist`
+        # is what makes a watchlist row judgeable at all: whether an item was
+        # held back for a real barrier or merely an unconfirmed one is the
+        # difference between correct routing and a lost opportunity.
+        "thematic_fit": item.get("thematic_fit", item.get("initial_thematic_fit")),
+        "why_watchlist": item.get("why_watchlist"),
         "geography": item.get("geography"),
         "applicant_type_match": item.get("applicant_type_match"),
         "timing": item.get("application_timing"),

@@ -91,18 +91,32 @@ class WatchlistCapTest(unittest.TestCase):
         self.assertEqual([i["name"] for i in capped], ["scored", "unscored"])
         self.assertEqual(trimmed, 0)
 
-    def test_the_result_is_deterministic(self):
-        # Two runs of the same company differing only because a tie broke
-        # arbitrarily would register as retrieval churn in the convergence
-        # measure, which is read as a diagnostic of search quality. A scoring
-        # artefact must not pollute it.
-        a = [item("Beta", fit=3), item("Alpha", fit=3), item("Gamma", fit=3)]
-        b = [item("Gamma", fit=3), item("Beta", fit=3), item("Alpha", fit=3)]
-        capped_a, _ = analyzer._apply_watchlist_cap(a, cap=2)
-        capped_b, _ = analyzer._apply_watchlist_cap(b, cap=2)
-        self.assertEqual([i["name"] for i in capped_a],
-                         [i["name"] for i in capped_b])
-        self.assertEqual([i["name"] for i in capped_a], ["Alpha", "Beta"])
+    def test_the_result_is_deterministic_for_a_given_input(self):
+        watchlist = [item("Beta", fit=3), item("Alpha", fit=3), item("Gamma", fit=3)]
+        first, _ = analyzer._apply_watchlist_cap(list(watchlist), cap=2)
+        second, _ = analyzer._apply_watchlist_cap(list(watchlist), cap=2)
+        self.assertEqual([i["name"] for i in first], [i["name"] for i in second])
+
+    def test_ties_keep_upstream_order_rather_than_going_alphabetical(self):
+        # Real runs produce watchlists with no fit on any entry. An
+        # alphabetical tiebreak then degenerates into discarding the tail of
+        # the alphabet — losing "Innovate UK Smart Grants" to an also-ran on
+        # its initial letter. Upstream order is the model's own judgement.
+        watchlist = [item("Zeta"), item("Alpha"), item("Innovate UK Smart Grants")]
+        capped, trimmed = analyzer._apply_watchlist_cap(watchlist, cap=2)
+        self.assertEqual([i["name"] for i in capped], ["Zeta", "Alpha"])
+        self.assertEqual(trimmed, 1)
+
+    def test_initial_thematic_fit_is_used_when_the_backfill_missed(self):
+        # The backfill matches by name against the longlist, so it misses any
+        # watchlist entry the scoring model invented. Those items still carry
+        # a discovery-stage rating.
+        watchlist = [
+            {"name": "backfilled", "thematic_fit": 2},
+            {"name": "model-invented", "initial_thematic_fit": 5},
+        ]
+        capped, _ = analyzer._apply_watchlist_cap(watchlist, cap=1)
+        self.assertEqual(capped[0]["name"], "model-invented")
 
     def test_an_empty_watchlist_is_safe(self):
         capped, trimmed = analyzer._apply_watchlist_cap([])

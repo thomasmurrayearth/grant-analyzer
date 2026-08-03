@@ -545,8 +545,34 @@ The test is simple: can the startup be involved in the funded project in any cap
 
 NOTE: "has_application_process is false" and "applicant_type_match is ineligible" are NO LONGER grounds for exclusion. These are uncertain judgements — route those items to the STRATEGIC WATCHLIST instead so the user can review them.
 
+### COMPLETENESS — check this before you finish
+
+Every programme in the shortlist you were given MUST appear in exactly one of
+the two output arrays. Not both, and never neither.
+
+Silently omitting a programme is the most damaging error you can make here: it
+is invisible to the reader, who has no way to know something was considered
+and dropped. If you are unsure where a programme belongs, put it in the main
+recommendations and say why you are unsure in its explanation — an item the
+reader can see and dismiss is worth more than one they never learn about.
+
+Before returning, count: `len(opportunities) + len(strategic_watchlist)` must
+equal the number of shortlisted programmes, minus only those you excluded
+entirely under the EXCLUDE ENTIRELY rule above. If the numbers don't match,
+you have dropped something — find it and place it.
+
+### The watchlist is for barriers, not for doubt
+
+The watchlist means "real, but you cannot act on it directly right now". It is
+not a place to put anything you are merely uncertain about. Route on evidence
+of an actual barrier, never on absence of evidence.
+
+If the only reason you are considering the watchlist is that the research did
+not confirm something, that is doubt, not a barrier — keep the programme in
+the main recommendations and state the uncertainty in its explanation.
+
 ### Route to STRATEGIC WATCHLIST (do not apply scoring rubric) if ANY of these apply:
-- has_application_process is false or unclear — set why_watchlist to: "No confirmed application process found in research. Verify directly with the funder whether a public application route exists."
+- has_application_process is false — the research positively indicates no public application route exists. Set why_watchlist to: "No public application process found in research. Verify directly with the funder whether an application route exists." Do NOT route here merely because the process was not mentioned; an unconfirmed process is doubt, and doubt belongs in the main list with a caveat.
 - applicant_type_match is "ineligible" — set why_watchlist to: "Scored as potentially ineligible for this startup. Review eligibility criteria directly — this classification may be incorrect and the startup may have a participation route not captured in the research."
 - applicant_type_match is "partner" — set why_watchlist to: "Startup cannot be lead applicant or direct funding recipient for this programme. Participation as a named project partner under an eligible lead organisation may be possible — worth pursuing if a suitable lead partner can be identified."
 - application_route is any of: invitation_or_relationship_led | nomination_required | government_or_accredited_entity_required | prior_award_required | no_application_route_found | unclear_application_route
@@ -1786,16 +1812,29 @@ async def _validate_application_specificity(
     For every main recommendation, uses the query_apply search evidence to
     confirm that a specific, named application process actually exists.
 
-    Outcome per grant (watchlist admission policy — see constants):
+    Outcome per grant:
       "confirmed"   — stays a main recommendation; application_link may be
                       upgraded to a more specific URL found in the evidence.
-      "likely"      — an established recurring programme currently between
-                      rounds: moved to the strategic watchlist as a
-                      "between_rounds" entry when thematic fit is strong
-                      (>= STRONG_FIT_MIN), otherwise dropped.
+      "likely"      — an established recurring programme with no round
+                      confirmed open: STAYS a main recommendation, with
+                      application_timing forced to "recurring_uncertain", any
+                      "Must Pursue"/"Quick Win" tier demoted to "Prepare for
+                      Next Window", and a `timing_caveat` explaining that no
+                      round is currently open.
       "unconfirmed" — no evidence a public application process exists:
                       DROPPED entirely. An unverifiable route is not
                       actionable, so it earns neither list.
+
+    Changed 3 August 2026. "Likely" used to be demoted to the watchlist, and
+    that was the largest single gate-side loss in the pipeline — on the two
+    real runs of 31 July it took 5 main recommendations to 2, and 4 to 2,
+    discarding the obvious direct applications for the company while leaving
+    an accelerator with "funding status uncertain" as the sole survivor.
+    "Likely" does not mean unverifiable; it means the process is known and
+    this round is not confirmed open, which is the ordinary state of a
+    recurring programme between calls. Labelling that honestly serves the
+    reader better than hiding it, which is what the "Prepare for Next Window"
+    tier is for. The safeguard is that "unconfirmed" is untouched.
 
     This runs as a single Claude batch call (one API request for all grants),
     not per-grant calls, to keep latency low.
@@ -1844,7 +1883,6 @@ async def _validate_application_specificity(
     validation_map = {v["name"]: v for v in validations if isinstance(v, dict)}
 
     confirmed_opps: list = []
-    demoted: list = []
 
     for opp in opportunities:
         name = opp.get("name", "")
@@ -1881,45 +1919,54 @@ async def _validate_application_specificity(
             confirmed_opps.append(updated)
 
         elif status == "likely":
-            # Established recurring programme currently between rounds.
-            # Strong fit → strategic watchlist as a "between_rounds" entry;
-            # weaker fit → dropped (watchlist slots are reserved for
-            # strong-fit items only).
-            fit = opp.get("thematic_fit_score")
-            if not isinstance(fit, (int, float)) or fit < STRONG_FIT_MIN:
-                continue
-            demoted.append({
-                "name":              opp.get("name", ""),
-                "managing_body":     opp.get("managing_body", ""),
-                "geography":         opp.get("geography", ""),
-                "opportunity_type":  opp.get("opportunity_type", ""),
-                "application_route": opp.get("application_route", ""),
-                "application_timing": opp.get("application_timing", "recurring_uncertain"),
-                "status":            opp.get("status", "Recurring"),
-                "application_link":  best_url if has_better_url else opp.get("application_link", "unknown"),
-                "link_type":         opp.get("link_type", "unknown"),
-                "funding_type":      opp.get("funding_type", ""),
-                "max_funding":       opp.get("max_funding", "unknown"),
-                "thematic_relevance": opp.get("thematic_fit_explanation", ""),
-                "watchlist_class":   "between_rounds",
-                "thematic_fit":      fit,
-                "why_watchlist": (
-                    "Well-established recurring programme with no application "
-                    "window currently open. "
-                    + (val.get("reason", ""))
-                ).strip(),
-                "what_would_unlock": (
-                    "The next application round opening — monitor the programme "
-                    "page and prepare the application in advance."
-                ),
-            })
+            # Established recurring programme, no round confirmed open.
+            #
+            # This used to be demoted to the watchlist, and it was the single
+            # largest gate-side loss: on the two real runs of 31 July 2026 it
+            # took five main recommendations to two, and four to two. What it
+            # discarded were Innovate UK Smart Grants, Innovate UK Sustainable
+            # Agriculture and Food Innovation, KTP, WRAP Resource Action Fund
+            # and the Defra Farming Investment Fund — the obvious direct
+            # applications for that company — while an accelerator with
+            # "funding status uncertain" survived to be the sole recommendation.
+            #
+            # "Likely" does not mean unverifiable. It means the process is
+            # known and this round is not confirmed open, which is ordinary for
+            # a recurring programme between calls, and is exactly what the
+            # "Prepare for Next Window" tier exists to carry. So it stays in
+            # the main list, honestly labelled rather than hidden.
+            #
+            # "Unconfirmed" — no evidence any public process exists — is still
+            # dropped. That distinction is the whole safeguard here.
+            updated = dict(opp)
+            if has_better_url:
+                updated["application_link"] = best_url
+                if updated.get("link_type") == "funder_homepage":
+                    updated["link_type"] = "programme_page"
+
+            # Never leave a "closes soon, apply now" framing on something whose
+            # round is not confirmed open — that would trade a missing
+            # recommendation for a misleading one.
+            updated["application_timing"] = "recurring_uncertain"
+            if str(updated.get("priority_tier", "")).strip().lower() in (
+                "must pursue", "quick win",
+            ):
+                updated["priority_tier"] = "Prepare for Next Window"
+
+            caveat = (val.get("reason") or "").strip()
+            updated["timing_caveat"] = (
+                "No application round is confirmed open right now. This is an "
+                "established programme that has run public rounds before — "
+                "prepare now and check the programme page for the next call."
+                + (f" {caveat}" if caveat else "")
+            )
+            confirmed_opps.append(updated)
 
         # "unconfirmed" — no evidence any public application process exists.
-        # Dropped entirely: not actionable, so it earns neither list.
+        # Dropped entirely: not actionable, so it earns neither list. This is
+        # the only status that still loses an item here, and deliberately so.
 
-    # Append between-rounds demotions to the existing watchlist
-    combined_watchlist = watchlist + demoted
-    return confirmed_opps, combined_watchlist
+    return confirmed_opps, watchlist
 
 
 # ---------------------------------------------------------------------------
@@ -2563,14 +2610,20 @@ def _apply_watchlist_cap(watchlist: list, cap: int = WATCHLIST_CAP) -> tuple[lis
     Ranking, in order:
 
     1. **Thematic fit**, descending — `_backfill_initial_thematic_fit` has run
-       by this point, so most items carry a real number.
+       by this point, so most items carry a real number. Falls back to
+       `initial_thematic_fit` where the backfill could not match the item by
+       name against the longlist, which happens whenever the scoring model
+       invents its own watchlist entry.
     2. **Has a usable application link.** Between two equally relevant
        entries, the one a reader can click is worth more than the one they
        would have to go and find.
-    3. **Name**, so the result is deterministic. Two runs of the same company
-       differing only because a tie broke arbitrarily would show up as
-       retrieval churn in the convergence measure, which is read as a
-       diagnostic of search quality — a scoring artefact must not pollute it.
+    3. **Original position**, so the result is deterministic for a given
+       input. Deliberately *not* alphabetical: real runs do produce
+       watchlists where fit is unavailable on every entry, and an alphabetical
+       tiebreak then degenerates into discarding the tail of the alphabet.
+       "Innovate UK Smart Grants" losing its place to an also-ran because of
+       its initial letter is indefensible. Upstream order carries the model's
+       own judgement, which is a better guess than none.
 
     The list is ordered whether or not it needs trimming. Dropping a tail is
     only defensible if the list is sorted by relevance in the first place, and
@@ -2584,14 +2637,17 @@ def _apply_watchlist_cap(watchlist: list, cap: int = WATCHLIST_CAP) -> tuple[lis
     if not watchlist:
         return watchlist, 0
 
-    def _rank(item: dict) -> tuple:
+    def _rank(pair: tuple) -> tuple:
+        position, item = pair
         fit = item.get("thematic_fit")
+        if not isinstance(fit, (int, float)):
+            fit = item.get("initial_thematic_fit")
         fit = fit if isinstance(fit, (int, float)) else -1
         link = (item.get("application_link") or "")
         has_link = 1 if link.startswith("http") else 0
-        return (-fit, -has_link, (item.get("name") or "").lower())
+        return (-fit, -has_link, position)
 
-    ordered = sorted(watchlist, key=_rank)
+    ordered = [item for _, item in sorted(enumerate(watchlist), key=_rank)]
 
     # A non-positive cap disables trimming rather than emptying the list — a
     # misconfigured constant should degrade to "no cap", never to "no output".
