@@ -98,6 +98,32 @@ notifications when results are ready.
 
 ## Timeline
 
+**2026-08-03 — The watchlist cap is enforced, at 20**
+Commit subject: *Enforce WATCHLIST_CAP at 20, ranked and deterministic*.
+`WATCHLIST_CAP = 10` had been declared in `analyzer.py` for months and never
+read once, which is why real runs shipped watchlists of 24–27 rows beside
+three or four recommendations — a shortlist tool handing back a tail nine
+times longer than the shortlist. Thomas chose 20 over the recommended 10, on
+the reasoning that the main list is currently too short to be useful and
+information should not be discarded to make the output look tidier; the
+binding problem is the 3–5 item main list, not the length of the tail.
+`_apply_watchlist_cap` runs *after* all five paths that can add to the
+watchlist — discovery triage (the only one ever gated, by `STRONG_FIT_MIN`),
+`_enforce_routing_rules`, `_validate_application_specificity`,
+`_rescue_missing_partner_items` and `_apply_recommendation_gates` — because
+capping at any single entrance would let the other four overflow it again. It
+ranks by thematic fit, then by whether the entry has a clickable application
+link, then by name. That last key is not cosmetic: two runs of the same
+company differing only because a tie broke arbitrarily would register as
+retrieval churn in the convergence measure, which is read as a diagnostic of
+search quality, and a scoring artefact must not pollute it. The list is
+ranked whether or not it needs trimming, since dropping a tail is only
+defensible if the list is ordered by relevance to begin with. Trimming is not
+silent: `watchlist_trimmed` lands on the result and `watchlist_before_cap` /
+`watchlist_after_cap` on `pipeline_funnel`, so the next review can see
+whether the cap is discarding also-rans or half the findings. A non-positive
+cap degrades to "no cap" rather than "no output". 13 new tests; 231 green.
+
 **2026-08-01 — The review reads a committed file instead of calling the live app**
 Commit subject: *Snapshot quality daily from CI; drop the results email*.
 Two improvement cycles in a row produced no measurement at all. Cycle 1 was

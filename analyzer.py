@@ -187,7 +187,14 @@ QUERIES_PER_GRANT     = 3    # research queries per shortlisted grant
 # Strong-fit items whose application route cannot be confirmed are DROPPED,
 # not watchlisted — an unverifiable entry is not actionable.
 STRONG_FIT_MIN        = 4    # minimum thematic fit for watchlist admission
-WATCHLIST_CAP         = 10   # maximum watchlist entries shown to the user
+# Maximum watchlist entries shown to the user. Enforced in
+# _apply_watchlist_cap, after every path that can add to the watchlist.
+# Raised from 10 to 20 on 2026-08-01 by Thomas's decision: the main shortlist
+# is currently too short to be useful, so information should not be discarded
+# from the watchlist to make the output look tidier. A watchlist can run
+# longer than ten and still be useful; the binding problem is the 3-5 item
+# main list, not the length of the tail.
+WATCHLIST_CAP         = 20
 _MAX_TRIAGE_SEARCHES  = 12   # bound on extra searches for watchlist triage
 
 # ---------------------------------------------------------------------------
@@ -2535,6 +2542,65 @@ def _backfill_initial_thematic_fit(
     return watchlist
 
 
+def _apply_watchlist_cap(watchlist: list, cap: int = WATCHLIST_CAP) -> tuple[list, int]:
+    """
+    Keep the best `cap` watchlist entries and report how many were dropped.
+
+    `WATCHLIST_CAP` was declared for months and never read, which is why real
+    runs shipped watchlists of 24–27 rows beside three or four
+    recommendations — a shortlist tool handing back a list nine times longer
+    than the shortlist. A constant documenting a policy the code doesn't
+    implement is worse than no constant, because the next person to read it
+    believes it.
+
+    **This must run after every path that can add to the watchlist**, not
+    inside any one of them. There are five: discovery triage (the only one
+    that was ever gated, by `STRONG_FIT_MIN`), `_enforce_routing_rules`,
+    `_validate_application_specificity`, `_rescue_missing_partner_items`, and
+    `_apply_recommendation_gates`. Capping at any single entrance would let
+    the other four overflow it again.
+
+    Ranking, in order:
+
+    1. **Thematic fit**, descending — `_backfill_initial_thematic_fit` has run
+       by this point, so most items carry a real number.
+    2. **Has a usable application link.** Between two equally relevant
+       entries, the one a reader can click is worth more than the one they
+       would have to go and find.
+    3. **Name**, so the result is deterministic. Two runs of the same company
+       differing only because a tie broke arbitrarily would show up as
+       retrieval churn in the convergence measure, which is read as a
+       diagnostic of search quality — a scoring artefact must not pollute it.
+
+    The list is ordered whether or not it needs trimming. Dropping a tail is
+    only defensible if the list is sorted by relevance in the first place, and
+    a watchlist that is ranked at 21 entries but arbitrary at 19 would be an
+    odd thing to hand a reader.
+
+    Trimming is deliberately *not* silent: the count is returned and recorded
+    on the result, so the review cycle can see whether the cap is discarding
+    a handful of also-rans or half the findings.
+    """
+    if not watchlist:
+        return watchlist, 0
+
+    def _rank(item: dict) -> tuple:
+        fit = item.get("thematic_fit")
+        fit = fit if isinstance(fit, (int, float)) else -1
+        link = (item.get("application_link") or "")
+        has_link = 1 if link.startswith("http") else 0
+        return (-fit, -has_link, (item.get("name") or "").lower())
+
+    ordered = sorted(watchlist, key=_rank)
+
+    # A non-positive cap disables trimming rather than emptying the list — a
+    # misconfigured constant should degrade to "no cap", never to "no output".
+    if cap <= 0 or len(ordered) <= cap:
+        return ordered, 0
+
+    return ordered[:cap], len(ordered) - cap
+
+
 # ---------------------------------------------------------------------------
 # Public entry points — split into two generators for the review gate
 # ---------------------------------------------------------------------------
@@ -2859,6 +2925,30 @@ async def run_phase23(
                 longlist=longlist,
                 shortlist=shortlist,
             )
+
+            # ── Watchlist cap ─────────────────────────────────────────────
+            # Last thing to touch the watchlist, and deliberately so: five
+            # separate paths can add to it, and capping at any one of them
+            # would let the other four overflow. Runs after the fit backfill
+            # because that supplies the ranking key.
+            stage_name = "watchlist cap"
+            funnel["watchlist_before_cap"] = len(result.get("strategic_watchlist", []))
+            result["strategic_watchlist"], trimmed = _apply_watchlist_cap(
+                result.get("strategic_watchlist", [])
+            )
+            funnel["watchlist_after_cap"] = len(result["strategic_watchlist"])
+            funnel["watchlist_cap"] = WATCHLIST_CAP
+            result["watchlist_trimmed"] = trimmed
+            result["pipeline_funnel"] = funnel
+            if trimmed:
+                await queue.put({
+                    "type": "progress", "stage": 3,
+                    "message": (
+                        f"Watchlist trimmed to the {WATCHLIST_CAP} most relevant "
+                        f"({trimmed} lower-fit {'entry' if trimmed == 1 else 'entries'} "
+                        "set aside)."
+                    ),
+                })
 
             # ── Acronym definitions ───────────────────────────────────────
             # Compile the acronyms/abbreviations used across the final rows
