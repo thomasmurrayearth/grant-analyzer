@@ -68,54 +68,77 @@ jobs:
           FETCHED_AT="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
           OUT="reports/snapshots/quality-${DATE}.json"
 
+          # Both payloads go straight to disk and are never held in a shell
+          # variable or passed as a command-line argument.
+          #
+          # This job failed every morning from 2026-08-12 to 2026-08-14 with
+          # "jq: Argument list too long" while the fetch itself was returning
+          # 200. The cause was `--argjson quality "$(cat ...)"`, which pastes
+          # the whole report into argv; Linux caps a single argument at 128 KB
+          # (MAX_ARG_STRLEN) and the report had grown to ~166 KB. Reading the
+          # report from a file with --slurpfile removes that ceiling, so the
+          # job cannot fail again merely because the app produced more data.
+          PAYLOAD=/tmp/payload.json
+          HEALTH_FILE=/tmp/health.json
+
           if [ -z "${ADMIN_TOKEN}" ]; then
             echo "::error::ADMIN_TOKEN secret is not set — see LAUNCH_SETUP.md §4"
             STATUS="no-token"
-            BODY=""
+            printf 'null' > "${PAYLOAD}"
           else
             # --fail is deliberately NOT used: a 403/503 body carries the
-            # app's own diagnosis and is worth capturing verbatim.
-            BODY="$(curl -sS --max-time 120 \
-                      -w '\n%{http_code}' \
-                      "${APP_URL}/admin/quality.json?token=${ADMIN_TOKEN}&days=14" \
-                    || printf '\n000')"
-            STATUS="$(printf '%s' "${BODY}" | tail -n1)"
-            BODY="$(printf '%s' "${BODY}" | sed '$d')"
+            # app's own diagnosis, and -o keeps it on disk for the log.
+            STATUS="$(curl -sS --max-time 120 \
+                        -o "${PAYLOAD}" \
+                        -w '%{http_code}' \
+                        "${APP_URL}/admin/quality.json?token=${ADMIN_TOKEN}&days=14" \
+                      || echo '000')"
           fi
 
           echo "HTTP status: ${STATUS}"
 
           # Health is unauthenticated, so it can always be recorded and
           # separates "the app is down" from "the database is down".
-          HEALTH="$(curl -sS --max-time 30 "${APP_URL}/health?deep=1" || echo '{}')"
+          curl -sS --max-time 30 "${APP_URL}/health?deep=1" -o "${HEALTH_FILE}" \
+            || printf '{}' > "${HEALTH_FILE}"
+          jq empty "${HEALTH_FILE}" 2>/dev/null || printf '{}' > "${HEALTH_FILE}"
 
-          if [ "${STATUS}" = "200" ] && [ -n "${BODY}" ]; then
-            printf '%s' "${BODY}" > /tmp/payload.json
-            if ! jq empty /tmp/payload.json 2>/dev/null; then
+          if [ "${STATUS}" = "200" ]; then
+            if ! jq empty "${PAYLOAD}" 2>/dev/null; then
               echo "::warning::response was not valid JSON"
               STATUS="bad-json"
+              printf 'null' > "${PAYLOAD}"
             fi
+          else
+            # A non-200 body is diagnostic text, not quality data. The status
+            # field carries the failure; the quality slot stays null.
+            echo "::notice::non-200 body follows"
+            head -c 2000 "${PAYLOAD}" || true
+            printf 'null' > "${PAYLOAD}"
           fi
 
+          # --slurpfile reads JSON from a file, so size is bounded by memory
+          # rather than by argv. It yields an array of the file's values, so
+          # the single document is $quality[0] / $health[0].
           jq -n \
             --arg date "${DATE}" \
             --arg fetched_at "${FETCHED_AT}" \
             --arg status "${STATUS}" \
-            --argjson health "$(printf '%s' "${HEALTH}" | jq -c . 2>/dev/null || echo '{}')" \
-            --argjson quality "$(cat /tmp/payload.json 2>/dev/null | jq -c . 2>/dev/null || echo 'null')" \
+            --slurpfile health "${HEALTH_FILE}" \
+            --slurpfile quality "${PAYLOAD}" \
             '{
                schema: 1,
                date: $date,
                fetched_at: $fetched_at,
                source: "/admin/quality.json?days=14",
                http_status: $status,
-               ok: ($status == "200" and $quality != null),
-               health: $health,
-               quality: $quality
+               ok: ($status == "200" and ($quality[0] // null) != null),
+               health: ($health[0] // {}),
+               quality: ($quality[0] // null)
              }' > "${OUT}"
 
           cp "${OUT}" reports/snapshots/latest.json
-          echo "Wrote ${OUT}"
+          echo "Wrote ${OUT} ($(wc -c < "${OUT}") bytes)"
 
           # Surface a failed fetch in the Actions UI so the owner gets an
           # email, while still committing the record of the failure below.
