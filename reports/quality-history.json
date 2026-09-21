@@ -1,454 +1,901 @@
 {
-  "schema": 1,
-  "about": "Quality trend for the Grant Opportunity Analyser, one entry per fortnightly review cycle. Maintained by the grant-analyzer-health-check skill; seeded from stored eval runs so cycle one has a baseline to move against. Figures are defined in quality.py and judged against launch plan section 9a. Convergence is a diagnostic of retrieval quality, never a target: never propose caching or pinning results to raise it.",
-  "cycles": [
-    {
-      "date": "2026-07-30",
-      "cycle": 0,
-      "label": "baseline",
-      "commit": "789d374",
-      "source": "eval/results/*.json, scored offline by eval/score_stored.py",
-      "note": "Seeded, not measured live. These are the numbers the mechanism was built against; cycle one is the first reading taken through /admin/quality.json.",
-      "benchmark": {
-        "all_stored_runs": {
-          "germandeeptech": {
-            "runs": 1,
-            "date_range": [
-              "2026-07-04",
-              "2026-07-04"
-            ],
-            "recall_mean": 1.0,
-            "recall_range": [
-              1.0,
-              1.0
-            ],
-            "exclusion_accuracy_mean": 1.0,
-            "runs_with_must_not_violations": 0,
-            "structural_precision": 1.0,
-            "main_count_mean": 5.0,
-            "main_count_range": [
-              5,
-              5
-            ],
-            "watchlist_count_mean": 12.0,
-            "tier_concentration": 0.6,
-            "specific_link_rate": 0.941,
-            "broken_link_rate": 0.235,
-            "defect_totals": {},
-            "convergence_exact": null,
-            "convergence_family": null,
-            "in_every_run": null,
-            "distinct_across_runs": null,
-            "carried_forward": true
-          },
-          "thermify": {
-            "runs": 16,
-            "date_range": [
-              "2026-05-30",
-              "2026-07-06"
-            ],
-            "recall_mean": 0.775,
-            "recall_range": [
-              0.2,
-              1.0
-            ],
-            "exclusion_accuracy_mean": 0.844,
-            "runs_with_must_not_violations": 5,
-            "structural_precision": 0.805,
-            "main_count_mean": 4.312,
-            "main_count_range": [
-              2,
-              9
-            ],
-            "watchlist_count_mean": 9.75,
-            "tier_concentration": 0.608,
-            "specific_link_rate": 0.645,
-            "broken_link_rate": 0.1,
-            "defect_totals": {
-              "broken_link": 9,
-              "trl_mismatch": 2,
-              "homepage_only_link": 2
-            },
-            "convergence_exact": 0.156,
-            "convergence_family": 0.142,
-            "in_every_run": 0,
-            "distinct_across_runs": 33,
-            "carried_forward": true
-          }
-        },
-        "since_2026_07_01": {
-          "germandeeptech": {
-            "runs": 1,
-            "date_range": [
-              "2026-07-04",
-              "2026-07-04"
-            ],
-            "recall_mean": 1.0,
-            "recall_range": [
-              1.0,
-              1.0
-            ],
-            "exclusion_accuracy_mean": 1.0,
-            "runs_with_must_not_violations": 0,
-            "structural_precision": 1.0,
-            "main_count_mean": 5.0,
-            "main_count_range": [
-              5,
-              5
-            ],
-            "watchlist_count_mean": 12.0,
-            "tier_concentration": 0.6,
-            "specific_link_rate": 0.941,
-            "broken_link_rate": 0.235,
-            "defect_totals": {},
-            "convergence_exact": null,
-            "convergence_family": null,
-            "in_every_run": null,
-            "distinct_across_runs": null,
-            "carried_forward": true
-          },
-          "thermify": {
-            "runs": 5,
-            "date_range": [
-              "2026-07-04",
-              "2026-07-06"
-            ],
-            "recall_mean": 0.92,
-            "recall_range": [
-              0.8,
-              1.0
-            ],
-            "exclusion_accuracy_mean": 0.9,
-            "runs_with_must_not_violations": 1,
-            "structural_precision": 0.76,
-            "main_count_mean": 4.2,
-            "main_count_range": [
-              4,
-              5
-            ],
-            "watchlist_count_mean": 16.8,
-            "tier_concentration": 0.51,
-            "specific_link_rate": 0.766,
-            "broken_link_rate": 0.11,
-            "defect_totals": {
-              "broken_link": 5
-            },
-            "convergence_exact": 0.209,
-            "convergence_family": 0.249,
-            "in_every_run": 1,
-            "distinct_across_runs": 12,
-            "carried_forward": true
-          }
-        }
+ "schema": 1,
+ "about": "Quality trend for the Grant Opportunity Analyser, one entry per fortnightly review cycle. Maintained by the grant-analyzer-health-check skill; seeded from stored eval runs so cycle one has a baseline to move against. Figures are defined in quality.py and judged against launch plan section 9a. Convergence is a diagnostic of retrieval quality, never a target: never propose caching or pinning results to raise it.",
+ "cycles": [
+  {
+   "date": "2026-07-30",
+   "cycle": 0,
+   "label": "baseline",
+   "commit": "789d374",
+   "source": "eval/results/*.json, scored offline by eval/score_stored.py",
+   "note": "Seeded, not measured live. These are the numbers the mechanism was built against; cycle one is the first reading taken through /admin/quality.json.",
+   "benchmark": {
+    "all_stored_runs": {
+     "germandeeptech": {
+      "runs": 1,
+      "date_range": [
+       "2026-07-04",
+       "2026-07-04"
+      ],
+      "recall_mean": 1.0,
+      "recall_range": [
+       1.0,
+       1.0
+      ],
+      "exclusion_accuracy_mean": 1.0,
+      "runs_with_must_not_violations": 0,
+      "structural_precision": 1.0,
+      "main_count_mean": 5.0,
+      "main_count_range": [
+       5,
+       5
+      ],
+      "watchlist_count_mean": 12.0,
+      "tier_concentration": 0.6,
+      "specific_link_rate": 0.941,
+      "broken_link_rate": 0.235,
+      "defect_totals": {},
+      "convergence_exact": null,
+      "convergence_family": null,
+      "in_every_run": null,
+      "distinct_across_runs": null,
+      "carried_forward": true
+     },
+     "thermify": {
+      "runs": 16,
+      "date_range": [
+       "2026-05-30",
+       "2026-07-06"
+      ],
+      "recall_mean": 0.775,
+      "recall_range": [
+       0.2,
+       1.0
+      ],
+      "exclusion_accuracy_mean": 0.844,
+      "runs_with_must_not_violations": 5,
+      "structural_precision": 0.805,
+      "main_count_mean": 4.312,
+      "main_count_range": [
+       2,
+       9
+      ],
+      "watchlist_count_mean": 9.75,
+      "tier_concentration": 0.608,
+      "specific_link_rate": 0.645,
+      "broken_link_rate": 0.1,
+      "defect_totals": {
+       "broken_link": 9,
+       "trl_mismatch": 2,
+       "homepage_only_link": 2
       },
-      "real_runs": {
-        "count": null,
-        "note": "Not measurable before /admin/quality.json existed. Cycle one is the first."
-      },
-      "verified": [],
-      "regressions": [],
-      "blockers": [
-        "Real user output had never been read: db.get_recent_analyses did not select job_id and no endpoint exposed stored results. Fixed in this commit.",
-        "No mechanism produced new measurements between cycles. Fixed by the fallback self-benchmark in benchmark.py."
-      ]
+      "convergence_exact": 0.156,
+      "convergence_family": 0.142,
+      "in_every_run": 0,
+      "distinct_across_runs": 33,
+      "carried_forward": true
+     }
     },
-    {
-      "date": "2026-07-30",
-      "cycle": 1,
-      "label": "first live cycle \u2014 blind",
-      "commit": "65bc498",
-      "source": "/admin/quality.json (unreachable); baseline carried forward from cycle 0",
-      "headline": "Analytics database unreachable. Nothing recorded since it went away; app itself healthy.",
-      "real_runs": {
-        "count": 2,
-        "completed": 2,
-        "started": 3,
-        "stalled": 1,
-        "structural_precision": 0.9,
-        "main_count_mean": 4.0,
-        "main_count_range": [
-          3,
-          5
-        ],
-        "watchlist_count_mean": 25.5,
-        "broken_link_rate": 0.135,
-        "specific_link_rate": 0.644,
-        "tier_concentration": 0.433,
-        "convergence_exact": null,
-        "feedback_mean": null,
-        "feedback_n": 0,
-        "companies": [
-          "Notpla (2026-07-12)",
-          "Fermeta (2026-07-13)"
-        ],
-        "note": "Read on 31 July after the database was restored; both runs predate the pause. First real user output ever inspected. Convergence unmeasurable \u2014 no company run twice."
-      },
-      "benchmark": {
-        "ran": false,
-        "reason": "database unreachable, so the app cannot tell whether real runs happened; it correctly declines to spend money on a guess",
-        "per_case": {
-          "thermify": {
-            "runs": 5,
-            "date_range": [
-              "2026-07-04",
-              "2026-07-06"
-            ],
-            "recall_mean": 0.92,
-            "exclusion_accuracy_mean": 0.9,
-            "structural_precision": 0.76,
-            "main_count_range": [
-              4,
-              5
-            ],
-            "broken_link_rate": 0.11,
-            "tier_concentration": 0.51,
-            "convergence_exact": 0.209,
-            "convergence_family": 0.249,
-            "carried_forward": true
-          },
-          "germandeeptech": {
-            "runs": 1,
-            "date_range": [
-              "2026-07-04",
-              "2026-07-04"
-            ],
-            "recall_mean": 1.0,
-            "exclusion_accuracy_mean": 1.0,
-            "structural_precision": 1.0,
-            "main_count_range": [
-              5,
-              5
-            ],
-            "broken_link_rate": 0.235,
-            "tier_concentration": 0.6,
-            "convergence_exact": null,
-            "convergence_family": null,
-            "carried_forward": true
-          }
-        }
-      },
-      "verified": [],
-      "regressions": [],
-      "proposals_open": [
-        {
-          "id": 1,
-          "summary": "Make eligibility a hard gate rather than a score input",
-          "verification": "exclusion accuracy >= 0.98; zero must_not_appear violations"
-        },
-        {
-          "id": 2,
-          "summary": "Never recommend a programme whose link is known broken",
-          "verification": "broken-link rate < 0.02; specific-link rate > 0.85"
-        },
-        {
-          "id": 3,
-          "summary": "Close the gap between 10 promised and 4-5 delivered",
-          "verification": "main-list median >= 8 with structural precision not falling"
-        },
-        {
-          "id": 4,
-          "summary": "Widen the ground-truth bench beyond two companies",
-          "verification": ">= 5 real completed runs readable next cycle"
-        },
-        {
-          "id": 5,
-          "summary": "Require a funder-domain source for every main recommendation",
-          "verification": "zero social/aggregator domains in main recommendations; link_authority rate > 0.9"
-        }
+    "since_2026_07_01": {
+     "germandeeptech": {
+      "runs": 1,
+      "date_range": [
+       "2026-07-04",
+       "2026-07-04"
       ],
-      "blockers": [
-        "No real user analysis has ever been inspected for quality.",
-        "Benchmark due 1 August: no real completion inside the 14-day lookback, so ~US$2.30 of self-benchmark will run as designed."
+      "recall_mean": 1.0,
+      "recall_range": [
+       1.0,
+       1.0
       ],
-      "addendum": {
-        "date": "2026-07-31",
-        "verified_live": "push deployed, /health?deep=1 analytics_database ok, /admin/quality.json returning scored analyses",
-        "new_finding": "Links resolve but are not authoritative \u2014 Facebook post, grant-aggregator, retailer blog and consultancy pages cited as sources. Invisible to structural precision because they load. Harms Q3 and \u00a79a failure mode 2.",
-        "confirmed": [
-          "shortfall against promised 10 reproduces on real companies in two countries",
-          "a main recommendation shipped with a link already marked broken"
-        ]
-      }
-    },
-    {
-      "date": "2026-08-01",
-      "cycle": 2,
-      "label": "blind — review session could not reach the deployed app",
-      "commit": "a2ae123",
-      "source": "none live. /admin/quality.json, /admin/stats and /health?deep=1 all unreachable from this session; offline re-derivation via eval/score_stored.py only",
-      "headline": "Second consecutive cycle with no live reading, from a different cause. Cycle 1: database paused. Cycle 2: web_fetch provenance-restricted and no Chrome browser connected. App and instrument both verified sound at code level; 187 tests green.",
-      "real_runs": {
-        "count": null,
-        "completed": null,
-        "stalled": null,
-        "structural_precision": null,
-        "main_count_mean": null,
-        "broken_link_rate": null,
-        "convergence_exact": null,
-        "feedback_mean": null,
-        "feedback_n": null,
-        "note": "Unreadable. No real user output from this fortnight was inspected; the two runs read in cycle 1 predate this window."
-      },
-      "benchmark": {
-        "ran": null,
-        "reason": "unknown — policy dictated ~4 runs before 06:00 UTC on 1 August, but benchmark.cycles could not be read. Ran / suppressed / never fired are indistinguishable from here. ~US$2.30 possibly spent invisibly.",
-        "per_case": {
-          "thermify": {
-            "runs": 16,
-            "date_range": ["2026-05-30", "2026-07-06"],
-            "structural_precision": 0.777,
-            "structural_precision_restated_from": 0.805,
-            "restatement_reason": "identical stored inputs, stricter scorer: quality.link_authority shipped in a2ae123 and detects 3 non_authoritative_link defects the previous scorer could not see. Not a regression. 0.777 is the honest baseline from here; comparisons against 0.805 compare two different rulers.",
-            "main_count_mean": 4.312,
-            "main_count_range": [2, 9],
-            "watchlist_count_mean": 9.75,
-            "tier_concentration": 0.608,
-            "specific_link_rate": 0.645,
-            "broken_link_rate": 0.1,
-            "recall_mean": 0.775,
-            "exclusion_accuracy_mean": 0.844,
-            "convergence_exact": 0.156,
-            "convergence_family": 0.142,
-            "defect_totals": {
-              "broken_link": 9,
-              "non_authoritative_link": 3,
-              "trl_mismatch": 2,
-              "homepage_only_link": 2
-            },
-            "source": "eval/score_stored.py over stored runs, all dated on or before 2026-07-06 — every one predates the a2ae123 gates",
-            "carried_forward": true
-          },
-          "germandeeptech": {
-            "runs": 1,
-            "date_range": ["2026-07-04", "2026-07-04"],
-            "structural_precision": 1.0,
-            "recall_mean": 1.0,
-            "exclusion_accuracy_mean": 1.0,
-            "main_count_range": [5, 5],
-            "broken_link_rate": 0.235,
-            "tier_concentration": 0.6,
-            "convergence_exact": null,
-            "convergence_family": null,
-            "carried_forward": true
-          }
-        }
-      },
-      "verified": [
-        {
-          "change": "Proposal 1 — eligibility as a hard gate",
-          "shipped_commit": "a2ae123",
-          "expected": "exclusion accuracy >= 0.98; zero must_not_appear violations",
-          "observed": null,
-          "verdict": "shipped as specified; effect not measurable",
-          "code_check": "_violates_declared_eligibility + _enforce_routing_rules run after scoring; describe classes of restriction, name no funder, per CLAUDE.md"
-        },
-        {
-          "change": "Proposal 2 — never recommend a known-broken link",
-          "shipped_commit": "a2ae123",
-          "expected": "broken-link rate < 0.02; specific-link rate > 0.85",
-          "observed": null,
-          "verdict": "shipped as specified, via the recommended option (b then a): one re-check, then demote",
-          "code_check": "_apply_recommendation_gates with _check_one_link retry"
-        },
-        {
-          "change": "Proposal 5 — require a funder-owned source",
-          "shipped_commit": "a2ae123",
-          "expected": "zero social/aggregator domains in main; link_authority rate > 0.9",
-          "observed": "detector confirmed working on historical data: 3 non_authoritative_link defects found across 17 stored runs",
-          "verdict": "shipped as specified; detection verified offline, effect on live output not measurable"
-        },
-        {
-          "change": "Proposal 3 — shortlist volume",
-          "shipped_commit": "a2ae123",
-          "expected": "main-list median >= 8 with structural precision not falling",
-          "observed": null,
-          "verdict": "diagnosed not fixed, as recommended; pipeline_funnel instrumentation traced end to end and confirmed complete (analyzer.py:2729-2832 -> db.py results_json JSONB -> main.py:997)"
-        },
-        {
-          "change": "Proposal 4 — widen the ground-truth bench",
-          "shipped_commit": null,
-          "expected": ">= 5 real completed runs readable next cycle",
-          "observed": null,
-          "verdict": "deferred as recommended, awaiting soft launch"
-        }
+      "exclusion_accuracy_mean": 1.0,
+      "runs_with_must_not_violations": 0,
+      "structural_precision": 1.0,
+      "main_count_mean": 5.0,
+      "main_count_range": [
+       5,
+       5
       ],
-      "regressions": [],
-      "proposals_open": [
-        {
-          "id": 1,
-          "summary": "Make each cycle's measurements survive the session that took them",
-          "status": "BUILT 2026-08-01, awaiting push by Thomas",
-          "solution": "GitHub Actions workflow (.github/workflows/quality-snapshot.yml) snapshots /admin/quality.json and /health?deep=1 daily at 07:00 UTC and commits reports/snapshots/quality-YYYY-MM-DD.json. The review reads a committed file: no network, no token, no secret in any prompt. Read path is snapshots.py + eval/read_snapshots.py, covered by tests/test_snapshots.py.",
-          "rejected_alternative": "Putting the real tokenised admin URL in the scheduled-task file so web_fetch's provenance check would accept it. Thomas rejected it: a secret must never travel through a prompt. That constraint makes any authenticated pull structurally impossible, which is what forced the CI answer. Do not re-propose it.",
-          "requires_from_thomas": "Add ADMIN_TOKEN as a GitHub repository secret (LAUNCH_SETUP.md §3). Until then the workflow fails daily and emails him.",
-          "verification": "cycle 3 reports live figures read from reports/snapshots/, with staleness_days <= 2 and no web_fetch or browser involved"
-        },
-        {
-          "id": 2,
-          "summary": "Make 'did the benchmark fire?' answerable without the admin endpoint",
-          "status": "BUILT 2026-08-01, awaiting push by Thomas",
-          "solution": "The snapshot carries the whole quality payload, benchmark.cycles included, so the cycle decision and its cost land in a committed file every morning.",
-          "verification": "cycle 3 states the 15 August benchmark decision and its cost from reports/snapshots/"
-        },
-        {
-          "id": 3,
-          "summary": "Generalise discovery beyond named UK funders (analyzer.py:269-289, :575)",
-          "recommended": "wait for funnel counters, then fix the cause",
-          "verification": "longlist size for non-UK companies within 20% of UK ones; main-list count no longer correlated with HQ country"
-        },
-        {
-          "id": 4,
-          "summary": "Decide what WATCHLIST_CAP means — enforce it or delete it (analyzer.py:190)",
-          "recommended": "option (a), enforce at 10",
-          "decision": {
-            "date": "2026-08-01",
-            "by": "Thomas",
-            "chosen": "option (b) — raise WATCHLIST_CAP to 20 and enforce it",
-            "status": "APPROVED, NOT YET IMPLEMENTED — do not build until Thomas says go",
-            "reasoning": "The main shortlist is currently too short to be useful, so information should not be discarded from the watchlist to make the output look tidier. A watchlist can run longer than 10 and still be useful to a reader; the binding problem is the 3-5 item main list, not the length of the tail.",
-            "overrides": "my recommendation of a cap at 10"
-          },
-          "implementation_notes": "Enforce AFTER all five watchlist entrances, not at any one of them: triage (the only path that currently applies STRONG_FIT_MIN), _enforce_routing_rules, _validate_application_specificity, _rescue_missing_partner_items, and _apply_recommendation_gates. Rank by initial_thematic_fit, which is already backfilled onto watchlist rows at analyzer.py:2857. Consider also _MAX_TRIAGE_SEARCHES (analyzer.py:191), declared and never used — same dead-constant family.",
-          "verification": "watchlist median <= 20; main-list count unchanged"
-        },
-        {
-          "id": 5,
-          "summary": "Mount the launch plan folder so cycles can read §9a from source",
-          "verification": "cycle 3 quotes §9a from source"
-        }
+      "watchlist_count_mean": 12.0,
+      "tier_concentration": 0.6,
+      "specific_link_rate": 0.941,
+      "broken_link_rate": 0.235,
+      "defect_totals": {},
+      "convergence_exact": null,
+      "convergence_family": null,
+      "in_every_run": null,
+      "distinct_across_runs": null,
+      "carried_forward": true
+     },
+     "thermify": {
+      "runs": 5,
+      "date_range": [
+       "2026-07-04",
+       "2026-07-06"
       ],
-      "carried_forward": [
-        "Cycle 1 proposal 3 (10 promised vs 4-5 delivered) remains undecided. Its diagnosis recommended option D (wait for funnel counters) with option C (fix the promise copy) as a free interim. Neither actioned."
+      "recall_mean": 0.92,
+      "recall_range": [
+       0.8,
+       1.0
       ],
-      "plumbing_built_this_cycle": {
-        "summary": "Replaced the review's live-network read path with committed daily snapshots. Root cause of both blind cycles was the same: the reviewer depended on making a live authenticated network call at the moment of review.",
-        "artefacts": [
-          ".github/workflows/quality-snapshot.yml — daily 07:00 UTC, ADMIN_TOKEN from GitHub Actions secrets, commits reports/snapshots/quality-YYYY-MM-DD.json",
-          "snapshots.py — offline read library: health_report, staleness_days, series, movement",
-          "eval/read_snapshots.py — CLI; exits non-zero when the newest usable snapshot is missing or >2 days old",
-          "tests/test_snapshots.py — 31 tests, weighted toward the not-measuring cases",
-          "reports/snapshots/README.md, LAUNCH_SETUP.md §3"
-        ],
-        "properties": [
-          "A failed fetch is still committed with its HTTP status, so an outage is data rather than a gap",
-          "Daily commits are the activity that prevents GitHub's 60-day auto-disable of scheduled workflows, so the mechanism cannot be killed by the quiet fortnights it covers",
-          "A bad snapshot exits non-zero, so GitHub emails Thomas — the alarm missing from both blind cycles"
-        ],
-        "tests": "218 green, up from 187",
-        "pushed": false
+      "exclusion_accuracy_mean": 0.9,
+      "runs_with_must_not_violations": 1,
+      "structural_precision": 0.76,
+      "main_count_mean": 4.2,
+      "main_count_range": [
+       4,
+       5
+      ],
+      "watchlist_count_mean": 16.8,
+      "tier_concentration": 0.51,
+      "specific_link_rate": 0.766,
+      "broken_link_rate": 0.11,
+      "defect_totals": {
+       "broken_link": 5
       },
-      "also_shipped": {
-        "change": "Removed the results email at Thomas's instruction",
-        "reason": "The landing page promised 'Email me my results when they're ready — you can safely lock your screen'. The app never sent a single message: RESEND_API_KEY and RESEND_FROM_EMAIL were never set in Railway and were never listed in LAUNCH_SETUP.md, and the send path returned silently when either was missing. Anyone who left an address and locked their phone got nothing, invisibly.",
-        "detail": "Address field retained for the grant-deadline digest only, and stored only with that consent. Capacity and waitlist copy now promise a human, not an automated send. email_sender.py left as a tombstone pending git rm (sandbox cannot delete files). NoResultsEmailTest added so the promise cannot return by accident.",
-        "pushed": false
-      },
-      "blockers": [
-        "RESOLVED BY THIS CYCLE'S BUILD (pending push): review session cannot reach the deployed app — web_fetch refuses URLs not in its provenance set (admin URLs were supplied with a <TOKEN> placeholder), and Claude-in-Chrome has no connected browser. The sandbox shell cannot reach it either. Snapshots remove the need for any of these.",
-        "Cannot commit or push from this sandbox: .git/index.lock cannot be removed (Operation not permitted on the mount) and there are no GitHub credentials. No plumbing fix could ship this cycle.",
-        "GRANT_ANALYZER_LAUNCH_PLAN.md is not mounted; §9a applied from cycle 1's summaries rather than from source.",
-        "The improvement loop has now run twice and has never once completed a verification step."
-      ]
+      "convergence_exact": 0.209,
+      "convergence_family": 0.249,
+      "in_every_run": 1,
+      "distinct_across_runs": 12,
+      "carried_forward": true
+     }
     }
-  ]
+   },
+   "real_runs": {
+    "count": null,
+    "note": "Not measurable before /admin/quality.json existed. Cycle one is the first."
+   },
+   "verified": [],
+   "regressions": [],
+   "blockers": [
+    "Real user output had never been read: db.get_recent_analyses did not select job_id and no endpoint exposed stored results. Fixed in this commit.",
+    "No mechanism produced new measurements between cycles. Fixed by the fallback self-benchmark in benchmark.py."
+   ]
+  },
+  {
+   "date": "2026-07-30",
+   "cycle": 1,
+   "label": "first live cycle — blind",
+   "commit": "65bc498",
+   "source": "/admin/quality.json (unreachable); baseline carried forward from cycle 0",
+   "headline": "Analytics database unreachable. Nothing recorded since it went away; app itself healthy.",
+   "real_runs": {
+    "count": 2,
+    "completed": 2,
+    "started": 3,
+    "stalled": 1,
+    "structural_precision": 0.9,
+    "main_count_mean": 4.0,
+    "main_count_range": [
+     3,
+     5
+    ],
+    "watchlist_count_mean": 25.5,
+    "broken_link_rate": 0.135,
+    "specific_link_rate": 0.644,
+    "tier_concentration": 0.433,
+    "convergence_exact": null,
+    "feedback_mean": null,
+    "feedback_n": 0,
+    "companies": [
+     "Notpla (2026-07-12)",
+     "Fermeta (2026-07-13)"
+    ],
+    "note": "Read on 31 July after the database was restored; both runs predate the pause. First real user output ever inspected. Convergence unmeasurable — no company run twice."
+   },
+   "benchmark": {
+    "ran": false,
+    "reason": "database unreachable, so the app cannot tell whether real runs happened; it correctly declines to spend money on a guess",
+    "per_case": {
+     "thermify": {
+      "runs": 5,
+      "date_range": [
+       "2026-07-04",
+       "2026-07-06"
+      ],
+      "recall_mean": 0.92,
+      "exclusion_accuracy_mean": 0.9,
+      "structural_precision": 0.76,
+      "main_count_range": [
+       4,
+       5
+      ],
+      "broken_link_rate": 0.11,
+      "tier_concentration": 0.51,
+      "convergence_exact": 0.209,
+      "convergence_family": 0.249,
+      "carried_forward": true
+     },
+     "germandeeptech": {
+      "runs": 1,
+      "date_range": [
+       "2026-07-04",
+       "2026-07-04"
+      ],
+      "recall_mean": 1.0,
+      "exclusion_accuracy_mean": 1.0,
+      "structural_precision": 1.0,
+      "main_count_range": [
+       5,
+       5
+      ],
+      "broken_link_rate": 0.235,
+      "tier_concentration": 0.6,
+      "convergence_exact": null,
+      "convergence_family": null,
+      "carried_forward": true
+     }
+    }
+   },
+   "verified": [],
+   "regressions": [],
+   "proposals_open": [
+    {
+     "id": 1,
+     "summary": "Make eligibility a hard gate rather than a score input",
+     "verification": "exclusion accuracy >= 0.98; zero must_not_appear violations"
+    },
+    {
+     "id": 2,
+     "summary": "Never recommend a programme whose link is known broken",
+     "verification": "broken-link rate < 0.02; specific-link rate > 0.85"
+    },
+    {
+     "id": 3,
+     "summary": "Close the gap between 10 promised and 4-5 delivered",
+     "verification": "main-list median >= 8 with structural precision not falling"
+    },
+    {
+     "id": 4,
+     "summary": "Widen the ground-truth bench beyond two companies",
+     "verification": ">= 5 real completed runs readable next cycle"
+    },
+    {
+     "id": 5,
+     "summary": "Require a funder-domain source for every main recommendation",
+     "verification": "zero social/aggregator domains in main recommendations; link_authority rate > 0.9"
+    }
+   ],
+   "blockers": [
+    "No real user analysis has ever been inspected for quality.",
+    "Benchmark due 1 August: no real completion inside the 14-day lookback, so ~US$2.30 of self-benchmark will run as designed."
+   ],
+   "addendum": {
+    "date": "2026-07-31",
+    "verified_live": "push deployed, /health?deep=1 analytics_database ok, /admin/quality.json returning scored analyses",
+    "new_finding": "Links resolve but are not authoritative — Facebook post, grant-aggregator, retailer blog and consultancy pages cited as sources. Invisible to structural precision because they load. Harms Q3 and §9a failure mode 2.",
+    "confirmed": [
+     "shortfall against promised 10 reproduces on real companies in two countries",
+     "a main recommendation shipped with a link already marked broken"
+    ]
+   }
+  },
+  {
+   "date": "2026-08-01",
+   "cycle": 2,
+   "label": "blind — review session could not reach the deployed app",
+   "commit": "a2ae123",
+   "source": "none live. /admin/quality.json, /admin/stats and /health?deep=1 all unreachable from this session; offline re-derivation via eval/score_stored.py only",
+   "headline": "Second consecutive cycle with no live reading, from a different cause. Cycle 1: database paused. Cycle 2: web_fetch provenance-restricted and no Chrome browser connected. App and instrument both verified sound at code level; 187 tests green.",
+   "real_runs": {
+    "count": null,
+    "completed": null,
+    "stalled": null,
+    "structural_precision": null,
+    "main_count_mean": null,
+    "broken_link_rate": null,
+    "convergence_exact": null,
+    "feedback_mean": null,
+    "feedback_n": null,
+    "note": "Unreadable. No real user output from this fortnight was inspected; the two runs read in cycle 1 predate this window."
+   },
+   "benchmark": {
+    "ran": null,
+    "reason": "unknown — policy dictated ~4 runs before 06:00 UTC on 1 August, but benchmark.cycles could not be read. Ran / suppressed / never fired are indistinguishable from here. ~US$2.30 possibly spent invisibly.",
+    "per_case": {
+     "thermify": {
+      "runs": 16,
+      "date_range": [
+       "2026-05-30",
+       "2026-07-06"
+      ],
+      "structural_precision": 0.777,
+      "structural_precision_restated_from": 0.805,
+      "restatement_reason": "identical stored inputs, stricter scorer: quality.link_authority shipped in a2ae123 and detects 3 non_authoritative_link defects the previous scorer could not see. Not a regression. 0.777 is the honest baseline from here; comparisons against 0.805 compare two different rulers.",
+      "main_count_mean": 4.312,
+      "main_count_range": [
+       2,
+       9
+      ],
+      "watchlist_count_mean": 9.75,
+      "tier_concentration": 0.608,
+      "specific_link_rate": 0.645,
+      "broken_link_rate": 0.1,
+      "recall_mean": 0.775,
+      "exclusion_accuracy_mean": 0.844,
+      "convergence_exact": 0.156,
+      "convergence_family": 0.142,
+      "defect_totals": {
+       "broken_link": 9,
+       "non_authoritative_link": 3,
+       "trl_mismatch": 2,
+       "homepage_only_link": 2
+      },
+      "source": "eval/score_stored.py over stored runs, all dated on or before 2026-07-06 — every one predates the a2ae123 gates",
+      "carried_forward": true
+     },
+     "germandeeptech": {
+      "runs": 1,
+      "date_range": [
+       "2026-07-04",
+       "2026-07-04"
+      ],
+      "structural_precision": 1.0,
+      "recall_mean": 1.0,
+      "exclusion_accuracy_mean": 1.0,
+      "main_count_range": [
+       5,
+       5
+      ],
+      "broken_link_rate": 0.235,
+      "tier_concentration": 0.6,
+      "convergence_exact": null,
+      "convergence_family": null,
+      "carried_forward": true
+     }
+    }
+   },
+   "verified": [
+    {
+     "change": "Proposal 1 — eligibility as a hard gate",
+     "shipped_commit": "a2ae123",
+     "expected": "exclusion accuracy >= 0.98; zero must_not_appear violations",
+     "observed": null,
+     "verdict": "shipped as specified; effect not measurable",
+     "code_check": "_violates_declared_eligibility + _enforce_routing_rules run after scoring; describe classes of restriction, name no funder, per CLAUDE.md"
+    },
+    {
+     "change": "Proposal 2 — never recommend a known-broken link",
+     "shipped_commit": "a2ae123",
+     "expected": "broken-link rate < 0.02; specific-link rate > 0.85",
+     "observed": null,
+     "verdict": "shipped as specified, via the recommended option (b then a): one re-check, then demote",
+     "code_check": "_apply_recommendation_gates with _check_one_link retry"
+    },
+    {
+     "change": "Proposal 5 — require a funder-owned source",
+     "shipped_commit": "a2ae123",
+     "expected": "zero social/aggregator domains in main; link_authority rate > 0.9",
+     "observed": "detector confirmed working on historical data: 3 non_authoritative_link defects found across 17 stored runs",
+     "verdict": "shipped as specified; detection verified offline, effect on live output not measurable"
+    },
+    {
+     "change": "Proposal 3 — shortlist volume",
+     "shipped_commit": "a2ae123",
+     "expected": "main-list median >= 8 with structural precision not falling",
+     "observed": null,
+     "verdict": "diagnosed not fixed, as recommended; pipeline_funnel instrumentation traced end to end and confirmed complete (analyzer.py:2729-2832 -> db.py results_json JSONB -> main.py:997)"
+    },
+    {
+     "change": "Proposal 4 — widen the ground-truth bench",
+     "shipped_commit": null,
+     "expected": ">= 5 real completed runs readable next cycle",
+     "observed": null,
+     "verdict": "deferred as recommended, awaiting soft launch"
+    }
+   ],
+   "regressions": [],
+   "proposals_open": [
+    {
+     "id": 1,
+     "summary": "Make each cycle's measurements survive the session that took them",
+     "status": "BUILT 2026-08-01, awaiting push by Thomas",
+     "solution": "GitHub Actions workflow (.github/workflows/quality-snapshot.yml) snapshots /admin/quality.json and /health?deep=1 daily at 07:00 UTC and commits reports/snapshots/quality-YYYY-MM-DD.json. The review reads a committed file: no network, no token, no secret in any prompt. Read path is snapshots.py + eval/read_snapshots.py, covered by tests/test_snapshots.py.",
+     "rejected_alternative": "Putting the real tokenised admin URL in the scheduled-task file so web_fetch's provenance check would accept it. Thomas rejected it: a secret must never travel through a prompt. That constraint makes any authenticated pull structurally impossible, which is what forced the CI answer. Do not re-propose it.",
+     "requires_from_thomas": "Add ADMIN_TOKEN as a GitHub repository secret (LAUNCH_SETUP.md §3). Until then the workflow fails daily and emails him.",
+     "verification": "cycle 3 reports live figures read from reports/snapshots/, with staleness_days <= 2 and no web_fetch or browser involved"
+    },
+    {
+     "id": 2,
+     "summary": "Make 'did the benchmark fire?' answerable without the admin endpoint",
+     "status": "BUILT 2026-08-01, awaiting push by Thomas",
+     "solution": "The snapshot carries the whole quality payload, benchmark.cycles included, so the cycle decision and its cost land in a committed file every morning.",
+     "verification": "cycle 3 states the 15 August benchmark decision and its cost from reports/snapshots/"
+    },
+    {
+     "id": 3,
+     "summary": "Generalise discovery beyond named UK funders (analyzer.py:269-289, :575)",
+     "recommended": "wait for funnel counters, then fix the cause",
+     "verification": "longlist size for non-UK companies within 20% of UK ones; main-list count no longer correlated with HQ country"
+    },
+    {
+     "id": 4,
+     "summary": "Decide what WATCHLIST_CAP means — enforce it or delete it (analyzer.py:190)",
+     "recommended": "option (a), enforce at 10",
+     "decision": {
+      "date": "2026-08-01",
+      "by": "Thomas",
+      "chosen": "option (b) — raise WATCHLIST_CAP to 20 and enforce it",
+      "status": "APPROVED, NOT YET IMPLEMENTED — do not build until Thomas says go",
+      "reasoning": "The main shortlist is currently too short to be useful, so information should not be discarded from the watchlist to make the output look tidier. A watchlist can run longer than 10 and still be useful to a reader; the binding problem is the 3-5 item main list, not the length of the tail.",
+      "overrides": "my recommendation of a cap at 10"
+     },
+     "implementation_notes": "Enforce AFTER all five watchlist entrances, not at any one of them: triage (the only path that currently applies STRONG_FIT_MIN), _enforce_routing_rules, _validate_application_specificity, _rescue_missing_partner_items, and _apply_recommendation_gates. Rank by initial_thematic_fit, which is already backfilled onto watchlist rows at analyzer.py:2857. Consider also _MAX_TRIAGE_SEARCHES (analyzer.py:191), declared and never used — same dead-constant family.",
+     "verification": "watchlist median <= 20; main-list count unchanged"
+    },
+    {
+     "id": 5,
+     "summary": "Mount the launch plan folder so cycles can read §9a from source",
+     "verification": "cycle 3 quotes §9a from source"
+    }
+   ],
+   "carried_forward": [
+    "Cycle 1 proposal 3 (10 promised vs 4-5 delivered) remains undecided. Its diagnosis recommended option D (wait for funnel counters) with option C (fix the promise copy) as a free interim. Neither actioned."
+   ],
+   "plumbing_built_this_cycle": {
+    "summary": "Replaced the review's live-network read path with committed daily snapshots. Root cause of both blind cycles was the same: the reviewer depended on making a live authenticated network call at the moment of review.",
+    "artefacts": [
+     ".github/workflows/quality-snapshot.yml — daily 07:00 UTC, ADMIN_TOKEN from GitHub Actions secrets, commits reports/snapshots/quality-YYYY-MM-DD.json",
+     "snapshots.py — offline read library: health_report, staleness_days, series, movement",
+     "eval/read_snapshots.py — CLI; exits non-zero when the newest usable snapshot is missing or >2 days old",
+     "tests/test_snapshots.py — 31 tests, weighted toward the not-measuring cases",
+     "reports/snapshots/README.md, LAUNCH_SETUP.md §3"
+    ],
+    "properties": [
+     "A failed fetch is still committed with its HTTP status, so an outage is data rather than a gap",
+     "Daily commits are the activity that prevents GitHub's 60-day auto-disable of scheduled workflows, so the mechanism cannot be killed by the quiet fortnights it covers",
+     "A bad snapshot exits non-zero, so GitHub emails Thomas — the alarm missing from both blind cycles"
+    ],
+    "tests": "218 green, up from 187",
+    "pushed": false
+   },
+   "also_shipped": {
+    "change": "Removed the results email at Thomas's instruction",
+    "reason": "The landing page promised 'Email me my results when they're ready — you can safely lock your screen'. The app never sent a single message: RESEND_API_KEY and RESEND_FROM_EMAIL were never set in Railway and were never listed in LAUNCH_SETUP.md, and the send path returned silently when either was missing. Anyone who left an address and locked their phone got nothing, invisibly.",
+    "detail": "Address field retained for the grant-deadline digest only, and stored only with that consent. Capacity and waitlist copy now promise a human, not an automated send. email_sender.py left as a tombstone pending git rm (sandbox cannot delete files). NoResultsEmailTest added so the promise cannot return by accident.",
+    "pushed": false
+   },
+   "blockers": [
+    "RESOLVED BY THIS CYCLE'S BUILD (pending push): review session cannot reach the deployed app — web_fetch refuses URLs not in its provenance set (admin URLs were supplied with a <TOKEN> placeholder), and Claude-in-Chrome has no connected browser. The sandbox shell cannot reach it either. Snapshots remove the need for any of these.",
+    "Cannot commit or push from this sandbox: .git/index.lock cannot be removed (Operation not permitted on the mount) and there are no GitHub credentials. No plumbing fix could ship this cycle.",
+    "GRANT_ANALYZER_LAUNCH_PLAN.md is not mounted; §9a applied from cycle 1's summaries rather than from source.",
+    "The improvement loop has now run twice and has never once completed a verification step."
+   ]
+  },
+  {
+   "date": "2026-08-15",
+   "cycle": 3,
+   "label": "first cycle that measured cleanly, and the first to complete a verification",
+   "commit": "ae0db5d",
+   "source": "reports/snapshots/quality-2026-08-14.json (staleness 1 day)",
+   "headline": "Snapshot pipeline worked. Main list is now fully defensible — 36/36 recommendations across 8 runs have working, specific, funder-owned links and zero eligibility defects — but it is 5 items against a promised 10, and its composition is near-random between repeat runs of the same company (exact convergence 0.000, family 0.061, nothing in every run).",
+   "snapshot_health": {
+    "verdict": "measuring, with gaps",
+    "blind": false,
+    "staleness_days": 1,
+    "missing_in_window": [
+     "2026-08-12",
+     "2026-08-13",
+     "2026-08-15"
+    ],
+    "failed_in_window": [
+     {
+      "date": "2026-08-02",
+      "http_status": "no-token"
+     }
+    ],
+    "gap_cause": "12-14 Aug: the snapshot job failed with 'jq: Argument list too long' as the 14-day report passed the 128 KB argv ceiling. Diagnosed and fixed by Thomas in 2d314f1 on 14 August; the 14 Aug snapshot was taken by hand at 14:10 UTC after the fix. 2 Aug: ADMIN_TOKEN secret not yet set. 15 Aug absent from the local folder — unsynced working copy, not necessarily a failed run."
+   },
+   "real_runs": {
+    "count": 8,
+    "completed": 8,
+    "started": 8,
+    "stalled": 0,
+    "failed": 0,
+    "structural_precision": 1.0,
+    "main_count_mean": 4.5,
+    "main_count_range": [
+     1,
+     7
+    ],
+    "main_count_mean_post_2026_08_03": 5.0,
+    "main_count_median_post_2026_08_03": 5,
+    "watchlist_count_mean": 21.125,
+    "watchlist_count_post_cap": [
+     20,
+     20,
+     20,
+     20,
+     20,
+     20,
+     20
+    ],
+    "broken_link_rate_combined": 0.09,
+    "broken_link_rate_main": 0.0,
+    "broken_links_in_main": 0,
+    "broken_links_demoted_to_watchlist": 19,
+    "specific_link_rate_combined": 0.694,
+    "specific_link_rate_main": 1.0,
+    "link_authority_rate_combined": 0.9,
+    "link_authority_rate_main": 1.0,
+    "tier_concentration": 0.673,
+    "distinct_tiers": 2.375,
+    "convergence_exact": 0.0,
+    "convergence_family": 0.061,
+    "convergence_in_every_run": 0,
+    "convergence_distinct_across_runs": 24,
+    "convergence_companies": 1,
+    "convergence_runs": 5,
+    "feedback_mean": null,
+    "feedback_n": 0,
+    "mean_cost_usd": 0.577,
+    "total_cost_usd": 4.61,
+    "companies": [
+     "F2F Systems (Fork to Field) x6",
+     "Resilio Bio",
+     "Resilio"
+    ],
+    "note": "Main-scoped link figures were re-derived in this session from the snapshot's own per-item link_status and link fields; the deployed app reported only the combined figures. The main-scoped measures were added to quality.py this cycle so the next cycle reads them directly."
+   },
+   "benchmark": {
+    "ran": false,
+    "reason": "suppressed — 8 real completed runs in the last 14 days. Working as designed; benchmark_cost_usd 0.",
+    "policy_seen": {
+     "enabled": true,
+     "cycle_days": [
+      1,
+      15
+     ],
+     "repeats": 2,
+     "max_runs": 4,
+     "suppressed_by_real_runs": 1
+    },
+    "per_case": {},
+    "note": "The 15 August decision is not in the 14 August snapshot. The 1 August cycle is recorded as 'skipped: suppressed — 2 real completed run(s)', followed by eleven 'cycle already handled' entries logged every 30 minutes. Harmless, but it makes benchmark.cycles hard to read."
+   },
+   "verified": [
+    {
+     "change": "Cycle 2 proposal 1 — make each cycle's measurements survive the session that took them (daily snapshot workflow)",
+     "shipped_commit": "9d2006a",
+     "expected": "cycle 3 reports live figures read from reports/snapshots/, staleness_days <= 2, no web_fetch or browser involved",
+     "observed": "staleness 1 day; every figure in this cycle read from a committed file; no network call attempted",
+     "verdict": "worked"
+    },
+    {
+     "change": "Cycle 2 proposal 2 — make 'did the benchmark fire?' answerable without the admin endpoint",
+     "shipped_commit": "9d2006a",
+     "expected": "cycle 3 states the benchmark decision and its cost from reports/snapshots/",
+     "observed": "benchmark.policy and benchmark.cycles read from the snapshot; 1 August suppressed by real runs, benchmark_cost_usd 0",
+     "verdict": "worked"
+    },
+    {
+     "change": "Cycle 2 proposal 4 (Thomas's option b) — raise WATCHLIST_CAP to 20 and enforce it after all five entrances",
+     "shipped_commit": "7a8bfa3",
+     "expected": "watchlist median <= 20; main-list count unchanged",
+     "observed": "all 7 post-change runs have watchlist exactly 20 (funnel shows watchlist_before_cap 21-28 trimmed to 20); the single 29 in the window is the 31 July run, which predates the change. Main count rose rather than fell.",
+     "verdict": "worked"
+    },
+    {
+     "change": "Keep between-rounds programmes in the shortlist; require the scorer to place every item",
+     "shipped_commit": "2a7f958",
+     "expected": "main-list count recovers toward the promised 10",
+     "observed": "main count mean 5.0 and median 5 across the 7 post-change runs, against 4.0 in cycle 1 and 1 in the single pre-change run in this window. Structural precision held at 1.000.",
+     "verdict": "worked, partially — the direction is right and precision did not pay for it, but 5 of 10 is still half the promise"
+    },
+    {
+     "change": "Cycle 1 proposal 2 — never recommend a programme whose link is known broken",
+     "shipped_commit": "a2ae123",
+     "expected": "broken-link rate < 0.02; specific-link rate > 0.85",
+     "observed": "zero broken links in 36 main recommendations across 8 runs, and 19 broken links correctly demoted to watchlists. Main-scoped specific-link rate 1.000. The stated target was written against the combined main+watchlist figure, which reads 0.09 and 0.694 — a measure that rises when the gate succeeds.",
+     "verdict": "worked; the verification measure was wrong, and was corrected this cycle"
+    },
+    {
+     "change": "Cycle 1 proposal 5 — require a funder-owned source for every main recommendation",
+     "shipped_commit": "a2ae123",
+     "expected": "zero social/aggregator domains in main; link_authority rate > 0.9",
+     "observed": "36/36 main recommendations classify as funder-owned; zero third-party links in main. Combined figure 0.900, dragged down by the watchlist and by 6 unclassifiable links in the 14 August run.",
+     "verdict": "worked"
+    },
+    {
+     "change": "Cycle 1 proposal 1 — eligibility as a hard gate",
+     "shipped_commit": "a2ae123",
+     "expected": "exclusion accuracy >= 0.98; zero must_not_appear violations",
+     "observed": "structural precision 1.000 across all 8 runs with zero defensibility failures and zero offenders. Exclusion accuracy proper needs ground truth, which real runs do not carry, so this is the weaker structural check.",
+     "verdict": "worked on the evidence available; exclusion accuracy still unverified"
+    },
+    {
+     "change": "Cycle 1 proposal 4 — widen the ground-truth bench beyond two companies",
+     "shipped_commit": null,
+     "expected": ">= 5 real completed runs readable next cycle",
+     "observed": "8 real completed runs readable, but across only 3 company identities and dominated by one firm run six times",
+     "verdict": "met on volume, not on breadth"
+    },
+    {
+     "change": "Cycle 2 proposal 5 — mount the launch plan folder so cycles can read §9a from source",
+     "shipped_commit": null,
+     "expected": "cycle 3 quotes §9a from source",
+     "observed": "the folder is still not mounted; §9a applied from cycle 1 and 2 summaries and from the property names encoded in quality.py",
+     "verdict": "not done — carried forward for a third cycle"
+    }
+   ],
+   "regressions": [
+    {
+     "measure": "link_authority_rate (combined)",
+     "from": 0.926,
+     "to": 0.708,
+     "window": "3 August to 14 August, single most recent run",
+     "confidence": "low",
+     "diagnosis": "6 of 24 links in the 14 August run classify as authority 'unknown' rather than 'funder' or 'third_party'. No code shipped between 3 and 14 August that touches link_authority, so this most likely reflects the programmes that run surfaced rather than a change in the app. Main-scoped authority was 1.000 in the same run. Watch rather than act.",
+     "action": "none — flagged for next cycle"
+    }
+   ],
+   "proposals_open": [
+    {
+     "id": 1,
+     "summary": "Split /admin/quality.json so the health check does not need a credential that guards user data",
+     "carried_from": "the scheduled-task brief, every cycle",
+     "status": "still not built; carry forward until Thomas decides"
+    },
+    {
+     "id": 2,
+     "summary": "Score the ~24 discovered programmes per run that are never scored (longlist 28-34 to scored 5-8)",
+     "verification": "scored count >= 15 per run; main-list median >= 8 with structural precision not falling below 0.95"
+    },
+    {
+     "id": 3,
+     "summary": "Fix the promise: the page offers 10 and the app has never delivered more than 7",
+     "verification": "shortfall field in assessment.shape reaches 0 for a majority of runs, by either route"
+    },
+    {
+     "id": 4,
+     "summary": "Treat zero convergence as a retrieval fault: make discovery deterministic in coverage rather than in results",
+     "verification": "family convergence above 0.35 with distinct_across_runs falling; exact convergence reported alongside as the check"
+    },
+    {
+     "id": 5,
+     "summary": "Find out why 8 completed runs produced 0 feedback responses",
+     "verification": ">= 3 feedback responses in the next fortnight, or a named reason why not"
+    }
+   ],
+   "plumbing_fixed_this_cycle": {
+    "summary": "The instrument was reading five field names the app has never emitted, scoring the recommendation gates on a population they do not govern, and dropping runs from the convergence sample.",
+    "artefacts": [
+     "eval/read_snapshots.py — headline paths corrected; convergence and schema-drift reporting added",
+     "snapshots.py — convergence_summary() and unresolved_measures()",
+     "quality.py — link_quality reports main and watchlist blocks; summarise carries main-scoped link measures; company_key() normalises scheme, www and trailing slash and falls back to an exact company name",
+     "tests/test_snapshots.py — fixture replaced with a real payload shape; HeadlineSchemaTest and ConvergenceSummaryTest added",
+     "tests/test_quality.py — MainScopedLinkTest and grouping tests",
+     ".gitattributes — normalise the repository to LF"
+    ],
+    "tests": "265 green, up from 251",
+    "pushed": false,
+    "blocker": ".git/index.lock cannot be removed on this mount and the sandbox has no GitHub credentials, so the changes sit uncommitted in the working folder. Same blocker as cycle 2."
+   },
+   "blockers": [
+    "GRANT_ANALYZER_LAUNCH_PLAN.md is still not mounted. Three cycles have now judged output against a standard read second-hand.",
+    "Zero feedback responses from 8 completed runs, so the Phase 1 exit gate (>= 3.5/5 across >= 8 responses) has no evidence at all against it.",
+    "The convergence sample is one company. Everything said about retrieval churn rests on six runs of a single UK biochar firm.",
+    "Real runs carry no ground truth, so recall and exclusion accuracy remain unverified since 6 July.",
+    "This session cannot commit or push."
+   ]
+  },
+  {
+   "date": "2026-09-01",
+   "cycle": 4,
+   "label": "blind for quality; the fortnight's story is a 13-hour total outage, fixed by Thomas, and a snapshot pipeline that has been silent since 29 August",
+   "commit": "3ee13cb",
+   "source": "reports/snapshots/quality-2026-08-28.json (staleness 4 days) + reports/digest-2026-09-01.md (Supabase, same day)",
+   "snapshot_health": {
+    "verdict": "blind — newest usable snapshot 4 days old; no snapshot at all on 2026-08-29 through 2026-09-01",
+    "blind": true,
+    "staleness_days": 4,
+    "missing_in_window": [
+     "2026-08-29",
+     "2026-08-30",
+     "2026-08-31",
+     "2026-09-01"
+    ],
+    "failed_in_window": [],
+    "gap_cause": "unknown from this session — the 29 Aug 07:00 UTC snapshot commit is absent even though Thomas's 08:27 UTC commit that morning is present locally, so the workflow most likely stopped committing on 29 Aug rather than the folder being unsynced. GitHub Actions status could not be checked (no GitHub access from the sandbox)."
+   },
+   "real_runs": {
+    "count": 0,
+    "completed": 0,
+    "started": 0,
+    "stalled": 0,
+    "failed": 0,
+    "structural_precision": null,
+    "main_count_mean": null,
+    "broken_link_rate": null,
+    "convergence_exact": null,
+    "feedback_mean": null,
+    "feedback_n": 0,
+    "note": "Snapshot window (14 to 28 Aug) held zero runs. Outside it, per the same-day Supabase digest: 6 started 25 Aug-1 Sep, 5 failed in the 28-29 Aug outage, 1 completed post-fix (3 main-list opportunities, $0.49). No per-item quality data for that run is readable without a snapshot."
+   },
+   "benchmark": {
+    "ran": null,
+    "reason": "1 Sep is a cycle day but its snapshot is missing. Expected outcome: suppressed by the single real completed run of 29 Aug (suppressed_by_real_runs = 1). Unverifiable this session.",
+    "per_case": {}
+   },
+   "verified": [
+    {
+     "change": "Emergency fix — pin anthropic SDK <1.0 after 1.x removed temperature and broke every analysis",
+     "shipped_commit": "3ee13cb",
+     "expected": "analyses complete again",
+     "observed": "5 identical failures up to 08:17 UTC 29 Aug; fix committed 08:27; next run completed 08:36. No failures since.",
+     "verdict": "worked"
+    },
+    {
+     "change": "Cycle 3 plumbing — main-scoped measures in quality.py, funnel scored_total in analyzer.py, corrected reader paths, tests",
+     "shipped_commit": null,
+     "expected": "cycle 4 reads main-scoped link measures directly from the snapshot",
+     "observed": "never committed — the 15 Aug session could not remove .git/index.lock and Thomas has not yet run the commit steps from health-2026-08-15.md §9. All changes still sit uncommitted in the local folder.",
+     "verdict": "not shipped"
+    }
+   ],
+   "regressions": [
+    {
+     "measure": "availability (completion rate)",
+     "from": "8/8 completed in the 15 Aug window",
+     "to": "1/6 completed 25 Aug-1 Sep",
+     "window": "28-29 Aug, 13 hours",
+     "confidence": "high",
+     "diagnosis": "requirements.txt had anthropic unpinned (>=0.40.0); a Railway rebuild installed 1.0, which rejects temperature. Fixed by 3ee13cb. Two real users saw a raw Python error and have not returned.",
+     "resolved": true
+    },
+    {
+     "measure": "snapshot pipeline",
+     "from": "daily files through 2026-08-28",
+     "to": "nothing since",
+     "window": "2026-08-29 onward",
+     "confidence": "high",
+     "diagnosis": "GitHub Actions workflow stopped producing commits; cause not visible from this session.",
+     "resolved": false
+    }
+   ],
+   "blockers": [
+    "Stale .git/index.lock in the mounted folder cannot be removed by the sandbox, so nothing can be committed from review sessions until Thomas deletes it.",
+    "GRANT_ANALYZER_LAUNCH_PLAN.md (the §9a standard) was not mounted; this cycle judged against the copy of its criteria quoted in health-2026-08-15.md.",
+    "GitHub Actions status unreachable from the sandbox."
+   ],
+   "proposals_carried_forward": [
+    1,
+    2,
+    3,
+    4,
+    5
+   ],
+   "proposals_new": [
+    {
+     "n": 6,
+     "title": "Replace the raw server error shown to users with plain-English copy (frontend/index.html:1334)"
+    },
+    {
+     "n": 7,
+     "title": "Pin all production dependencies and make the snapshot workflow fail loudly (issue/email) when the app errors or the workflow stops"
+    }
+   ]
+  },
+  {
+   "date": "2026-09-15",
+   "cycle": 5,
+   "label": "sighted after a false-blind first pass; output quality strong (precision 1.000, 39/39 clean main links) but retrieval convergence near-zero on live data; the 'pipeline dead' alarm was a stale local folder, not a dead workflow",
+   "commit": null,
+   "commit_note": "repo commit unreadable — this session's sandbox shell would not start (Windows-update mount failure), so git could not be run. Snapshot read instead from origin/main via GitHub browser access, granted mid-session at Thomas's prompt.",
+   "source": "reports/snapshots/quality-2026-09-15.json, read from origin/main on GitHub (staleness 0 days). The local working copy's newest snapshot was 2026-08-28 (18 days stale); the first pass of this cycle wrongly reported blind from it.",
+   "correction": "First pass of cycle 5 read the local folder, saw no snapshot after 28 Aug, and — following cycle 4 — reported the cycle blind and the snapshot pipeline dead. Both were wrong. GitHub has committed a snapshot every day (workflow run #48 by 16 Sep). The blindness was a local checkout unpulled for 18 days. Cycle 4's 'workflow stopped committing' diagnosis is retracted here.",
+   "snapshot_health": {
+    "verdict": "measuring cleanly (read from origin); local folder stale",
+    "blind": false,
+    "staleness_days": 0,
+    "staleness_days_local_folder": 18,
+    "missing_in_window": [],
+    "failed_in_window": [],
+    "gap_cause": "No pipeline gap. The GitHub Actions workflow committed reports/snapshots/quality-YYYY-MM-DD.json every day from 29 Aug through 16 Sep. The local grant-analyzer working copy had not run git pull since ~28 Aug, so review sessions reading the local folder saw stale data. The weekly Supabase digests are written directly into the local folder by a separate Cowork task, which is why current digests coexisted with 18-day-old snapshots and misled cycle 4 and this cycle's first pass."
+   },
+   "real_runs": {
+    "count": 6,
+    "completed": 6,
+    "started": 6,
+    "stalled": 0,
+    "failed": 0,
+    "structural_precision": 1.0,
+    "main_count_mean": 6.5,
+    "main_count_range": [4, 10],
+    "main_count_per_run": {"Notpla_a": 10, "Notpla_b": 5, "Buraanbur Sahlan": 4, "Natural Negative": 7, "Coastal Biotech": 5, "GRF Tech": 8},
+    "main_links_total": 39,
+    "broken_links_in_main": 0,
+    "third_party_links_in_main": 0,
+    "broken_rate_combined": 0.073,
+    "specific_link_rate_combined": 0.788,
+    "link_authority_rate_combined": 0.952,
+    "watchlist_count_mean": 18.833,
+    "watchlist_per_run": [20, 20, 20, 20, 20, 13],
+    "tier_concentration": 0.417,
+    "distinct_tiers": 3.667,
+    "convergence_exact": 0.071,
+    "convergence_family": 0.154,
+    "convergence_scope": "main; Notpla only, 2 runs, sizes [5,10], in_every_run 1 (exact) / 2 (family)",
+    "convergence_all_scope_exact": 0.058,
+    "convergence_all_scope_family": 0.231,
+    "feedback_mean": null,
+    "feedback_n": 0,
+    "mean_cost_usd": 0.6,
+    "total_cost_usd": 3.6,
+    "benchmark_cost_usd": 0,
+    "companies": [
+     "Notpla (3 Sep, x2: 10 then 5)",
+     "Buraanbur Sahlan (3 Sep)",
+     "Natural Negative (10 Sep)",
+     "Coastal Biotech (10 Sep)",
+     "GRF Tech (12 Sep)"
+    ],
+    "note": "Main list fully defensible on live September output: 39 recommendations, 0 broken, 0 third-party, all link_status 'verified'. Two runs read in full (Notpla 10-item, GRF Tech 8-item) — real, current, eligible programmes with the major funders (Horizon Europe, Innovate UK, EIC) present; passes the credibility test. Weakness confirmed on per-item data: Notpla run twice returned near-disjoint lists (exact Jaccard 0.071), so retrieval churn (cycle 3 zero-convergence) is unresolved. App declared blind_spots: []."
+   },
+   "benchmark": {
+    "ran": false,
+    "reason": "suppressed — 6 real completed runs in the last 14 days (suppressed_by_real_runs = 1). Working as designed; benchmark_cost_usd 0. Events table clear of benchmark_cycle spam per digest 09-14.",
+    "per_case": {}
+   },
+   "verified": [
+    {
+     "change": "Cycle 4 emergency SDK pin (anthropic <1.0)",
+     "shipped_commit": "3ee13cb",
+     "expected": "analyses complete again",
+     "observed": "6 completed runs, 0 failures across the 1-15 Sep window; usage.failed = 0 in the snapshot",
+     "verdict": "worked, and sustained"
+    },
+    {
+     "change": "Cycle 1/3 gates (eligibility hard gate, no-broken-link, funder-owned source, watchlist cap 20) re-verified on fresh live output",
+     "shipped_commit": "a2ae123 / 7a8bfa3 / 2a7f958",
+     "expected": "precision high; 0 broken and 0 third-party in main; watchlist capped",
+     "observed": "structural precision 1.000; 0 of 39 broken in main; 0 of 39 third-party in main; watchlist five runs at 20, one at 13",
+     "verdict": "worked, on live September data"
+    },
+    {
+     "change": "Cycle 4 plumbing — silence false SCHEMA DRIFT alarm on zero-run snapshots",
+     "shipped_commit": "committed by Thomas (PROJECT_LOG Timeline 2026-09-01)",
+     "expected": "drift check quiet on a zero-run window",
+     "observed": "September window has 6 runs so not exercised; snapshot declares blind_spots: []",
+     "verdict": "shipped as specified; not exercised this window"
+    },
+    {
+     "change": "Cycle 4 proposal 6 — plain-English error copy",
+     "shipped_commit": null,
+     "expected": "no raw exception text shown to users",
+     "observed": "not built — frontend/index.html:1334 still logs 'ERROR: ' + err.message",
+     "verdict": "not shipped — awaiting decision"
+    }
+   ],
+   "regressions": [
+    {
+     "measure": "snapshot pipeline (cycle 4's claimed regression)",
+     "status": "RETRACTED",
+     "diagnosis": "Not a regression. The workflow committed a snapshot every day through 16 Sep. Cycle 4 and this cycle's first pass read a local folder unpulled for 18 days and mistook it for a dead pipeline. Fix is to read from origin (proposal 8) or pull before reviewing.",
+     "resolved": true
+    }
+   ],
+   "proposals_open": [
+    {"id": 1, "summary": "Split /admin/quality.json into an aggregate-only endpoint with a low-value token", "status": "carried every cycle; still not built; recommended"},
+    {"id": 2, "summary": "Deep-research more than 10 candidates so scored output can reach 10", "status": "carried"},
+    {"id": 3, "summary": "Fix the '10 opportunities' promise copy to match delivery", "status": "carried; cheap interim to P2"},
+    {"id": 4, "summary": "Deterministic query spine to attack near-zero convergence at retrieval", "status": "carried; confirmed on live data (Notpla Jaccard 0.071); never via caching"},
+    {"id": 5, "summary": "Move the feedback ask to the download click and instrument it", "status": "carried; highest-value — 0 feedback in 36 runs / 14 weeks blocks the Phase 1 gate"},
+    {"id": 6, "summary": "Plain-English error copy at frontend/index.html:1334", "status": "carried; confirmed not built"},
+    {"id": 7, "summary": "Pin all requirements.txt and add a snapshot/health watchdog that emails Thomas", "status": "carried"},
+    {"id": 8, "summary": "Make the review read the snapshot from origin (or pull first), so a stale local folder cannot cause false blindness", "status": "NEW this cycle; recommended; would be plumbing but sandbox down so proposed not built", "verification": "an un-pulled local folder still yields a correctly-measured cycle, or a message naming the unsynced folder rather than 'blind / pipeline dead'"}
+   ],
+   "plumbing_fixed_this_cycle": {
+    "summary": "None. This session's sandbox shell would not start (Windows-update mount failure), so tests could not run and nothing could be committed. The current snapshot was read from origin via GitHub browser access (read-only; nothing written to GitHub).",
+    "pushed": false
+   },
+   "blockers": [
+    "Local grant-analyzer folder is 18 days behind origin/main; needs git pull. Until the review reads from origin (proposal 8) or the folder is pulled first, a stale checkout keeps causing false-blind cycles.",
+    "This session's sandbox shell would not start, so no tests, no read_snapshots.py, no commit/push; report and history sit uncommitted in the local folder for Thomas to commit.",
+    "Zero feedback in 36 runs across 14 weeks — Phase 1 exit gate has no evidence and structurally cannot get any until the feedback ask moves.",
+    "GRANT_ANALYZER_LAUNCH_PLAN.md still not mounted; §9a applied second-hand for the fourth cycle.",
+    "Real runs still carry no ground truth, so recall and exclusion accuracy remain unverified since 6 July."
+   ]
+  }
+ ]
 }
