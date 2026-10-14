@@ -1,7 +1,7 @@
 {
   "schema": 1,
-  "date": "2026-10-13",
-  "fetched_at": "2026-10-13T14:44:59Z",
+  "date": "2026-10-14",
+  "fetched_at": "2026-10-14T12:36:39Z",
   "source": "/admin/quality.json?days=14",
   "http_status": "200",
   "ok": true,
@@ -12,7 +12,7 @@
     "message": "ok"
   },
   "quality": {
-    "generated_at": "2026-10-13T14:45:03.027817+00:00",
+    "generated_at": "2026-10-14T12:36:42.465163+00:00",
     "window_days": 14,
     "app": {
       "shortlist_size": 10,
@@ -59,54 +59,6 @@
         "rule": "Benchmarks only run when a fortnight passed with no completed real user runs. Real usage is better evidence and costs nothing."
       },
       "cycles": [
-        {
-          "at": "2026-08-15T00:11:37.579288+00:00",
-          "detail": "2026-08-15 skipped: suppressed — 7 real completed run(s) in the last 14 days"
-        },
-        {
-          "at": "2026-08-15T00:41:40.290689+00:00",
-          "detail": "2026-08-15 skipped: cycle already handled"
-        },
-        {
-          "at": "2026-08-15T01:11:43.212858+00:00",
-          "detail": "2026-08-15 skipped: cycle already handled"
-        },
-        {
-          "at": "2026-08-15T01:41:46.090186+00:00",
-          "detail": "2026-08-15 skipped: cycle already handled"
-        },
-        {
-          "at": "2026-08-15T02:11:49.13763+00:00",
-          "detail": "2026-08-15 skipped: cycle already handled"
-        },
-        {
-          "at": "2026-08-15T02:41:51.841357+00:00",
-          "detail": "2026-08-15 skipped: cycle already handled"
-        },
-        {
-          "at": "2026-08-15T03:11:54.832422+00:00",
-          "detail": "2026-08-15 skipped: cycle already handled"
-        },
-        {
-          "at": "2026-08-15T03:41:56.913139+00:00",
-          "detail": "2026-08-15 skipped: cycle already handled"
-        },
-        {
-          "at": "2026-08-15T04:11:59.092644+00:00",
-          "detail": "2026-08-15 skipped: cycle already handled"
-        },
-        {
-          "at": "2026-08-15T04:42:01.234577+00:00",
-          "detail": "2026-08-15 skipped: cycle already handled"
-        },
-        {
-          "at": "2026-08-15T05:12:04.015591+00:00",
-          "detail": "2026-08-15 skipped: cycle already handled"
-        },
-        {
-          "at": "2026-08-15T05:42:06.530272+00:00",
-          "detail": "2026-08-15 skipped: cycle already handled"
-        },
         {
           "at": "2026-09-01T00:17:40.665669+00:00",
           "detail": "2026-09-01 skipped: suppressed — 1 real completed run(s) in the last 14 days"
