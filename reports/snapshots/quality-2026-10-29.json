@@ -1,0 +1,238 @@
+{
+  "schema": 1,
+  "date": "2026-10-29",
+  "fetched_at": "2026-10-29T13:54:04Z",
+  "source": "/admin/quality.json?days=14",
+  "http_status": "200",
+  "ok": true,
+  "health": {
+    "status": "ok",
+    "analysis_pipeline": "ok",
+    "analytics_database": "ok",
+    "message": "ok"
+  },
+  "quality": {
+    "generated_at": "2026-10-29T13:54:07.342952+00:00",
+    "window_days": 14,
+    "app": {
+      "shortlist_size": 10,
+      "discovery_searches": 30
+    },
+    "usage": {
+      "started": 0,
+      "completed": 0,
+      "failed": 0,
+      "stalled_or_abandoned": 0,
+      "left_email": 0
+    },
+    "economics": {
+      "runs_with_cost": 0,
+      "mean_cost_usd": null,
+      "p90_cost_usd": null,
+      "total_cost_usd": 0,
+      "benchmark_cost_usd": 0
+    },
+    "feedback": {
+      "n": 0,
+      "mean": null,
+      "comments": []
+    },
+    "real_runs": {
+      "count": 0,
+      "summary": {
+        "runs": 0
+      },
+      "convergence": {},
+      "runs": []
+    },
+    "benchmark": {
+      "policy": {
+        "enabled": true,
+        "cycle_days": [
+          1,
+          15
+        ],
+        "lookback_days": 14,
+        "repeats": 2,
+        "max_runs": 4,
+        "suppressed_by_real_runs": 1,
+        "rule": "Benchmarks only run when a fortnight passed with no completed real user runs. Real usage is better evidence and costs nothing."
+      },
+      "cycles": [
+        {
+          "at": "2026-09-01T00:17:40.665669+00:00",
+          "detail": "2026-09-01 skipped: suppressed — 1 real completed run(s) in the last 14 days"
+        },
+        {
+          "at": "2026-09-01T00:47:42.758266+00:00",
+          "detail": "2026-09-01 skipped: cycle already handled"
+        },
+        {
+          "at": "2026-09-01T01:17:45.314728+00:00",
+          "detail": "2026-09-01 skipped: cycle already handled"
+        },
+        {
+          "at": "2026-09-01T01:47:47.744246+00:00",
+          "detail": "2026-09-01 skipped: cycle already handled"
+        },
+        {
+          "at": "2026-09-01T02:17:50.193153+00:00",
+          "detail": "2026-09-01 skipped: cycle already handled"
+        },
+        {
+          "at": "2026-09-01T02:47:53.292824+00:00",
+          "detail": "2026-09-01 skipped: cycle already handled"
+        },
+        {
+          "at": "2026-09-01T03:17:55.722443+00:00",
+          "detail": "2026-09-01 skipped: cycle already handled"
+        },
+        {
+          "at": "2026-09-01T03:47:58.855812+00:00",
+          "detail": "2026-09-01 skipped: cycle already handled"
+        },
+        {
+          "at": "2026-09-01T04:18:01.714236+00:00",
+          "detail": "2026-09-01 skipped: cycle already handled"
+        },
+        {
+          "at": "2026-09-01T04:48:04.651413+00:00",
+          "detail": "2026-09-01 skipped: cycle already handled"
+        },
+        {
+          "at": "2026-09-01T05:18:07.29719+00:00",
+          "detail": "2026-09-01 skipped: cycle already handled"
+        },
+        {
+          "at": "2026-09-01T05:48:09.924835+00:00",
+          "detail": "2026-09-01 skipped: cycle already handled"
+        },
+        {
+          "at": "2026-09-15T00:06:04.537345+00:00",
+          "detail": "2026-09-15 skipped: suppressed — 6 real completed run(s) in the last 14 days"
+        },
+        {
+          "at": "2026-09-15T00:36:07.630845+00:00",
+          "detail": "2026-09-15 skipped: cycle already handled"
+        },
+        {
+          "at": "2026-09-15T01:06:10.297061+00:00",
+          "detail": "2026-09-15 skipped: cycle already handled"
+        },
+        {
+          "at": "2026-09-15T01:36:13.117048+00:00",
+          "detail": "2026-09-15 skipped: cycle already handled"
+        },
+        {
+          "at": "2026-09-15T02:06:15.559297+00:00",
+          "detail": "2026-09-15 skipped: cycle already handled"
+        },
+        {
+          "at": "2026-09-15T02:36:18.516693+00:00",
+          "detail": "2026-09-15 skipped: cycle already handled"
+        },
+        {
+          "at": "2026-09-15T03:06:20.949954+00:00",
+          "detail": "2026-09-15 skipped: cycle already handled"
+        },
+        {
+          "at": "2026-09-15T03:36:23.876219+00:00",
+          "detail": "2026-09-15 skipped: cycle already handled"
+        },
+        {
+          "at": "2026-09-15T04:06:26.917713+00:00",
+          "detail": "2026-09-15 skipped: cycle already handled"
+        },
+        {
+          "at": "2026-09-15T04:36:30.021628+00:00",
+          "detail": "2026-09-15 skipped: cycle already handled"
+        },
+        {
+          "at": "2026-09-15T05:06:32.338322+00:00",
+          "detail": "2026-09-15 skipped: cycle already handled"
+        },
+        {
+          "at": "2026-09-15T05:36:34.7673+00:00",
+          "detail": "2026-09-15 skipped: cycle already handled"
+        },
+        {
+          "at": "2026-10-01T00:18:01.371786+00:00",
+          "detail": "2026-10-01 running: no real completed runs in the last 14 days"
+        },
+        {
+          "at": "2026-10-01T02:12:00.749517+00:00",
+          "detail": "2026-10-01 done: 4/4 runs, $2.39"
+        },
+        {
+          "at": "2026-10-01T02:42:03.193375+00:00",
+          "detail": "2026-10-01 skipped: cycle already handled"
+        },
+        {
+          "at": "2026-10-01T03:12:06.21285+00:00",
+          "detail": "2026-10-01 skipped: cycle already handled"
+        },
+        {
+          "at": "2026-10-01T03:42:08.898392+00:00",
+          "detail": "2026-10-01 skipped: cycle already handled"
+        },
+        {
+          "at": "2026-10-01T04:12:11.8081+00:00",
+          "detail": "2026-10-01 skipped: cycle already handled"
+        },
+        {
+          "at": "2026-10-01T04:42:14.769851+00:00",
+          "detail": "2026-10-01 skipped: cycle already handled"
+        },
+        {
+          "at": "2026-10-01T05:12:17.306849+00:00",
+          "detail": "2026-10-01 skipped: cycle already handled"
+        },
+        {
+          "at": "2026-10-01T05:42:20.731333+00:00",
+          "detail": "2026-10-01 skipped: cycle already handled"
+        },
+        {
+          "at": "2026-10-15T00:08:32.77308+00:00",
+          "detail": "2026-10-15 running: no real completed runs in the last 14 days"
+        },
+        {
+          "at": "2026-10-15T02:37:57.792121+00:00",
+          "detail": "2026-10-15 done: 4/4 runs, $2.46"
+        },
+        {
+          "at": "2026-10-15T03:08:00.462291+00:00",
+          "detail": "2026-10-15 skipped: cycle already handled"
+        },
+        {
+          "at": "2026-10-15T03:38:03.431758+00:00",
+          "detail": "2026-10-15 skipped: cycle already handled"
+        },
+        {
+          "at": "2026-10-15T04:08:05.907052+00:00",
+          "detail": "2026-10-15 skipped: cycle already handled"
+        },
+        {
+          "at": "2026-10-15T04:38:08.099679+00:00",
+          "detail": "2026-10-15 skipped: cycle already handled"
+        },
+        {
+          "at": "2026-10-15T05:08:10.691576+00:00",
+          "detail": "2026-10-15 skipped: cycle already handled"
+        },
+        {
+          "at": "2026-10-15T05:38:12.824516+00:00",
+          "detail": "2026-10-15 skipped: cycle already handled"
+        }
+      ],
+      "count": 0,
+      "summary": {
+        "runs": 0
+      },
+      "convergence": {},
+      "runs": []
+    },
+    "blind_spots": [
+      "No completed analyses of any kind in the window — nothing to measure. Check whether the self-benchmark fired (see benchmark.cycles below)."
+    ]
+  }
+}
