@@ -1,7 +1,7 @@
 {
   "schema": 1,
-  "date": "2026-11-02",
-  "fetched_at": "2026-11-02T16:46:17Z",
+  "date": "2026-11-03",
+  "fetched_at": "2026-11-03T14:49:06Z",
   "source": "/admin/quality.json?days=14",
   "http_status": "200",
   "ok": true,
@@ -12,7 +12,7 @@
     "message": "ok"
   },
   "quality": {
-    "generated_at": "2026-11-02T16:46:21.047868+00:00",
+    "generated_at": "2026-11-03T14:49:08.915011+00:00",
     "window_days": 14,
     "app": {
       "shortlist_size": 10,
