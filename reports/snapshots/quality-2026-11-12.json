@@ -1,0 +1,2558 @@
+{
+  "schema": 1,
+  "date": "2026-11-12",
+  "fetched_at": "2026-11-12T15:43:49Z",
+  "source": "/admin/quality.json?days=14",
+  "http_status": "200",
+  "ok": true,
+  "health": {
+    "status": "ok",
+    "analysis_pipeline": "ok",
+    "analytics_database": "ok",
+    "message": "ok"
+  },
+  "quality": {
+    "generated_at": "2026-11-12T15:43:53.227656+00:00",
+    "window_days": 14,
+    "app": {
+      "shortlist_size": 10,
+      "discovery_searches": 30
+    },
+    "usage": {
+      "started": 0,
+      "completed": 0,
+      "failed": 0,
+      "stalled_or_abandoned": 0,
+      "left_email": 0
+    },
+    "economics": {
+      "runs_with_cost": 0,
+      "mean_cost_usd": null,
+      "p90_cost_usd": null,
+      "total_cost_usd": 0,
+      "benchmark_cost_usd": 2.35
+    },
+    "feedback": {
+      "n": 0,
+      "mean": null,
+      "comments": []
+    },
+    "real_runs": {
+      "count": 0,
+      "summary": {
+        "runs": 0
+      },
+      "convergence": {},
+      "runs": []
+    },
+    "benchmark": {
+      "policy": {
+        "enabled": true,
+        "cycle_days": [
+          1,
+          15
+        ],
+        "lookback_days": 14,
+        "repeats": 2,
+        "max_runs": 4,
+        "suppressed_by_real_runs": 1,
+        "rule": "Benchmarks only run when a fortnight passed with no completed real user runs. Real usage is better evidence and costs nothing."
+      },
+      "cycles": [
+        {
+          "at": "2026-09-15T00:06:04.537345+00:00",
+          "detail": "2026-09-15 skipped: suppressed — 6 real completed run(s) in the last 14 days"
+        },
+        {
+          "at": "2026-09-15T00:36:07.630845+00:00",
+          "detail": "2026-09-15 skipped: cycle already handled"
+        },
+        {
+          "at": "2026-09-15T01:06:10.297061+00:00",
+          "detail": "2026-09-15 skipped: cycle already handled"
+        },
+        {
+          "at": "2026-09-15T01:36:13.117048+00:00",
+          "detail": "2026-09-15 skipped: cycle already handled"
+        },
+        {
+          "at": "2026-09-15T02:06:15.559297+00:00",
+          "detail": "2026-09-15 skipped: cycle already handled"
+        },
+        {
+          "at": "2026-09-15T02:36:18.516693+00:00",
+          "detail": "2026-09-15 skipped: cycle already handled"
+        },
+        {
+          "at": "2026-09-15T03:06:20.949954+00:00",
+          "detail": "2026-09-15 skipped: cycle already handled"
+        },
+        {
+          "at": "2026-09-15T03:36:23.876219+00:00",
+          "detail": "2026-09-15 skipped: cycle already handled"
+        },
+        {
+          "at": "2026-09-15T04:06:26.917713+00:00",
+          "detail": "2026-09-15 skipped: cycle already handled"
+        },
+        {
+          "at": "2026-09-15T04:36:30.021628+00:00",
+          "detail": "2026-09-15 skipped: cycle already handled"
+        },
+        {
+          "at": "2026-09-15T05:06:32.338322+00:00",
+          "detail": "2026-09-15 skipped: cycle already handled"
+        },
+        {
+          "at": "2026-09-15T05:36:34.7673+00:00",
+          "detail": "2026-09-15 skipped: cycle already handled"
+        },
+        {
+          "at": "2026-10-01T00:18:01.371786+00:00",
+          "detail": "2026-10-01 running: no real completed runs in the last 14 days"
+        },
+        {
+          "at": "2026-10-01T02:12:00.749517+00:00",
+          "detail": "2026-10-01 done: 4/4 runs, $2.39"
+        },
+        {
+          "at": "2026-10-01T02:42:03.193375+00:00",
+          "detail": "2026-10-01 skipped: cycle already handled"
+        },
+        {
+          "at": "2026-10-01T03:12:06.21285+00:00",
+          "detail": "2026-10-01 skipped: cycle already handled"
+        },
+        {
+          "at": "2026-10-01T03:42:08.898392+00:00",
+          "detail": "2026-10-01 skipped: cycle already handled"
+        },
+        {
+          "at": "2026-10-01T04:12:11.8081+00:00",
+          "detail": "2026-10-01 skipped: cycle already handled"
+        },
+        {
+          "at": "2026-10-01T04:42:14.769851+00:00",
+          "detail": "2026-10-01 skipped: cycle already handled"
+        },
+        {
+          "at": "2026-10-01T05:12:17.306849+00:00",
+          "detail": "2026-10-01 skipped: cycle already handled"
+        },
+        {
+          "at": "2026-10-01T05:42:20.731333+00:00",
+          "detail": "2026-10-01 skipped: cycle already handled"
+        },
+        {
+          "at": "2026-10-15T00:08:32.77308+00:00",
+          "detail": "2026-10-15 running: no real completed runs in the last 14 days"
+        },
+        {
+          "at": "2026-10-15T02:37:57.792121+00:00",
+          "detail": "2026-10-15 done: 4/4 runs, $2.46"
+        },
+        {
+          "at": "2026-10-15T03:08:00.462291+00:00",
+          "detail": "2026-10-15 skipped: cycle already handled"
+        },
+        {
+          "at": "2026-10-15T03:38:03.431758+00:00",
+          "detail": "2026-10-15 skipped: cycle already handled"
+        },
+        {
+          "at": "2026-10-15T04:08:05.907052+00:00",
+          "detail": "2026-10-15 skipped: cycle already handled"
+        },
+        {
+          "at": "2026-10-15T04:38:08.099679+00:00",
+          "detail": "2026-10-15 skipped: cycle already handled"
+        },
+        {
+          "at": "2026-10-15T05:08:10.691576+00:00",
+          "detail": "2026-10-15 skipped: cycle already handled"
+        },
+        {
+          "at": "2026-10-15T05:38:12.824516+00:00",
+          "detail": "2026-10-15 skipped: cycle already handled"
+        },
+        {
+          "at": "2026-11-01T00:16:15.522263+00:00",
+          "detail": "2026-11-01 running: no real completed runs in the last 14 days"
+        },
+        {
+          "at": "2026-11-01T01:51:26.793869+00:00",
+          "detail": "2026-11-01 done: 4/4 runs, $2.35"
+        },
+        {
+          "at": "2026-11-01T02:21:29.465824+00:00",
+          "detail": "2026-11-01 skipped: cycle already handled"
+        },
+        {
+          "at": "2026-11-01T02:51:32.680132+00:00",
+          "detail": "2026-11-01 skipped: cycle already handled"
+        },
+        {
+          "at": "2026-11-01T03:21:35.441778+00:00",
+          "detail": "2026-11-01 skipped: cycle already handled"
+        },
+        {
+          "at": "2026-11-01T03:51:38.150164+00:00",
+          "detail": "2026-11-01 skipped: cycle already handled"
+        },
+        {
+          "at": "2026-11-01T04:21:40.89886+00:00",
+          "detail": "2026-11-01 skipped: cycle already handled"
+        },
+        {
+          "at": "2026-11-01T04:51:43.680417+00:00",
+          "detail": "2026-11-01 skipped: cycle already handled"
+        },
+        {
+          "at": "2026-11-01T05:21:46.839869+00:00",
+          "detail": "2026-11-01 skipped: cycle already handled"
+        },
+        {
+          "at": "2026-11-01T05:51:49.580834+00:00",
+          "detail": "2026-11-01 skipped: cycle already handled"
+        }
+      ],
+      "count": 4,
+      "summary": {
+        "runs": 4,
+        "structural_precision": 1.0,
+        "main_count": 5.25,
+        "main_count_range": [
+          4,
+          6
+        ],
+        "watchlist_count": 20.0,
+        "tier_concentration": 0.433,
+        "distinct_tiers": 3.5,
+        "specific_link_rate": 0.792,
+        "broken_rate": 0.069,
+        "link_authority_rate": 0.97,
+        "third_party_links": 0,
+        "defect_totals": {}
+      },
+      "convergence": {
+        "https://thermify.cloud": {
+          "runs": 2,
+          "main": {
+            "runs": 2,
+            "comparable": true,
+            "scope": "main",
+            "learned_aliases": 2,
+            "ambiguous_aliases": {},
+            "exact": {
+              "mean_pairwise_jaccard": 0.25,
+              "min_pairwise_jaccard": 0.25,
+              "in_every_run": 2,
+              "distinct_across_runs": 8,
+              "core_share": 0.25,
+              "sizes": [
+                4,
+                6
+              ]
+            },
+            "family": {
+              "mean_pairwise_jaccard": 0.25,
+              "min_pairwise_jaccard": 0.25,
+              "in_every_run": 2,
+              "distinct_across_runs": 8,
+              "core_share": 0.25,
+              "sizes": [
+                4,
+                6
+              ]
+            },
+            "identity_gap": 0.0
+          },
+          "all": {
+            "runs": 2,
+            "comparable": true,
+            "scope": "all",
+            "learned_aliases": 5,
+            "ambiguous_aliases": {},
+            "exact": {
+              "mean_pairwise_jaccard": 0.065,
+              "min_pairwise_jaccard": 0.065,
+              "in_every_run": 3,
+              "distinct_across_runs": 46,
+              "core_share": 0.065,
+              "sizes": [
+                23,
+                26
+              ]
+            },
+            "family": {
+              "mean_pairwise_jaccard": 0.205,
+              "min_pairwise_jaccard": 0.205,
+              "in_every_run": 8,
+              "distinct_across_runs": 39,
+              "core_share": 0.205,
+              "sizes": [
+                22,
+                25
+              ]
+            },
+            "identity_gap": 0.14
+          }
+        }
+      },
+      "runs": [
+        {
+          "job_id": "2252a095-aedd-49e1-abf5-810252a701db",
+          "company_name": "Kaltefluss GmbH",
+          "company_url": null,
+          "created_at": "2026-11-01T01:19:21.032101+00:00",
+          "cost_usd": 0.6038,
+          "assessment": {
+            "shape": {
+              "main": 6,
+              "watchlist": 20,
+              "promised_main": 10,
+              "shortfall": 4,
+              "watchlist_ratio": 3.33,
+              "has_summary": true,
+              "has_recommendations": true
+            },
+            "defensibility": {
+              "main_count": 6,
+              "defensible": 6,
+              "structural_precision": 1.0,
+              "failures": {},
+              "offenders": [],
+              "properties": {
+                "no_application_process": "Q2",
+                "not_directly_applicable": "Q1",
+                "trl_mismatch": "Q1",
+                "geography_mismatch": "Q1",
+                "no_usable_link": "Q3",
+                "broken_link": "Q3",
+                "homepage_only_link": "Q3",
+                "non_authoritative_link": "Q3",
+                "deadline_passed": "Q2"
+              }
+            },
+            "tier_spread": {
+              "counts": {
+                "Must Pursue": 2,
+                "Big Bet": 1,
+                "Prepare for Next Window": 2,
+                "Low Priority": 1
+              },
+              "distinct_tiers": 4,
+              "concentration": 0.333,
+              "score_range": [
+                2.55,
+                4.05
+              ],
+              "score_spread": 1.5
+            },
+            "links": {
+              "total": 26,
+              "by_type": {
+                "programme_page": 16,
+                "application_portal": 4,
+                "unknown": 6
+              },
+              "by_status": {
+                "verified": 23,
+                "broken": 3
+              },
+              "no_url": 0,
+              "specific_link_rate": 0.769,
+              "broken_rate": 0.115,
+              "by_authority": {
+                "funder": 25,
+                "unknown": 1
+              },
+              "link_authority_rate": 0.962,
+              "third_party_links": 0
+            }
+          },
+          "funnel": {
+            "scored": 8,
+            "longlist": 29,
+            "promised": 10,
+            "shortlist": 10,
+            "watchlist_cap": 20,
+            "watchlist_after_cap": 20,
+            "watchlist_before_cap": 21,
+            "after_admission_gates": 6,
+            "after_specificity_check": 7,
+            "after_eligibility_routing": 8
+          },
+          "main": [
+            {
+              "name": "Zentrales Innovationsprogramm Mittelstand (ZIM) — FuE-Projekte für KMU",
+              "body": "Bundesministerium für Wirtschaft und Energie (BMWE) / AiF Projekt GmbH",
+              "tier": "Must Pursue",
+              "score": 3.65,
+              "thematic_fit": null,
+              "why_watchlist": null,
+              "geography": "Germany",
+              "applicant_type_match": "direct",
+              "timing": "open_now",
+              "deadline": "Rolling",
+              "link": "https://www.zim.de/ZIM/Navigation/DE/Formularcenter/formularcenter.html",
+              "link_type": "programme_page",
+              "link_status": "verified",
+              "trl_match": true,
+              "geography_match": true
+            },
+            {
+              "name": "Bundesförderung Industrie und Klimaschutz (BIK) — Modul 1: Dekarbonisierung der Industrie (2026 Round)",
+              "body": "Bundesministerium für Wirtschaft und Energie (BMWE) / Zukunft – Umwelt – Gesellschaft (ZUG)",
+              "tier": "Must Pursue",
+              "score": 4.0,
+              "thematic_fit": null,
+              "why_watchlist": null,
+              "geography": "Germany",
+              "applicant_type_match": "direct",
+              "timing": "open_now",
+              "deadline": "6 December 2026",
+              "link": "https://www.klimaschutz-industrie.de/foerderung/bundesfoerderung-industrie-und-klimaschutz-modul-1/foerderaufruf/",
+              "link_type": "programme_page",
+              "link_status": "verified",
+              "trl_match": true,
+              "geography_match": true
+            },
+            {
+              "name": "EIC Accelerator Open — 2026/2027",
+              "body": "European Innovation Council (EIC)",
+              "tier": "Big Bet",
+              "score": 4.05,
+              "thematic_fit": null,
+              "why_watchlist": null,
+              "geography": "EU Member States + associated countries (including Germany, Austria)",
+              "applicant_type_match": "direct",
+              "timing": "open_now",
+              "deadline": "Multiple cut-offs per year — next confirmed windows in 2026/2027",
+              "link": "https://eic.ec.europa.eu/eic-funding-opportunities/eic-accelerator/eic-accelerator-open_en",
+              "link_type": "programme_page",
+              "link_status": "verified",
+              "trl_match": true,
+              "geography_match": true
+            },
+            {
+              "name": "aws Energie & Klima",
+              "body": "Austria Wirtschaftsservice (aws)",
+              "tier": "Prepare for Next Window",
+              "score": 3.45,
+              "thematic_fit": null,
+              "why_watchlist": null,
+              "geography": "Austria",
+              "applicant_type_match": "direct",
+              "timing": "recurring_uncertain",
+              "deadline": "unknown — application must be submitted before project start",
+              "link": "https://www.aws.at/aws-energie-klima/",
+              "link_type": "programme_page",
+              "link_status": "verified",
+              "trl_match": true,
+              "geography_match": true
+            },
+            {
+              "name": "Breakthrough Energy Fellows — Cohort 7 (2027)",
+              "body": "Breakthrough Energy",
+              "tier": "Prepare for Next Window",
+              "score": 3.45,
+              "thematic_fit": null,
+              "why_watchlist": null,
+              "geography": "Global (US-based programme, international applicants accepted)",
+              "applicant_type_match": "direct",
+              "timing": "open_now",
+              "deadline": "2 November 2026",
+              "link": "https://apply.breakthroughenergy.org/prog/cohort_7_application/",
+              "link_type": "application_portal",
+              "link_status": "verified",
+              "trl_match": true,
+              "geography_match": true
+            },
+            {
+              "name": "EIC Accelerator Challenge 2026 — Deep Tech for Climate Adaptation",
+              "body": "European Innovation Council (EIC)",
+              "tier": "Low Priority",
+              "score": 2.55,
+              "thematic_fit": null,
+              "why_watchlist": null,
+              "geography": "EU Member States + associated countries",
+              "applicant_type_match": "direct",
+              "timing": "open_now",
+              "deadline": "unknown — confirm via EIC website",
+              "link": "https://eic.ec.europa.eu/eic-funding-opportunities/eic-accelerator/eic-accelerator-challenges-2026/deep-tech-climate-adaptation_en",
+              "link_type": "programme_page",
+              "link_status": "verified",
+              "trl_match": true,
+              "geography_match": true
+            }
+          ],
+          "watchlist": [
+            {
+              "name": "Innovation Fund 2026 Heat Auction (IF26 Heat Auction)",
+              "body": "European Commission / CINEA",
+              "tier": null,
+              "score": null,
+              "thematic_fit": 5,
+              "why_watchlist": "Startup cannot be lead applicant or direct funding recipient at current stage — the auction funds large-scale deployment projects requiring an industrial operator as lead; Kaltefluss could participate as named technology supplier to an industrial operator's application.",
+              "geography": "EEA Member States",
+              "applicant_type_match": null,
+              "timing": "known_future_window",
+              "deadline": null,
+              "link": "https://climate.ec.europa.eu/areas-action/eu-funding-climate-action/innovation-fund/calls-proposals/if26-heat-auction_en",
+              "link_type": "programme_page",
+              "link_status": "verified",
+              "trl_match": null,
+              "geography_match": null
+            },
+            {
+              "name": "Bundesförderung für Energie- und Ressourceneffizienz in der Wirtschaft (EEW) — Modul 4: Prozesswärme aus Erneuerbaren Energien (KfW 295 / BAFA)",
+              "body": "BAFA / KfW on behalf of BMWE",
+              "tier": null,
+              "score": null,
+              "thematic_fit": 5,
+              "why_watchlist": "Startup cannot be lead applicant or direct funding recipient — this programme funds the industrial operator (customer) investing in the heat pump system, not the technology developer; Kaltefluss's role is as technology supplier to an eligible customer applicant.",
+              "geography": "Germany",
+              "applicant_type_match": null,
+              "timing": "open_now",
+              "deadline": null,
+              "link": "https://www.kfw.de/inlandsfoerderung/Unternehmen/Energie-Umwelt/Förderprodukte/Energieeffizienz-und-Prozesswärme-aus-Erneuerbaren-Energien-(295)/",
+              "link_type": "programme_page",
+              "link_status": "verified",
+              "trl_match": null,
+              "geography_match": null
+            },
+            {
+              "name": "Deutsche Bundesstiftung Umwelt (DBU) Projektförderung — Energieeffizienz und Klimaschutz in der Industrie",
+              "body": "Deutsche Bundesstiftung Umwelt (DBU)",
+              "tier": null,
+              "score": null,
+              "thematic_fit": 4,
+              "why_watchlist": "This programme was identified during discovery but was not selected for deep research. It showed partial thematic fit — verify eligibility and application process directly.",
+              "geography": "Germany",
+              "applicant_type_match": null,
+              "timing": "timing_unknown",
+              "deadline": null,
+              "link": "https://www.dbu.de/foerderung/projektfoerderung/foerderung-beantragen/",
+              "link_type": "application_portal",
+              "link_status": "verified",
+              "trl_match": null,
+              "geography_match": null
+            },
+            {
+              "name": "Bayerisches Technologieförderungs-Programm plus (BayTP+)",
+              "body": "Bayerisches Staatsministerium für Wirtschaft, Landesentwicklung und Energie / Bayern Innovativ",
+              "tier": null,
+              "score": null,
+              "thematic_fit": 4,
+              "why_watchlist": "This programme was identified during discovery but was not selected for deep research. It showed partial thematic fit — verify eligibility and application process directly.",
+              "geography": "Bavaria, Germany",
+              "applicant_type_match": null,
+              "timing": "timing_unknown",
+              "deadline": null,
+              "link": "https://www.bayern-innovativ.de/leistungen/projekttraeger/projekttraeger-bayern/bayerisches-technologiefoerderungs-programm-plus-baytp/",
+              "link_type": "programme_page",
+              "link_status": "verified",
+              "trl_match": null,
+              "geography_match": null
+            },
+            {
+              "name": "Horizon Europe Cluster 4 — HORIZON-CL4-2026 Industrial Decarbonisation and Process Innovation Calls",
+              "body": "European Commission / HaDEA",
+              "tier": null,
+              "score": null,
+              "thematic_fit": 4,
+              "why_watchlist": "This programme was identified during discovery but was not selected for deep research. It showed partial thematic fit — verify eligibility and application process directly.",
+              "geography": "EU Member States + associated countries",
+              "applicant_type_match": null,
+              "timing": "timing_unknown",
+              "deadline": null,
+              "link": "https://hadea.ec.europa.eu/programmes/horizon-europe/industry_en",
+              "link_type": "programme_page",
+              "link_status": "verified",
+              "trl_match": null,
+              "geography_match": null
+            },
+            {
+              "name": "Horizon Europe P4Planet / SPIRE Partnership — 2027 Open Calls for Process Industry Innovation",
+              "body": "A.SPIRE / European Commission",
+              "tier": null,
+              "score": null,
+              "thematic_fit": 4,
+              "why_watchlist": "This programme was identified during discovery but was not selected for deep research. It showed partial thematic fit — verify eligibility and application process directly.",
+              "geography": "EU Member States + associated countries",
+              "applicant_type_match": null,
+              "timing": "timing_unknown",
+              "deadline": null,
+              "link": "https://www.aspire2050.eu/news/new/heu-2027-calls",
+              "link_type": "programme_page",
+              "link_status": "verified",
+              "trl_match": null,
+              "geography_match": null
+            },
+            {
+              "name": "EIT InnoEnergy Open Call for Sustainable Energy Solutions",
+              "body": "EIT InnoEnergy",
+              "tier": null,
+              "score": null,
+              "thematic_fit": 4,
+              "why_watchlist": "This programme was identified during discovery but was not selected for deep research. It showed partial thematic fit — verify eligibility and application process directly.",
+              "geography": "Europe (EU + associated countries)",
+              "applicant_type_match": null,
+              "timing": "timing_unknown",
+              "deadline": null,
+              "link": "https://www.eit.europa.eu/our-activities/opportunities/eit-innoenergy-open-call-sustainable-energy-solutions",
+              "link_type": "application_portal",
+              "link_status": "verified",
+              "trl_match": null,
+              "geography_match": null
+            },
+            {
+              "name": "EIT Climate-KIC ClimAccelerator — Deep Tech for Climate Impact",
+              "body": "EIT Climate-KIC",
+              "tier": null,
+              "score": null,
+              "thematic_fit": 4,
+              "why_watchlist": "This programme was identified during discovery but was not selected for deep research. It showed partial thematic fit — verify eligibility and application process directly.",
+              "geography": "EU Member States + associated countries (multiple hubs)",
+              "applicant_type_match": null,
+              "timing": "timing_unknown",
+              "deadline": null,
+              "link": "https://www.climate-kic.org/open-call/climaccelerator-organisers-deep-tech/",
+              "link_type": "application_portal",
+              "link_status": "verified",
+              "trl_match": null,
+              "geography_match": null
+            },
+            {
+              "name": "KfW Energieeffizienzprogramm — Produktionsanlagen/-prozesse (KfW 292)",
+              "body": "KfW Bankengruppe",
+              "tier": null,
+              "score": null,
+              "thematic_fit": 4,
+              "why_watchlist": "This programme was identified during discovery but was not selected for deep research. It showed partial thematic fit — verify eligibility and application process directly.",
+              "geography": "Germany",
+              "applicant_type_match": null,
+              "timing": "timing_unknown",
+              "deadline": null,
+              "link": "https://www.kfw.de/inlandsfoerderung/Unternehmen/Energie-Umwelt/Förderprodukte/EE-Produktion-292/",
+              "link_type": "programme_page",
+              "link_status": "verified",
+              "trl_match": null,
+              "geography_match": null
+            },
+            {
+              "name": "Greentown Go Make 2026 — Industrial and Energy Decarbonisation Open Innovation Program",
+              "body": "Greentown Labs / Shell Catalysts & Technologies / Technip Energies",
+              "tier": null,
+              "score": null,
+              "thematic_fit": 4,
+              "why_watchlist": "This programme was identified during discovery but was not selected for deep research. It showed partial thematic fit — verify eligibility and application process directly.",
+              "geography": "Global (US-based programme, international startups accepted)",
+              "applicant_type_match": null,
+              "timing": "timing_unknown",
+              "deadline": null,
+              "link": "https://greentown.org/go-make",
+              "link_type": "programme_page",
+              "link_status": "verified",
+              "trl_match": null,
+              "geography_match": null
+            },
+            {
+              "name": "Bayerisches Staatsministerium für Wirtschaft — Energieförderung Bayern (Innovative Energietechnologien in Betrieben)",
+              "body": "Bayerisches Staatsministerium für Wirtschaft, Landesentwicklung und Energie",
+              "tier": null,
+              "score": null,
+              "thematic_fit": 4,
+              "why_watchlist": "This programme was identified during discovery but was not selected for deep research. It showed partial thematic fit — verify eligibility and application process directly.",
+              "geography": "Bavaria, Germany",
+              "applicant_type_match": null,
+              "timing": "timing_unknown",
+              "deadline": null,
+              "link": "https://www.stmwi.bayern.de/foerderungen/energiefoerderung/",
+              "link_type": "programme_page",
+              "link_status": "verified",
+              "trl_match": null,
+              "geography_match": null
+            },
+            {
+              "name": "Horizon Europe EIC Accelerator — Green Deal Challenge (if relaunched 2027)",
+              "body": "European Innovation Council (EIC)",
+              "tier": null,
+              "score": null,
+              "thematic_fit": 4,
+              "why_watchlist": "This programme was identified during discovery but was not selected for deep research. It showed partial thematic fit — verify eligibility and application process directly.",
+              "geography": "EU Member States + associated countries",
+              "applicant_type_match": null,
+              "timing": "timing_unknown",
+              "deadline": null,
+              "link": "https://eic.ec.europa.eu/eic-funding-opportunities/eic-accelerator_en",
+              "link_type": "unknown",
+              "link_status": "verified",
+              "trl_match": null,
+              "geography_match": null
+            },
+            {
+              "name": "Österreichischer Klima- und Energiefonds — Energieforschungsprogramm 2026",
+              "body": "Klima- und Energiefonds Österreich / FFG",
+              "tier": null,
+              "score": null,
+              "thematic_fit": 4,
+              "why_watchlist": "This programme was identified during discovery but was not selected for deep research. It showed partial thematic fit — verify eligibility and application process directly.",
+              "geography": "Austria",
+              "applicant_type_match": null,
+              "timing": "timing_unknown",
+              "deadline": null,
+              "link": "https://www.klimafonds.gv.at/",
+              "link_type": "unknown",
+              "link_status": "verified",
+              "trl_match": null,
+              "geography_match": null
+            },
+            {
+              "name": "FFG FTI Initiative for Industrial Transformation 2026",
+              "body": "Austrian Research Promotion Agency (FFG) / Austrian Climate and Energy Fund",
+              "tier": null,
+              "score": null,
+              "thematic_fit": 4,
+              "why_watchlist": "The application link could not be reached on two checks, so the opportunity cannot be verified in one step. Locate the official page before investing application effort.",
+              "geography": "Austria",
+              "applicant_type_match": null,
+              "timing": "open_now",
+              "deadline": null,
+              "link": "https://www.ffg.at/en/FTI-TdI_Ausschreibung_2026",
+              "link_type": "programme_page",
+              "link_status": "broken",
+              "trl_match": null,
+              "geography_match": null
+            },
+            {
+              "name": "LIFE Clean Energy Transition 2026 — Industrial Heat and Cooling Decarbonisation",
+              "body": "European Commission / CINEA",
+              "tier": null,
+              "score": null,
+              "thematic_fit": 3,
+              "why_watchlist": "This programme was identified during discovery but was not selected for deep research. It showed partial thematic fit — verify eligibility and application process directly.",
+              "geography": "EU Member States",
+              "applicant_type_match": null,
+              "timing": "timing_unknown",
+              "deadline": null,
+              "link": "https://cinea.ec.europa.eu/funding-opportunities/calls-proposals/supporting-clean-energy-transition-european-industry-and-businesses-0_en",
+              "link_type": "programme_page",
+              "link_status": "verified",
+              "trl_match": null,
+              "geography_match": null
+            },
+            {
+              "name": "Germany Carbon Contracts for Difference (CCfD) — Klimaschutzverträge 2027 Vorverfahren",
+              "body": "Bundesministerium für Wirtschaft und Energie (BMWE)",
+              "tier": null,
+              "score": null,
+              "thematic_fit": 3,
+              "why_watchlist": "This programme was identified during discovery but was not selected for deep research. It showed partial thematic fit — verify eligibility and application process directly.",
+              "geography": "Germany",
+              "applicant_type_match": null,
+              "timing": "timing_unknown",
+              "deadline": null,
+              "link": "https://raue.com/aktuell/branchen/neue-foerdermoeglichkeiten-fuer-die-industrielle-transformation/",
+              "link_type": "unknown",
+              "link_status": "verified",
+              "trl_match": null,
+              "geography_match": null
+            },
+            {
+              "name": "ClimateWorks Foundation Industry Programme Grants",
+              "body": "ClimateWorks Foundation",
+              "tier": null,
+              "score": null,
+              "thematic_fit": 3,
+              "why_watchlist": "This programme was identified during discovery but was not selected for deep research. It showed partial thematic fit — verify eligibility and application process directly.",
+              "geography": "Global",
+              "applicant_type_match": null,
+              "timing": "timing_unknown",
+              "deadline": null,
+              "link": "https://www.climateworks.org/programs/industry/",
+              "link_type": "programme_page",
+              "link_status": "verified",
+              "trl_match": null,
+              "geography_match": null
+            },
+            {
+              "name": "IEA Heat Pumping Technologies Annex / Project 68 — Industrial Heat Pump Collaboration",
+              "body": "IEA Technology Collaboration Programme on Heat Pumping Technologies (IEA HTP)",
+              "tier": null,
+              "score": null,
+              "thematic_fit": 3,
+              "why_watchlist": "This programme was identified during discovery but was not selected for deep research. It showed partial thematic fit — verify eligibility and application process directly.",
+              "geography": "International (Germany is participating country)",
+              "applicant_type_match": null,
+              "timing": "timing_unknown",
+              "deadline": null,
+              "link": "https://heatpumpingtechnologies.org/project68/participating-countries-germany/",
+              "link_type": "unknown",
+              "link_status": "verified",
+              "trl_match": null,
+              "geography_match": null
+            },
+            {
+              "name": "Fraunhofer-Gesellschaft Technology Transfer / Kooperationsprojekte mit Industrie",
+              "body": "Fraunhofer-Gesellschaft (various institutes, esp. ISE, IEG)",
+              "tier": null,
+              "score": null,
+              "thematic_fit": 3,
+              "why_watchlist": "This programme was identified during discovery but was not selected for deep research. It showed partial thematic fit — verify eligibility and application process directly.",
+              "geography": "Germany",
+              "applicant_type_match": null,
+              "timing": "timing_unknown",
+              "deadline": null,
+              "link": "https://www.fraunhofer.de/en/research/fields-of-research/energy-resources-environment.html",
+              "link_type": "unknown",
+              "link_status": "broken",
+              "trl_match": null,
+              "geography_match": null
+            },
+            {
+              "name": "Innovate UK — Net Zero Innovation Portfolio (if UK operations established)",
+              "body": "Innovate UK / UKRI",
+              "tier": null,
+              "score": null,
+              "thematic_fit": 3,
+              "why_watchlist": "This programme was identified during discovery but was not selected for deep research. It showed partial thematic fit — verify eligibility and application process directly.",
+              "geography": "United Kingdom",
+              "applicant_type_match": null,
+              "timing": "timing_unknown",
+              "deadline": null,
+              "link": "https://www.ukri.org/what-we-do/browse-our-areas-of-investment-and-support/net-zero-innovation-portfolio/",
+              "link_type": "unknown",
+              "link_status": "broken",
+              "trl_match": null,
+              "geography_match": null
+            }
+          ],
+          "case_id": "germandeeptech",
+          "ground_truth": {
+            "case_id": "germandeeptech",
+            "recall": 1.0,
+            "recall_checks": [
+              {
+                "rule": "must_appear_in_watchlist_or_main",
+                "pattern": "EIC",
+                "passed": true,
+                "matched": "EIC Accelerator Open — 2026/2027"
+              }
+            ],
+            "misses": [],
+            "exclusion_accuracy": 1.0,
+            "exclusion_checks": [
+              {
+                "rule": "must_not_appear_in_main",
+                "pattern": "Innovate UK",
+                "passed": true,
+                "matched": null
+              },
+              {
+                "rule": "must_not_appear_anywhere",
+                "pattern": "Welsh",
+                "passed": true,
+                "matched": null
+              },
+              {
+                "rule": "must_not_appear_anywhere",
+                "pattern": "Energy Catalyst",
+                "passed": true,
+                "matched": null
+              }
+            ],
+            "violations": [],
+            "must_not_violations": 0
+          }
+        },
+        {
+          "job_id": "b73e166f-1894-48df-a2fb-46d0ec030aa6",
+          "company_name": "Thermify",
+          "company_url": "https://thermify.cloud/",
+          "created_at": "2026-11-01T00:56:32.69288+00:00",
+          "cost_usd": 0.5671,
+          "assessment": {
+            "shape": {
+              "main": 4,
+              "watchlist": 20,
+              "promised_main": 10,
+              "shortfall": 6,
+              "watchlist_ratio": 5.0,
+              "has_summary": true,
+              "has_recommendations": true
+            },
+            "defensibility": {
+              "main_count": 4,
+              "defensible": 4,
+              "structural_precision": 1.0,
+              "failures": {},
+              "offenders": [],
+              "properties": {
+                "no_application_process": "Q2",
+                "not_directly_applicable": "Q1",
+                "trl_mismatch": "Q1",
+                "geography_mismatch": "Q1",
+                "no_usable_link": "Q3",
+                "broken_link": "Q3",
+                "homepage_only_link": "Q3",
+                "non_authoritative_link": "Q3",
+                "deadline_passed": "Q2"
+              }
+            },
+            "tier_spread": {
+              "counts": {
+                "Must Pursue": 2,
+                "Big Bet": 1,
+                "Prepare for Next Window": 1
+              },
+              "distinct_tiers": 3,
+              "concentration": 0.5,
+              "score_range": [
+                3.35,
+                4.45
+              ],
+              "score_spread": 1.1
+            },
+            "links": {
+              "total": 24,
+              "by_type": {
+                "programme_page": 14,
+                "funder_homepage": 1,
+                "application_portal": 5,
+                "unknown": 4
+              },
+              "by_status": {
+                "verified": 23,
+                "broken": 1
+              },
+              "no_url": 0,
+              "specific_link_rate": 0.792,
+              "broken_rate": 0.042,
+              "by_authority": {
+                "funder": 23,
+                "unknown": 1
+              },
+              "link_authority_rate": 0.958,
+              "third_party_links": 0
+            }
+          },
+          "funnel": {
+            "scored": 6,
+            "longlist": 31,
+            "promised": 10,
+            "shortlist": 10,
+            "watchlist_cap": 20,
+            "watchlist_after_cap": 20,
+            "watchlist_before_cap": 26,
+            "after_admission_gates": 4,
+            "after_specificity_check": 6,
+            "after_eligibility_routing": 6
+          },
+          "main": [
+            {
+              "name": "Welsh Government SMART Flexible Innovation Support (SFIS) — Innovation Grant",
+              "body": "Welsh Government / Business Wales",
+              "tier": "Must Pursue",
+              "score": 4.45,
+              "thematic_fit": null,
+              "why_watchlist": null,
+              "geography": "Wales, UK",
+              "applicant_type_match": "direct",
+              "timing": "open_now",
+              "deadline": "rolling",
+              "link": "https://businesswales.gov.wales/topics-and-guidance/develop-innovative-ideas-organisations-products-or-services/access-funding-and-support/application-form-and-guidance",
+              "link_type": "programme_page",
+              "link_status": "verified",
+              "trl_match": true,
+              "geography_match": true
+            },
+            {
+              "name": "EIC Accelerator Challenge 2026 — Deep Tech for Climate Adaptation",
+              "body": "European Innovation Council (EIC)",
+              "tier": "Big Bet",
+              "score": 3.95,
+              "thematic_fit": null,
+              "why_watchlist": null,
+              "geography": "EU / Associated countries (including UK)",
+              "applicant_type_match": "direct",
+              "timing": "open_now",
+              "deadline": "unknown",
+              "link": "https://eic.ec.europa.eu/eic-funding-opportunities/eic-accelerator/eic-accelerator-challenges-2026/deep-tech-climate-adaptation_en",
+              "link_type": "programme_page",
+              "link_status": "verified",
+              "trl_match": true,
+              "geography_match": true
+            },
+            {
+              "name": "Knowledge Transfer Partnership (KTP): 2026–2027 Round 4",
+              "body": "Innovate UK / UKRI",
+              "tier": "Must Pursue",
+              "score": 3.65,
+              "thematic_fit": null,
+              "why_watchlist": null,
+              "geography": "UK",
+              "applicant_type_match": "direct",
+              "timing": "open_now",
+              "deadline": "27 January 2027",
+              "link": "https://apply-for-innovation-funding.service.gov.uk/competition/2605/overview/4b82d27a-2794-457c-8dc7-7ec4f6911c84",
+              "link_type": "programme_page",
+              "link_status": "verified",
+              "trl_match": true,
+              "geography_match": true
+            },
+            {
+              "name": "Innovate UK Net Zero Heat Programme",
+              "body": "Innovate UK / UKRI",
+              "tier": "Prepare for Next Window",
+              "score": 3.35,
+              "thematic_fit": null,
+              "why_watchlist": null,
+              "geography": "UK",
+              "applicant_type_match": "direct",
+              "timing": "recurring_uncertain",
+              "deadline": "unknown",
+              "link": "https://iuk-business-connect.org.uk/programme/net-zero-heat/",
+              "link_type": "programme_page",
+              "link_status": "verified",
+              "trl_match": true,
+              "geography_match": true
+            }
+          ],
+          "watchlist": [
+            {
+              "name": "Ofgem Strategic Innovation Fund — Innovation Challenges Discovery Autumn 2026",
+              "body": "Ofgem / Innovate UK",
+              "tier": null,
+              "score": null,
+              "thematic_fit": 5,
+              "why_watchlist": "Startup cannot be lead applicant or direct funding recipient for this programme — SIF requires a licensed network operator (e.g. UK Power Networks) as lead applicant; Thermify can only participate as a named technology partner.",
+              "geography": "UK",
+              "applicant_type_match": null,
+              "timing": "open_now",
+              "deadline": null,
+              "link": "https://iuk-business-connect.org.uk/opportunities/ofgem-strategic-innovation-fund-innovation-challenges-discovery-autumn-2026/",
+              "link_type": "programme_page",
+              "link_status": "verified",
+              "trl_match": null,
+              "geography_match": null
+            },
+            {
+              "name": "Ofgem Network Innovation Allowance (NIA) — RIIO-ED2 2026/27 and 2027/28",
+              "body": "Ofgem / Distribution Network Operators",
+              "tier": null,
+              "score": null,
+              "thematic_fit": 5,
+              "why_watchlist": "Startup cannot be lead applicant or direct funding recipient — NIA funding is held by licensed DNOs; Thermify must be proposed as a technology partner within a DNO-led project, with UK Power Networks being the most natural lead given existing exploratory discussions.",
+              "geography": "UK",
+              "applicant_type_match": null,
+              "timing": "recurring_uncertain",
+              "deadline": null,
+              "link": "https://www.ofgem.gov.uk/network-innovation-allowance-nia",
+              "link_type": "programme_page",
+              "link_status": "verified",
+              "trl_match": null,
+              "geography_match": null
+            },
+            {
+              "name": "Knowledge Transfer Partnership (KTP): 2026–2027 Round 4",
+              "body": "Innovate UK / UKRI",
+              "tier": null,
+              "score": null,
+              "thematic_fit": 4,
+              "why_watchlist": "Startup cannot be lead applicant or direct funding recipient — the UK academic institution (e.g. SPECIFIC IKC / Cardiff University) must be the lead applicant; Thermify participates as the named business partner.",
+              "geography": "UK",
+              "applicant_type_match": null,
+              "timing": "open_now",
+              "deadline": null,
+              "link": "https://apply-for-innovation-funding.service.gov.uk/competition/2605/overview/4b82d27a-2794-457c-8dc7-7ec4f6911c84",
+              "link_type": "programme_page",
+              "link_status": "verified",
+              "trl_match": null,
+              "geography_match": null
+            },
+            {
+              "name": "EIT InnoEnergy — Startup and Scale-up Investment Programme",
+              "body": "EIT InnoEnergy",
+              "tier": null,
+              "score": null,
+              "thematic_fit": 4,
+              "why_watchlist": "This programme was researched and shortlisted but was not included in the final scored output. Verify eligibility directly — it may have application requirements or eligibility constraints that the scoring model could not confidently resolve.",
+              "geography": "Europe (including UK)",
+              "applicant_type_match": null,
+              "timing": "timing_unknown",
+              "deadline": null,
+              "link": "https://innoenergy.com/",
+              "link_type": "funder_homepage",
+              "link_status": "verified",
+              "trl_match": null,
+              "geography_match": null
+            },
+            {
+              "name": "Bethnal Green Ventures Tech For Good Programme — Autumn 2026",
+              "body": "Bethnal Green Ventures (BGV)",
+              "tier": null,
+              "score": null,
+              "thematic_fit": 4,
+              "why_watchlist": "This programme was researched and shortlisted but was not included in the final scored output. Verify eligibility directly — it may have application requirements or eligibility constraints that the scoring model could not confidently resolve.",
+              "geography": "UK",
+              "applicant_type_match": null,
+              "timing": "timing_unknown",
+              "deadline": null,
+              "link": "https://www.bethnalgreenventures.com/apply",
+              "link_type": "application_portal",
+              "link_status": "verified",
+              "trl_match": null,
+              "geography_match": null
+            },
+            {
+              "name": "Horizon Europe Cluster 4 — Digital, Industry and Space: Green and Efficient Data Infrastructure",
+              "body": "European Commission / HaDEA",
+              "tier": null,
+              "score": null,
+              "thematic_fit": 4,
+              "why_watchlist": "This programme was identified during discovery but was not selected for deep research. It showed partial thematic fit — verify eligibility and application process directly.",
+              "geography": "EU / Associated countries",
+              "applicant_type_match": null,
+              "timing": "timing_unknown",
+              "deadline": null,
+              "link": "https://research-and-innovation.ec.europa.eu/funding/funding-opportunities/funding-programmes-and-open-calls/horizon-europe/cluster-4-digital-industry-and-space_en",
+              "link_type": "programme_page",
+              "link_status": "verified",
+              "trl_match": null,
+              "geography_match": null
+            },
+            {
+              "name": "Horizon Europe Cluster 5 — Climate, Energy and Mobility: Buildings and Industrial Decarbonisation",
+              "body": "European Commission / CINEA",
+              "tier": null,
+              "score": null,
+              "thematic_fit": 4,
+              "why_watchlist": "This programme was identified during discovery but was not selected for deep research. It showed partial thematic fit — verify eligibility and application process directly.",
+              "geography": "EU / Associated countries",
+              "applicant_type_match": null,
+              "timing": "timing_unknown",
+              "deadline": null,
+              "link": "https://ec.europa.eu/info/funding-tenders/opportunities/portal/screen/programmes/horizon",
+              "link_type": "application_portal",
+              "link_status": "verified",
+              "trl_match": null,
+              "geography_match": null
+            },
+            {
+              "name": "Energy Systems Catapult — Living Lab and Accelerator Programmes",
+              "body": "Energy Systems Catapult",
+              "tier": null,
+              "score": null,
+              "thematic_fit": 4,
+              "why_watchlist": "This programme was identified during discovery but was not selected for deep research. It showed partial thematic fit — verify eligibility and application process directly.",
+              "geography": "UK",
+              "applicant_type_match": null,
+              "timing": "timing_unknown",
+              "deadline": null,
+              "link": "https://es.catapult.org.uk/what-we-do/living-lab/",
+              "link_type": "programme_page",
+              "link_status": "verified",
+              "trl_match": null,
+              "geography_match": null
+            },
+            {
+              "name": "SPECIFIC IKC (Swansea University) — Collaborative R&D and Innovation Support",
+              "body": "SPECIFIC IKC / Swansea University / Welsh Government",
+              "tier": null,
+              "score": null,
+              "thematic_fit": 4,
+              "why_watchlist": "This programme was identified during discovery but was not selected for deep research. It showed partial thematic fit — verify eligibility and application process directly.",
+              "geography": "Wales, UK",
+              "applicant_type_match": null,
+              "timing": "timing_unknown",
+              "deadline": null,
+              "link": "https://www.specific.eu.com/",
+              "link_type": "unknown",
+              "link_status": "verified",
+              "trl_match": null,
+              "geography_match": null
+            },
+            {
+              "name": "Innovate UK — Sustainable Innovation Fund (future rounds)",
+              "body": "Innovate UK / UKRI",
+              "tier": null,
+              "score": null,
+              "thematic_fit": 4,
+              "why_watchlist": "This programme was identified during discovery but was not selected for deep research. It showed partial thematic fit — verify eligibility and application process directly.",
+              "geography": "UK",
+              "applicant_type_match": null,
+              "timing": "timing_unknown",
+              "deadline": null,
+              "link": "https://apply-for-innovation-funding.service.gov.uk/competition/search",
+              "link_type": "unknown",
+              "link_status": "verified",
+              "trl_match": null,
+              "geography_match": null
+            },
+            {
+              "name": "UK Cleantech Innovation Challenges — GOV.UK Collection",
+              "body": "DESNZ / Innovate UK",
+              "tier": null,
+              "score": null,
+              "thematic_fit": 4,
+              "why_watchlist": "This programme was identified during discovery but was not selected for deep research. It showed partial thematic fit — verify eligibility and application process directly.",
+              "geography": "UK",
+              "applicant_type_match": null,
+              "timing": "timing_unknown",
+              "deadline": null,
+              "link": "https://www.gov.uk/government/collections/uk-cleantech-innovation-challenges",
+              "link_type": "unknown",
+              "link_status": "verified",
+              "trl_match": null,
+              "geography_match": null
+            },
+            {
+              "name": "EIT Climate-KIC — Accelerator and Innovation Support",
+              "body": "EIT Climate-KIC",
+              "tier": null,
+              "score": null,
+              "thematic_fit": 4,
+              "why_watchlist": "This programme was identified during discovery but was not selected for deep research. It showed partial thematic fit — verify eligibility and application process directly.",
+              "geography": "Europe (including UK)",
+              "applicant_type_match": null,
+              "timing": "timing_unknown",
+              "deadline": null,
+              "link": "https://www.climate-kic.org/",
+              "link_type": "unknown",
+              "link_status": "verified",
+              "trl_match": null,
+              "geography_match": null
+            },
+            {
+              "name": "Innovate UK — Climate Tech FOAK Builder: Programme Entry (SME single applicant)",
+              "body": "Innovate UK / UKRI",
+              "tier": null,
+              "score": null,
+              "thematic_fit": 4,
+              "why_watchlist": "The application link could not be reached on two checks, so the opportunity cannot be verified in one step. Locate the official page before investing application effort.",
+              "geography": "UK",
+              "applicant_type_match": null,
+              "timing": "open_now",
+              "deadline": null,
+              "link": "https://apply-for-innovation-funding.service.gov.uk/competition/2600/overview",
+              "link_type": "programme_page",
+              "link_status": "broken",
+              "trl_match": null,
+              "geography_match": null
+            },
+            {
+              "name": "100x Impact Accelerator (LSE) — 2026/27 Spring Cohort",
+              "body": "100x Impact / London School of Economics",
+              "tier": null,
+              "score": null,
+              "thematic_fit": 4,
+              "why_watchlist": "The only link found for this programme points at a third-party site rather than the funder, so the opportunity could not be confirmed from the funder's own pages. Find the official programme page before relying on it.",
+              "geography": "UK / Global",
+              "applicant_type_match": null,
+              "timing": "open_now",
+              "deadline": null,
+              "link": "https://www.100ximpact.org/how-to-apply",
+              "link_type": "programme_page",
+              "link_status": "verified",
+              "trl_match": null,
+              "geography_match": null
+            },
+            {
+              "name": "Innovate UK — National Materials Innovation Programme 1 (Investor Partnerships)",
+              "body": "Innovate UK / UKRI",
+              "tier": null,
+              "score": null,
+              "thematic_fit": 3,
+              "why_watchlist": "This programme was identified during discovery but was not selected for deep research. It showed partial thematic fit — verify eligibility and application process directly.",
+              "geography": "UK",
+              "applicant_type_match": null,
+              "timing": "timing_unknown",
+              "deadline": null,
+              "link": "https://apply-for-innovation-funding.service.gov.uk/competition/2616/overview/d8e92206-e9dc-43d5-8d52-4fbfbd78339c",
+              "link_type": "application_portal",
+              "link_status": "verified",
+              "trl_match": null,
+              "geography_match": null
+            },
+            {
+              "name": "Green Heat Network Fund (GHNF)",
+              "body": "DESNZ (Department for Energy Security and Net Zero)",
+              "tier": null,
+              "score": null,
+              "thematic_fit": 3,
+              "why_watchlist": "This programme was identified during discovery but not deep-researched. It likely requires a licensed or regulated entity (e.g. network operator, NHS trust, housing association, or local authority) as lead applicant. The startup may be able to participate as a named technology partner. Verify current eligibility and identify a suitable lead organisation.",
+              "geography": "England",
+              "applicant_type_match": null,
+              "timing": "timing_unknown",
+              "deadline": null,
+              "link": "https://www.gov.uk/government/publications/green-heat-network-fund-ghnf-guidance-on-how-to-apply",
+              "link_type": "programme_page",
+              "link_status": "verified",
+              "trl_match": null,
+              "geography_match": null
+            },
+            {
+              "name": "Welsh Government Optimised Retrofit Programme 3 (Year 5) — 2026 to 2027",
+              "body": "Welsh Government",
+              "tier": null,
+              "score": null,
+              "thematic_fit": 3,
+              "why_watchlist": "This programme was identified during discovery but not deep-researched. It likely requires a licensed or regulated entity (e.g. network operator, NHS trust, housing association, or local authority) as lead applicant. The startup may be able to participate as a named technology partner. Verify current eligibility and identify a suitable lead organisation.",
+              "geography": "Wales, UK",
+              "applicant_type_match": null,
+              "timing": "timing_unknown",
+              "deadline": null,
+              "link": "https://www.gov.wales/optimised-retrofit-programme-3-year-5-guidance-2026-2027-html",
+              "link_type": "programme_page",
+              "link_status": "verified",
+              "trl_match": null,
+              "geography_match": null
+            },
+            {
+              "name": "Innovate UK Frontier AI: SME Champions, Phase 1",
+              "body": "Innovate UK / UKRI",
+              "tier": null,
+              "score": null,
+              "thematic_fit": 3,
+              "why_watchlist": "This programme was identified during discovery but was not selected for deep research. It showed partial thematic fit — verify eligibility and application process directly.",
+              "geography": "UK",
+              "applicant_type_match": null,
+              "timing": "timing_unknown",
+              "deadline": null,
+              "link": "https://apply-for-innovation-funding.service.gov.uk/competition/2584/overview/4c7afb5d-4572-4ef2-9507-73ef2dec8ec8",
+              "link_type": "application_portal",
+              "link_status": "verified",
+              "trl_match": null,
+              "geography_match": null
+            },
+            {
+              "name": "Innovate UK BridgeAI Deployment Catalyst",
+              "body": "Innovate UK / Digital Catapult",
+              "tier": null,
+              "score": null,
+              "thematic_fit": 3,
+              "why_watchlist": "This programme was identified during discovery but was not selected for deep research. It showed partial thematic fit — verify eligibility and application process directly.",
+              "geography": "UK",
+              "applicant_type_match": null,
+              "timing": "timing_unknown",
+              "deadline": null,
+              "link": "https://apply-for-innovation-funding.service.gov.uk/competition/2597/overview/7ec02a95-73e5-4928-8104-67a9f1b279e3",
+              "link_type": "application_portal",
+              "link_status": "verified",
+              "trl_match": null,
+              "geography_match": null
+            },
+            {
+              "name": "EU Innovation Fund 2026 Heat Auction (IF26 Heat Auction)",
+              "body": "European Commission / Climate DG",
+              "tier": null,
+              "score": null,
+              "thematic_fit": 3,
+              "why_watchlist": "This programme was identified during discovery but was not selected for deep research. It showed partial thematic fit — verify eligibility and application process directly.",
+              "geography": "EU member states",
+              "applicant_type_match": null,
+              "timing": "timing_unknown",
+              "deadline": null,
+              "link": "https://climate.ec.europa.eu/areas-action/eu-funding-climate-action/innovation-fund/calls-proposals/if26-heat-auction_en",
+              "link_type": "programme_page",
+              "link_status": "verified",
+              "trl_match": null,
+              "geography_match": null
+            }
+          ],
+          "case_id": "thermify",
+          "ground_truth": {
+            "case_id": "thermify",
+            "recall": 1.0,
+            "recall_checks": [
+              {
+                "rule": "must_appear_in_main",
+                "pattern": "Innovate UK",
+                "passed": true,
+                "matched": "Knowledge Transfer Partnership (KTP): 2026–2027 Round 4"
+              },
+              {
+                "rule": "must_appear_in_main",
+                "pattern": "SMART",
+                "passed": true,
+                "matched": "Welsh Government SMART Flexible Innovation Support (SFIS) — Innovation Grant"
+              },
+              {
+                "rule": "must_appear_in_watchlist_or_main",
+                "pattern": "Ofgem",
+                "passed": true,
+                "matched": "Ofgem Strategic Innovation Fund — Innovation Challenges Discovery Autumn 2026"
+              },
+              {
+                "rule": "must_appear_in_watchlist_or_main",
+                "pattern": "EIC Accelerator",
+                "passed": true,
+                "matched": "EIC Accelerator Challenge 2026 — Deep Tech for Climate Adaptation"
+              },
+              {
+                "rule": "must_appear_in_watchlist_or_main",
+                "pattern": "KTP",
+                "passed": true,
+                "matched": "Knowledge Transfer Partnership (KTP): 2026–2027 Round 4"
+              }
+            ],
+            "misses": [],
+            "exclusion_accuracy": 1.0,
+            "exclusion_checks": [
+              {
+                "rule": "must_not_appear_anywhere",
+                "pattern": "Energy Catalyst",
+                "passed": true,
+                "matched": null
+              },
+              {
+                "rule": "must_not_appear_anywhere",
+                "pattern": "EIC Pathfinder",
+                "passed": true,
+                "matched": null
+              }
+            ],
+            "violations": [],
+            "must_not_violations": 0
+          }
+        },
+        {
+          "job_id": "2644119a-7b20-4beb-844c-a2c7a66c02b5",
+          "company_name": "Kaltefluss GmbH",
+          "company_url": null,
+          "created_at": "2026-11-01T00:30:17.759295+00:00",
+          "cost_usd": 0.5865,
+          "assessment": {
+            "shape": {
+              "main": 5,
+              "watchlist": 20,
+              "promised_main": 10,
+              "shortfall": 5,
+              "watchlist_ratio": 4.0,
+              "has_summary": true,
+              "has_recommendations": true
+            },
+            "defensibility": {
+              "main_count": 5,
+              "defensible": 5,
+              "structural_precision": 1.0,
+              "failures": {},
+              "offenders": [],
+              "properties": {
+                "no_application_process": "Q2",
+                "not_directly_applicable": "Q1",
+                "trl_mismatch": "Q1",
+                "geography_mismatch": "Q1",
+                "no_usable_link": "Q3",
+                "broken_link": "Q3",
+                "homepage_only_link": "Q3",
+                "non_authoritative_link": "Q3",
+                "deadline_passed": "Q2"
+              }
+            },
+            "tier_spread": {
+              "counts": {
+                "Prepare for Next Window": 2,
+                "Big Bet": 1,
+                "Must Pursue": 1,
+                "Low Priority": 1
+              },
+              "distinct_tiers": 4,
+              "concentration": 0.4,
+              "score_range": [
+                2.35,
+                4.4
+              ],
+              "score_spread": 2.05
+            },
+            "links": {
+              "total": 25,
+              "by_type": {
+                "programme_page": 17,
+                "funder_homepage": 1,
+                "application_portal": 3,
+                "unknown": 4
+              },
+              "by_status": {
+                "verified": 22,
+                "broken": 3
+              },
+              "no_url": 0,
+              "specific_link_rate": 0.8,
+              "broken_rate": 0.12,
+              "by_authority": {
+                "funder": 24,
+                "unknown": 1
+              },
+              "link_authority_rate": 0.96,
+              "third_party_links": 0
+            }
+          },
+          "funnel": {
+            "scored": 6,
+            "longlist": 28,
+            "promised": 10,
+            "shortlist": 10,
+            "watchlist_cap": 20,
+            "watchlist_after_cap": 20,
+            "watchlist_before_cap": 23,
+            "after_admission_gates": 5,
+            "after_specificity_check": 6,
+            "after_eligibility_routing": 6
+          },
+          "main": [
+            {
+              "name": "BMWE Transferoffensive Großwärmepumpen und thermische Speicher für die Industrie",
+              "body": "Bundesministerium für Wirtschaft und Energie (BMWE)",
+              "tier": "Prepare for Next Window",
+              "score": 4.25,
+              "thematic_fit": null,
+              "why_watchlist": null,
+              "geography": "Germany",
+              "applicant_type_match": "direct",
+              "timing": "recurring_uncertain",
+              "deadline": "unknown",
+              "link": "https://www.energieforschung.de/de/foerderung/foerderangebote/transferoffensive-grosswaermepumpen-und-thermische-speicher-fuer-die-industrie",
+              "link_type": "programme_page",
+              "link_status": "verified",
+              "trl_match": true,
+              "geography_match": true
+            },
+            {
+              "name": "EIC Accelerator Open — 2026/2027",
+              "body": "European Innovation Council (EIC)",
+              "tier": "Big Bet",
+              "score": 4.4,
+              "thematic_fit": null,
+              "why_watchlist": null,
+              "geography": "EU member states + associated countries",
+              "applicant_type_match": "direct",
+              "timing": "open_now",
+              "deadline": "Rolling — multiple cut-off dates per year",
+              "link": "https://eic.ec.europa.eu/eic-funding-opportunities/eic-accelerator/eic-accelerator-open_en",
+              "link_type": "programme_page",
+              "link_status": "verified",
+              "trl_match": true,
+              "geography_match": true
+            },
+            {
+              "name": "Bundesförderung Industrie und Klimaschutz (BIK) — Modul 1: Dekarbonisierung der Industrie (neue Runde 2026)",
+              "body": "Bundesministerium für Wirtschaft und Energie (BMWE)",
+              "tier": "Must Pursue",
+              "score": 3.8,
+              "thematic_fit": null,
+              "why_watchlist": null,
+              "geography": "Germany",
+              "applicant_type_match": "direct",
+              "timing": "open_now",
+              "deadline": "unknown",
+              "link": "https://www.klimaschutz-industrie.de/foerderung/bundesfoerderung-industrie-und-klimaschutz-modul-1/foerderaufruf/",
+              "link_type": "programme_page",
+              "link_status": "verified",
+              "trl_match": true,
+              "geography_match": true
+            },
+            {
+              "name": "KLIEN FTI-Initiative für die Transformation der Industrie 2026",
+              "body": "Klima- und Energiefonds (KLIEN), Austria",
+              "tier": "Prepare for Next Window",
+              "score": 3.45,
+              "thematic_fit": null,
+              "why_watchlist": null,
+              "geography": "Austria",
+              "applicant_type_match": "direct",
+              "timing": "recurring_uncertain",
+              "deadline": "10 March 2027",
+              "link": "https://www.klimafonds.gv.at/fti-initiative-transformation-der-industrie/",
+              "link_type": "programme_page",
+              "link_status": "verified",
+              "trl_match": true,
+              "geography_match": true
+            },
+            {
+              "name": "EIC Accelerator Challenge 2026 — Deep Tech for Climate Adaptation",
+              "body": "European Innovation Council (EIC)",
+              "tier": "Low Priority",
+              "score": 2.35,
+              "thematic_fit": null,
+              "why_watchlist": null,
+              "geography": "EU member states + associated countries",
+              "applicant_type_match": "direct",
+              "timing": "open_now",
+              "deadline": "unknown",
+              "link": "https://eic.ec.europa.eu/eic-funding-opportunities/eic-accelerator/eic-accelerator-challenges-2026/deep-tech-climate-adaptation_en",
+              "link_type": "programme_page",
+              "link_status": "verified",
+              "trl_match": true,
+              "geography_match": true
+            }
+          ],
+          "watchlist": [
+            {
+              "name": "Innovation Fund 2026 Heat Auction (IF26 Heat Auction)",
+              "body": "European Commission / CINEA",
+              "tier": null,
+              "score": null,
+              "thematic_fit": 5,
+              "why_watchlist": "Startup cannot be lead applicant or direct funding recipient for this programme — the auction mechanism requires the industrial project deployer (the customer site) as lead applicant; Kaltefluss can participate as technology supplier in a customer-led application.",
+              "geography": "EU EEA Member States",
+              "applicant_type_match": null,
+              "timing": "known_future_window",
+              "deadline": null,
+              "link": "https://climate.ec.europa.eu/areas-action/eu-funding-climate-action/innovation-fund/calls-proposals/if26-heat-auction_en",
+              "link_type": "programme_page",
+              "link_status": "broken",
+              "trl_match": null,
+              "geography_match": null
+            },
+            {
+              "name": "Klima- und Energiefonds Österreich — Innovative klimaneutrale Prozesswärme und -kälte für Betriebe (INNO-WAKA)",
+              "body": "Klima- und Energiefonds (KLIEN), Austria",
+              "tier": null,
+              "score": null,
+              "thematic_fit": 5,
+              "why_watchlist": "Startup cannot be lead applicant — the programme targets businesses (Betriebe) adopting process heat solutions; Kaltefluss as technology supplier would need to apply jointly with an Austrian industrial customer as lead.",
+              "geography": "Austria",
+              "applicant_type_match": null,
+              "timing": "recurring_uncertain",
+              "deadline": null,
+              "link": "https://www.klimafonds.gv.at/foerderungen/",
+              "link_type": "funder_homepage",
+              "link_status": "verified",
+              "trl_match": null,
+              "geography_match": null
+            },
+            {
+              "name": "Horizon Europe Clean Industrial Deal — R&I in Support of the Clean Industrial Deal: Decarbonisation of Energy-Intensive Industries (HORIZON-CID-2026-01-01)",
+              "body": "European Commission / REA",
+              "tier": null,
+              "score": null,
+              "thematic_fit": 5,
+              "why_watchlist": "This programme was researched and shortlisted but was not included in the final scored output. Verify eligibility directly — it may have application requirements or eligibility constraints that the scoring model could not confidently resolve.",
+              "geography": "EU member states + associated countries",
+              "applicant_type_match": null,
+              "timing": "timing_unknown",
+              "deadline": null,
+              "link": "https://hadea.ec.europa.eu/calls-proposals/ri-support-clean-industrial-deal-decarbonisation-energy-intensive-industries-ia_en",
+              "link_type": "programme_page",
+              "link_status": "verified",
+              "trl_match": null,
+              "geography_match": null
+            },
+            {
+              "name": "EIC Transition 2026",
+              "body": "European Innovation Council (EIC)",
+              "tier": null,
+              "score": null,
+              "thematic_fit": 4,
+              "why_watchlist": "Eligibility is restricted to proposals based on results from prior EIC, FET, or FTI projects — Kaltefluss has no confirmed qualifying predecessor project, creating a hard eligibility barrier under the prior_award_required route.",
+              "geography": "EU member states + associated countries",
+              "applicant_type_match": null,
+              "timing": "open_now",
+              "deadline": null,
+              "link": "https://eic.ec.europa.eu/eic-funding-opportunities/eic-transition_en",
+              "link_type": "programme_page",
+              "link_status": "verified",
+              "trl_match": null,
+              "geography_match": null
+            },
+            {
+              "name": "Zentrales Innovationsprogramm Mittelstand (ZIM) — FuE-Projekte für KMU",
+              "body": "Bundesministerium für Wirtschaft und Energie (BMWE)",
+              "tier": null,
+              "score": null,
+              "thematic_fit": 4,
+              "why_watchlist": "This programme was identified during discovery but was not selected for deep research. It showed partial thematic fit — verify eligibility and application process directly.",
+              "geography": "Germany",
+              "applicant_type_match": null,
+              "timing": "timing_unknown",
+              "deadline": null,
+              "link": "https://www.zim.de/ZIM/Navigation/DE/Home/home.html",
+              "link_type": "programme_page",
+              "link_status": "verified",
+              "trl_match": null,
+              "geography_match": null
+            },
+            {
+              "name": "Deutsche Bundesstiftung Umwelt (DBU) — Projektförderung Umwelttechnik",
+              "body": "Deutsche Bundesstiftung Umwelt (DBU)",
+              "tier": null,
+              "score": null,
+              "thematic_fit": 4,
+              "why_watchlist": "This programme was identified during discovery but was not selected for deep research. It showed partial thematic fit — verify eligibility and application process directly.",
+              "geography": "Germany",
+              "applicant_type_match": null,
+              "timing": "timing_unknown",
+              "deadline": null,
+              "link": "https://www.dbu.de/foerderung/projektfoerderung/",
+              "link_type": "programme_page",
+              "link_status": "verified",
+              "trl_match": null,
+              "geography_match": null
+            },
+            {
+              "name": "Bundesförderung für Energie- und Ressourceneffizienz in der Wirtschaft (EEW) — Förderwettbewerb",
+              "body": "Bundesamt für Wirtschaft und Ausfuhrkontrolle (BAFA) / BMWE",
+              "tier": null,
+              "score": null,
+              "thematic_fit": 4,
+              "why_watchlist": "This programme was identified during discovery but was not selected for deep research. It showed partial thematic fit — verify eligibility and application process directly.",
+              "geography": "Germany",
+              "applicant_type_match": null,
+              "timing": "timing_unknown",
+              "deadline": null,
+              "link": "https://www.wettbewerb-energieeffizienz.de/WENEFF/Navigation/DE/Home/home.html",
+              "link_type": "programme_page",
+              "link_status": "verified",
+              "trl_match": null,
+              "geography_match": null
+            },
+            {
+              "name": "Horizon Europe 2027 SPIRE Process Industry Calls — Industrial Decarbonisation",
+              "body": "European Commission / A.SPIRE Partnership",
+              "tier": null,
+              "score": null,
+              "thematic_fit": 4,
+              "why_watchlist": "This programme was identified during discovery but was not selected for deep research. It showed partial thematic fit — verify eligibility and application process directly.",
+              "geography": "EU member states + associated countries",
+              "applicant_type_match": null,
+              "timing": "timing_unknown",
+              "deadline": null,
+              "link": "https://www.aspire2050.eu/news/new/heu-2027-calls",
+              "link_type": "programme_page",
+              "link_status": "verified",
+              "trl_match": null,
+              "geography_match": null
+            },
+            {
+              "name": "Breakthrough Energy Fellows — Cohort 7 (2027)",
+              "body": "Breakthrough Energy",
+              "tier": null,
+              "score": null,
+              "thematic_fit": 4,
+              "why_watchlist": "This programme was identified during discovery but was not selected for deep research. It showed partial thematic fit — verify eligibility and application process directly.",
+              "geography": "Global (US-based programme, international applicants accepted)",
+              "applicant_type_match": null,
+              "timing": "timing_unknown",
+              "deadline": null,
+              "link": "https://apply.breakthroughenergy.org/prog/cohort_7_application/",
+              "link_type": "application_portal",
+              "link_status": "verified",
+              "trl_match": null,
+              "geography_match": null
+            },
+            {
+              "name": "EIT InnoEnergy — Startup Support and Investment Programme",
+              "body": "EIT InnoEnergy",
+              "tier": null,
+              "score": null,
+              "thematic_fit": 4,
+              "why_watchlist": "This programme was identified during discovery but was not selected for deep research. It showed partial thematic fit — verify eligibility and application process directly.",
+              "geography": "Europe",
+              "applicant_type_match": null,
+              "timing": "timing_unknown",
+              "deadline": null,
+              "link": "https://innoenergy.com/startups/apply-form/",
+              "link_type": "application_portal",
+              "link_status": "verified",
+              "trl_match": null,
+              "geography_match": null
+            },
+            {
+              "name": "SuperCluster ClimAccelerator — Industrial Decarbonisation Programme",
+              "body": "Cambridge Cleantech / Cambridge Consultants / EIT Climate-KIC",
+              "tier": null,
+              "score": null,
+              "thematic_fit": 4,
+              "why_watchlist": "This programme was identified during discovery but was not selected for deep research. It showed partial thematic fit — verify eligibility and application process directly.",
+              "geography": "Europe",
+              "applicant_type_match": null,
+              "timing": "timing_unknown",
+              "deadline": null,
+              "link": "https://www.climatetechsupercluster.com/supercluster-climaccelerator",
+              "link_type": "programme_page",
+              "link_status": "verified",
+              "trl_match": null,
+              "geography_match": null
+            },
+            {
+              "name": "Horizon Europe Cluster 5 — Energy: Industrial Heat Pump and Thermal Storage Topics (Work Programme 2026-2027)",
+              "body": "European Commission / REA / CINEA",
+              "tier": null,
+              "score": null,
+              "thematic_fit": 4,
+              "why_watchlist": "This programme was identified during discovery but was not selected for deep research. It showed partial thematic fit — verify eligibility and application process directly.",
+              "geography": "EU member states + associated countries",
+              "applicant_type_match": null,
+              "timing": "timing_unknown",
+              "deadline": null,
+              "link": "https://ec.europa.eu/info/funding-tenders/opportunities/portal/screen/programmes/horizon",
+              "link_type": "application_portal",
+              "link_status": "verified",
+              "trl_match": null,
+              "geography_match": null
+            },
+            {
+              "name": "Fraunhofer Wärmepumpenpreis 2026 (European Heat Pump Award)",
+              "body": "Europäischer Wärmepumpenverband (EHPA) / Fraunhofer IEG",
+              "tier": null,
+              "score": null,
+              "thematic_fit": 4,
+              "why_watchlist": "This programme was identified during discovery but was not selected for deep research. It showed partial thematic fit — verify eligibility and application process directly.",
+              "geography": "Europe",
+              "applicant_type_match": null,
+              "timing": "timing_unknown",
+              "deadline": null,
+              "link": "https://www.ieg.fraunhofer.de/de/presse/pressemitteilungen/2026/push2heat-hochtemperatur-waermepumpe.html",
+              "link_type": "unknown",
+              "link_status": "verified",
+              "trl_match": null,
+              "geography_match": null
+            },
+            {
+              "name": "BMBF Energieforschung — 7. Energieforschungsprogramm: Industrielle Wärme und Kälte",
+              "body": "Bundesministerium für Bildung und Forschung (BMBF) / Projektträger Jülich (PtJ)",
+              "tier": null,
+              "score": null,
+              "thematic_fit": 4,
+              "why_watchlist": "This programme was identified during discovery but was not selected for deep research. It showed partial thematic fit — verify eligibility and application process directly.",
+              "geography": "Germany",
+              "applicant_type_match": null,
+              "timing": "timing_unknown",
+              "deadline": null,
+              "link": "https://www.energieforschung.de/de/foerderung/foerderangebote",
+              "link_type": "unknown",
+              "link_status": "verified",
+              "trl_match": null,
+              "geography_match": null
+            },
+            {
+              "name": "Horizon Europe — Net Zero Technology Validation and Demonstration (Cluster 5 specific topics 2026-2027)",
+              "body": "European Commission / REA",
+              "tier": null,
+              "score": null,
+              "thematic_fit": 4,
+              "why_watchlist": "This programme was identified during discovery but was not selected for deep research. It showed partial thematic fit — verify eligibility and application process directly.",
+              "geography": "EU member states + associated countries",
+              "applicant_type_match": null,
+              "timing": "timing_unknown",
+              "deadline": null,
+              "link": "https://ec.europa.eu/info/funding-tenders/opportunities/portal/screen/programmes/horizon",
+              "link_type": "unknown",
+              "link_status": "verified",
+              "trl_match": null,
+              "geography_match": null
+            },
+            {
+              "name": "FFG Energy Research 2026 — Austrian Federal Ministry (BMIMI) via FFG",
+              "body": "Austrian Research Promotion Agency (FFG) / BMIMI",
+              "tier": null,
+              "score": null,
+              "thematic_fit": 4,
+              "why_watchlist": "The application link could not be reached on two checks, so the opportunity cannot be verified in one step. Locate the official page before investing application effort.",
+              "geography": "Austria",
+              "applicant_type_match": null,
+              "timing": "open_now",
+              "deadline": null,
+              "link": "https://www.ffg.at/en/2026-Ausschreibung-Energieforschung",
+              "link_type": "programme_page",
+              "link_status": "broken",
+              "trl_match": null,
+              "geography_match": null
+            },
+            {
+              "name": "LIFE 2026 — Climate Change Mitigation and Adaptation Sub-programme",
+              "body": "European Commission / CINEA",
+              "tier": null,
+              "score": null,
+              "thematic_fit": 3,
+              "why_watchlist": "This programme was identified during discovery but was not selected for deep research. It showed partial thematic fit — verify eligibility and application process directly.",
+              "geography": "EU member states",
+              "applicant_type_match": null,
+              "timing": "timing_unknown",
+              "deadline": null,
+              "link": "https://cinea.ec.europa.eu/life-calls-proposals-2026_en",
+              "link_type": "programme_page",
+              "link_status": "verified",
+              "trl_match": null,
+              "geography_match": null
+            },
+            {
+              "name": "Amazon Sustainability Accelerator — Climate Tech Europe",
+              "body": "Amazon / Bezos Earth Fund",
+              "tier": null,
+              "score": null,
+              "thematic_fit": 3,
+              "why_watchlist": "This programme was identified during discovery but was not selected for deep research. It showed partial thematic fit — verify eligibility and application process directly.",
+              "geography": "Europe",
+              "applicant_type_match": null,
+              "timing": "timing_unknown",
+              "deadline": null,
+              "link": "https://sustainability.aboutamazon.com/sustainability-accelerator-climate-tech",
+              "link_type": "programme_page",
+              "link_status": "verified",
+              "trl_match": null,
+              "geography_match": null
+            },
+            {
+              "name": "Innovationswettbewerb Energie.IN.NRW (EFRE/JTF NRW 2021-2027)",
+              "body": "Land Nordrhein-Westfalen / IN.NRW",
+              "tier": null,
+              "score": null,
+              "thematic_fit": 3,
+              "why_watchlist": "This programme was identified during discovery but was not selected for deep research. It showed partial thematic fit — verify eligibility and application process directly.",
+              "geography": "North Rhine-Westphalia, Germany",
+              "applicant_type_match": null,
+              "timing": "timing_unknown",
+              "deadline": null,
+              "link": "https://www.in.nrw/energie",
+              "link_type": "programme_page",
+              "link_status": "verified",
+              "trl_match": null,
+              "geography_match": null
+            },
+            {
+              "name": "Forschungszulage (R&D Tax Credit) — Germany",
+              "body": "Bescheinigungsstelle Forschungszulage (BSFZ)",
+              "tier": null,
+              "score": null,
+              "thematic_fit": 3,
+              "why_watchlist": "This programme was identified during discovery but was not selected for deep research. It showed partial thematic fit — verify eligibility and application process directly.",
+              "geography": "Germany",
+              "applicant_type_match": null,
+              "timing": "timing_unknown",
+              "deadline": null,
+              "link": "https://www.bsfz.de/",
+              "link_type": "unknown",
+              "link_status": "broken",
+              "trl_match": null,
+              "geography_match": null
+            }
+          ],
+          "case_id": "germandeeptech",
+          "ground_truth": {
+            "case_id": "germandeeptech",
+            "recall": 1.0,
+            "recall_checks": [
+              {
+                "rule": "must_appear_in_watchlist_or_main",
+                "pattern": "EIC",
+                "passed": true,
+                "matched": "BMWE Transferoffensive Großwärmepumpen und thermische Speicher für die Industrie"
+              }
+            ],
+            "misses": [],
+            "exclusion_accuracy": 1.0,
+            "exclusion_checks": [
+              {
+                "rule": "must_not_appear_in_main",
+                "pattern": "Innovate UK",
+                "passed": true,
+                "matched": null
+              },
+              {
+                "rule": "must_not_appear_anywhere",
+                "pattern": "Welsh",
+                "passed": true,
+                "matched": null
+              },
+              {
+                "rule": "must_not_appear_anywhere",
+                "pattern": "Energy Catalyst",
+                "passed": true,
+                "matched": null
+              }
+            ],
+            "violations": [],
+            "must_not_violations": 0
+          }
+        },
+        {
+          "job_id": "a480a585-087b-4ea2-9cf4-7483dce5f642",
+          "company_name": "Thermify",
+          "company_url": "https://thermify.cloud/",
+          "created_at": "2026-11-01T00:16:16.244283+00:00",
+          "cost_usd": 0.5929,
+          "assessment": {
+            "shape": {
+              "main": 6,
+              "watchlist": 20,
+              "promised_main": 10,
+              "shortfall": 4,
+              "watchlist_ratio": 3.33,
+              "has_summary": true,
+              "has_recommendations": true
+            },
+            "defensibility": {
+              "main_count": 6,
+              "defensible": 6,
+              "structural_precision": 1.0,
+              "failures": {},
+              "offenders": [],
+              "properties": {
+                "no_application_process": "Q2",
+                "not_directly_applicable": "Q1",
+                "trl_mismatch": "Q1",
+                "geography_mismatch": "Q1",
+                "no_usable_link": "Q3",
+                "broken_link": "Q3",
+                "homepage_only_link": "Q3",
+                "non_authoritative_link": "Q3",
+                "deadline_passed": "Q2"
+              }
+            },
+            "tier_spread": {
+              "counts": {
+                "Must Pursue": 1,
+                "Big Bet": 2,
+                "Prepare for Next Window": 3
+              },
+              "distinct_tiers": 3,
+              "concentration": 0.5,
+              "score_range": [
+                3.45,
+                4.45
+              ],
+              "score_spread": 1.0
+            },
+            "links": {
+              "total": 26,
+              "by_type": {
+                "programme_page": 16,
+                "application_portal": 5,
+                "unknown": 5
+              },
+              "by_status": {
+                "verified": 26
+              },
+              "no_url": 0,
+              "specific_link_rate": 0.808,
+              "broken_rate": 0.0,
+              "by_authority": {
+                "funder": 26
+              },
+              "link_authority_rate": 1.0,
+              "third_party_links": 0
+            }
+          },
+          "funnel": {
+            "scored": 6,
+            "longlist": 32,
+            "promised": 10,
+            "shortlist": 10,
+            "watchlist_cap": 20,
+            "watchlist_after_cap": 20,
+            "watchlist_before_cap": 24,
+            "after_admission_gates": 6,
+            "after_specificity_check": 6,
+            "after_eligibility_routing": 6
+          },
+          "main": [
+            {
+              "name": "Welsh Government SMART Flexible Innovation Support (SFIS) — Innovation Grant",
+              "body": "Welsh Government / Business Wales",
+              "tier": "Must Pursue",
+              "score": 4.45,
+              "thematic_fit": null,
+              "why_watchlist": null,
+              "geography": "Wales, United Kingdom",
+              "applicant_type_match": "direct",
+              "timing": "open_now",
+              "deadline": "unknown",
+              "link": "https://businesswales.gov.wales/topics-and-guidance/develop-innovative-ideas-organisations-products-or-services/access-funding-and-support/application-form-and-guidance",
+              "link_type": "programme_page",
+              "link_status": "verified",
+              "trl_match": true,
+              "geography_match": true
+            },
+            {
+              "name": "Horizon Europe — Thermal Energy Optimisation and Waste Heat Recovery of High-Performance Computing (HORIZON-CL5-2027-05-D4-06)",
+              "body": "European Commission / CINEA",
+              "tier": "Big Bet",
+              "score": 4.4,
+              "thematic_fit": null,
+              "why_watchlist": null,
+              "geography": "EU member states + associated countries (UK eligible)",
+              "applicant_type_match": "direct",
+              "timing": "known_future_window",
+              "deadline": "unknown",
+              "link": "https://cordis.europa.eu/programme/id/HORIZON_HORIZON-CL5-2027-05-D4-06",
+              "link_type": "programme_page",
+              "link_status": "verified",
+              "trl_match": true,
+              "geography_match": true
+            },
+            {
+              "name": "Innovate UK — Net Zero Heat Programme (specific competitions)",
+              "body": "Innovate UK / UKRI",
+              "tier": "Prepare for Next Window",
+              "score": 4.25,
+              "thematic_fit": null,
+              "why_watchlist": null,
+              "geography": "United Kingdom",
+              "applicant_type_match": "direct",
+              "timing": "recurring_uncertain",
+              "deadline": "unknown",
+              "link": "https://apply-for-innovation-funding.service.gov.uk/competition/1548/overview/36130e1f-58b2-4ac4-89d5-f23de0dc5526",
+              "link_type": "programme_page",
+              "link_status": "verified",
+              "trl_match": true,
+              "geography_match": true
+            },
+            {
+              "name": "UK Cleantech Innovation Challenges Programme — Carbon Management Innovation Challenge",
+              "body": "UK Government (DESNZ / DBT)",
+              "tier": "Prepare for Next Window",
+              "score": 3.45,
+              "thematic_fit": null,
+              "why_watchlist": null,
+              "geography": "United Kingdom",
+              "applicant_type_match": "direct",
+              "timing": "open_now",
+              "deadline": "unknown",
+              "link": "https://www.gov.uk/government/publications/uk-carbon-management-innovation-challenge",
+              "link_type": "programme_page",
+              "link_status": "verified",
+              "trl_match": true,
+              "geography_match": true
+            },
+            {
+              "name": "DATGLOI Climate Innovation Fund — Wales",
+              "body": "Welsh Government",
+              "tier": "Prepare for Next Window",
+              "score": 3.45,
+              "thematic_fit": null,
+              "why_watchlist": null,
+              "geography": "Wales, United Kingdom",
+              "applicant_type_match": "direct",
+              "timing": "recurring_uncertain",
+              "deadline": "2 October 2026 (extended deadline for current round — likely closed)",
+              "link": "https://www.gov.wales/climate-innovation-fund-datgloi-application-form",
+              "link_type": "programme_page",
+              "link_status": "verified",
+              "trl_match": true,
+              "geography_match": true
+            },
+            {
+              "name": "EIC Accelerator 2026 — Deep Tech for Climate Adaptation Challenge",
+              "body": "European Innovation Council (EIC)",
+              "tier": "Big Bet",
+              "score": 3.5,
+              "thematic_fit": null,
+              "why_watchlist": null,
+              "geography": "EU member states + associated countries (UK eligible)",
+              "applicant_type_match": "direct",
+              "timing": "open_now",
+              "deadline": "unknown — check EIC portal for 2026 cut-off dates",
+              "link": "https://eic.ec.europa.eu/eic-funding-opportunities/eic-accelerator/eic-accelerator-challenges-2026/deep-tech-climate-adaptation_en",
+              "link_type": "programme_page",
+              "link_status": "verified",
+              "trl_match": true,
+              "geography_match": true
+            }
+          ],
+          "watchlist": [
+            {
+              "name": "Ofgem Strategic Innovation Fund — Innovation Challenges Discovery Autumn 2026",
+              "body": "Ofgem / Innovate UK",
+              "tier": null,
+              "score": null,
+              "thematic_fit": 5,
+              "why_watchlist": "Startup cannot be lead applicant or direct funding recipient for this programme — SIF requires a licensed network operator (e.g. UK Power Networks) as lead applicant; Thermify can only participate as a named technology partner.",
+              "geography": "United Kingdom",
+              "applicant_type_match": null,
+              "timing": "open_now",
+              "deadline": null,
+              "link": "https://iuk-business-connect.org.uk/opportunities/ofgem-strategic-innovation-fund-innovation-challenges-discovery-autumn-2026/",
+              "link_type": "programme_page",
+              "link_status": "verified",
+              "trl_match": null,
+              "geography_match": null
+            },
+            {
+              "name": "UK Power Networks SHIELD Project — ongoing SIF-funded innovation partnership",
+              "body": "UK Power Networks / Ofgem SIF",
+              "tier": null,
+              "score": null,
+              "thematic_fit": 5,
+              "why_watchlist": "Thermify is already participating in SHIELD; there is no new application route — this is an existing funded partnership that should be maintained and leveraged rather than applied to.",
+              "geography": "United Kingdom",
+              "applicant_type_match": null,
+              "timing": "recurring_uncertain",
+              "deadline": null,
+              "link": "https://innovation.ukpowernetworks.co.uk/projects/shield",
+              "link_type": "programme_page",
+              "link_status": "verified",
+              "trl_match": null,
+              "geography_match": null
+            },
+            {
+              "name": "Net Zero Innovation Portfolio — Heat Buildings Innovation Programme (DESNZ)",
+              "body": "Department for Energy Security and Net Zero (DESNZ)",
+              "tier": null,
+              "score": null,
+              "thematic_fit": 5,
+              "why_watchlist": "This programme was researched and shortlisted but was not included in the scored output. It likely requires a licensed or regulated entity (e.g. network operator, NHS trust, housing association, or local authority) as lead applicant. The startup may be able to participate as a named technology partner under an eligible lead. Verify current eligibility and identify a suitable lead organisation.",
+              "geography": "United Kingdom",
+              "applicant_type_match": null,
+              "timing": "timing_unknown",
+              "deadline": null,
+              "link": "https://www.gov.uk/government/collections/net-zero-innovation-portfolio",
+              "link_type": "programme_page",
+              "link_status": "verified",
+              "trl_match": null,
+              "geography_match": null
+            },
+            {
+              "name": "Ynni Cymru Capital Grant Funding Scheme 2026 to 2027",
+              "body": "Welsh Government / Ynni Cymru",
+              "tier": null,
+              "score": null,
+              "thematic_fit": 4,
+              "why_watchlist": "Startup cannot be lead applicant or direct funding recipient — Ynni Cymru eligibility is restricted to public sector organisations, community/third sector organisations, and social enterprises; Thermify as a private SME cannot apply directly.",
+              "geography": "Wales, United Kingdom",
+              "applicant_type_match": null,
+              "timing": "open_now",
+              "deadline": null,
+              "link": "https://www.gov.wales/ynni-cymru-capital-grant-funding-scheme-2026-2027-application-guidance",
+              "link_type": "programme_page",
+              "link_status": "verified",
+              "trl_match": null,
+              "geography_match": null
+            },
+            {
+              "name": "Innovate UK Knowledge Transfer Partnership (KTP) — 2026 to 2027 Round 4",
+              "body": "Innovate UK / UKRI",
+              "tier": null,
+              "score": null,
+              "thematic_fit": 4,
+              "why_watchlist": "This programme was identified during discovery but was not selected for deep research. It showed partial thematic fit — verify eligibility and application process directly.",
+              "geography": "United Kingdom",
+              "applicant_type_match": null,
+              "timing": "timing_unknown",
+              "deadline": null,
+              "link": "https://www.ukri.org/opportunity/knowledge-transfer-partnership-2026-to-2027-round-4/",
+              "link_type": "application_portal",
+              "link_status": "verified",
+              "trl_match": null,
+              "geography_match": null
+            },
+            {
+              "name": "EIT InnoEnergy — Open Call for Sustainable Energy Solutions",
+              "body": "EIT InnoEnergy / European Institute of Innovation and Technology",
+              "tier": null,
+              "score": null,
+              "thematic_fit": 4,
+              "why_watchlist": "This programme was identified during discovery but was not selected for deep research. It showed partial thematic fit — verify eligibility and application process directly.",
+              "geography": "Europe (EU + associated countries including UK)",
+              "applicant_type_match": null,
+              "timing": "timing_unknown",
+              "deadline": null,
+              "link": "https://www.eit.europa.eu/our-activities/opportunities/eit-innoenergy-open-call-sustainable-energy-solutions",
+              "link_type": "programme_page",
+              "link_status": "verified",
+              "trl_match": null,
+              "geography_match": null
+            },
+            {
+              "name": "Warm Homes: Social Housing Fund (Wave 3 / successor scheme)",
+              "body": "Department for Energy Security and Net Zero (DESNZ)",
+              "tier": null,
+              "score": null,
+              "thematic_fit": 4,
+              "why_watchlist": "This programme was identified during discovery but not deep-researched. It likely requires a licensed or regulated entity (e.g. network operator, NHS trust, housing association, or local authority) as lead applicant. The startup may be able to participate as a named technology partner. Verify current eligibility and identify a suitable lead organisation.",
+              "geography": "England (primarily); devolved equivalents in Wales/Scotland",
+              "applicant_type_match": null,
+              "timing": "timing_unknown",
+              "deadline": null,
+              "link": "https://www.gov.uk/government/publications/warm-homes-social-housing-fund-wave-3",
+              "link_type": "programme_page",
+              "link_status": "verified",
+              "trl_match": null,
+              "geography_match": null
+            },
+            {
+              "name": "Warm Homes: Local Grant — England",
+              "body": "Department for Energy Security and Net Zero (DESNZ) / Local Authorities",
+              "tier": null,
+              "score": null,
+              "thematic_fit": 4,
+              "why_watchlist": "This programme was identified during discovery but not deep-researched. It likely requires a licensed or regulated entity (e.g. network operator, NHS trust, housing association, or local authority) as lead applicant. The startup may be able to participate as a named technology partner. Verify current eligibility and identify a suitable lead organisation.",
+              "geography": "England",
+              "applicant_type_match": null,
+              "timing": "timing_unknown",
+              "deadline": null,
+              "link": "https://www.gov.uk/apply-warm-homes-local-grant",
+              "link_type": "application_portal",
+              "link_status": "verified",
+              "trl_match": null,
+              "geography_match": null
+            },
+            {
+              "name": "Innovate UK — Clean Energy Superpower Collaborative R&D (specific competition)",
+              "body": "Innovate UK / UKRI",
+              "tier": null,
+              "score": null,
+              "thematic_fit": 4,
+              "why_watchlist": "This programme was identified during discovery but was not selected for deep research. It showed partial thematic fit — verify eligibility and application process directly.",
+              "geography": "United Kingdom",
+              "applicant_type_match": null,
+              "timing": "timing_unknown",
+              "deadline": null,
+              "link": "https://www.ukri.org/opportunity/consumer-led-flexibility-for-the-clean-energy-superpower-mission/",
+              "link_type": "programme_page",
+              "link_status": "verified",
+              "trl_match": null,
+              "geography_match": null
+            },
+            {
+              "name": "Innovate UK — Climate Tech FOAK Commercial Project Competition",
+              "body": "Innovate UK / UKRI",
+              "tier": null,
+              "score": null,
+              "thematic_fit": 4,
+              "why_watchlist": "This programme was identified during discovery but was not selected for deep research. It showed partial thematic fit — verify eligibility and application process directly.",
+              "geography": "United Kingdom",
+              "applicant_type_match": null,
+              "timing": "timing_unknown",
+              "deadline": null,
+              "link": "https://apply-for-innovation-funding.service.gov.uk/competition/2600/overview/0c422454-a8af-4c24-a74a-565426f42395",
+              "link_type": "application_portal",
+              "link_status": "verified",
+              "trl_match": null,
+              "geography_match": null
+            },
+            {
+              "name": "Energy Systems Catapult — Innovating to Net Zero Accelerator Programmes",
+              "body": "Energy Systems Catapult",
+              "tier": null,
+              "score": null,
+              "thematic_fit": 4,
+              "why_watchlist": "This programme was identified during discovery but was not selected for deep research. It showed partial thematic fit — verify eligibility and application process directly.",
+              "geography": "United Kingdom",
+              "applicant_type_match": null,
+              "timing": "timing_unknown",
+              "deadline": null,
+              "link": "https://es.catapult.org.uk/project/innovating-to-net-zero-2026/",
+              "link_type": "programme_page",
+              "link_status": "verified",
+              "trl_match": null,
+              "geography_match": null
+            },
+            {
+              "name": "Digital Catapult — GridFlex Programme (Innovate UK funded)",
+              "body": "Digital Catapult / Energy Systems Catapult / Innovate UK",
+              "tier": null,
+              "score": null,
+              "thematic_fit": 4,
+              "why_watchlist": "This programme was identified during discovery but was not selected for deep research. It showed partial thematic fit — verify eligibility and application process directly.",
+              "geography": "United Kingdom",
+              "applicant_type_match": null,
+              "timing": "timing_unknown",
+              "deadline": null,
+              "link": "https://www.digicatapult.org.uk/programmes/programme/gridflex/",
+              "link_type": "programme_page",
+              "link_status": "verified",
+              "trl_match": null,
+              "geography_match": null
+            },
+            {
+              "name": "Innovate UK — Sustainable Innovation Fund / Green Futures (specific competition)",
+              "body": "Innovate UK / UKRI",
+              "tier": null,
+              "score": null,
+              "thematic_fit": 4,
+              "why_watchlist": "This programme was identified during discovery but was not selected for deep research. It showed partial thematic fit — verify eligibility and application process directly.",
+              "geography": "United Kingdom",
+              "applicant_type_match": null,
+              "timing": "timing_unknown",
+              "deadline": null,
+              "link": "https://apply-for-innovation-funding.service.gov.uk/competition/search",
+              "link_type": "unknown",
+              "link_status": "verified",
+              "trl_match": null,
+              "geography_match": null
+            },
+            {
+              "name": "Welsh Government — Circular Economy Innovation Fund (next round)",
+              "body": "Welsh Government",
+              "tier": null,
+              "score": null,
+              "thematic_fit": 4,
+              "why_watchlist": "This programme was identified during discovery but was not selected for deep research. It showed partial thematic fit — verify eligibility and application process directly.",
+              "geography": "Wales, United Kingdom",
+              "applicant_type_match": null,
+              "timing": "timing_unknown",
+              "deadline": null,
+              "link": "https://www.gov.wales/new-30-million-funds-launched-boost-innovation-wales",
+              "link_type": "unknown",
+              "link_status": "verified",
+              "trl_match": null,
+              "geography_match": null
+            },
+            {
+              "name": "Social Housing Decarbonisation Fund (SHDF) Wave 3 — technology partner route",
+              "body": "Department for Energy Security and Net Zero (DESNZ)",
+              "tier": null,
+              "score": null,
+              "thematic_fit": 4,
+              "why_watchlist": "This programme was identified during discovery but not deep-researched. It likely requires a licensed or regulated entity (e.g. network operator, NHS trust, housing association, or local authority) as lead applicant. The startup may be able to participate as a named technology partner. Verify current eligibility and identify a suitable lead organisation.",
+              "geography": "England",
+              "applicant_type_match": null,
+              "timing": "timing_unknown",
+              "deadline": null,
+              "link": "https://www.gov.uk/government/statistics/social-housing-decarbonisation-fund-statistics-june-2026/summary-of-the-social-housing-decarbonisation-fund-statistics-june-2026",
+              "link_type": "unknown",
+              "link_status": "verified",
+              "trl_match": null,
+              "geography_match": null
+            },
+            {
+              "name": "Community Matters Fund — Energy Affordability 2026",
+              "body": "Localgiving / energy sector funders",
+              "tier": null,
+              "score": null,
+              "thematic_fit": 3,
+              "why_watchlist": "This programme was identified during discovery but was not selected for deep research. It showed partial thematic fit — verify eligibility and application process directly.",
+              "geography": "Midlands, Southwest England and South Wales",
+              "applicant_type_match": null,
+              "timing": "timing_unknown",
+              "deadline": null,
+              "link": "https://localgiving.org/community-matters-fund-apply",
+              "link_type": "application_portal",
+              "link_status": "verified",
+              "trl_match": null,
+              "geography_match": null
+            },
+            {
+              "name": "Bethnal Green Ventures — Tech for Good Programme (Autumn 2026)",
+              "body": "Bethnal Green Ventures",
+              "tier": null,
+              "score": null,
+              "thematic_fit": 3,
+              "why_watchlist": "This programme was identified during discovery but was not selected for deep research. It showed partial thematic fit — verify eligibility and application process directly.",
+              "geography": "United Kingdom",
+              "applicant_type_match": null,
+              "timing": "timing_unknown",
+              "deadline": null,
+              "link": "https://www.bethnalgreenventures.com/apply",
+              "link_type": "application_portal",
+              "link_status": "verified",
+              "trl_match": null,
+              "geography_match": null
+            },
+            {
+              "name": "Amazon Sustainability Accelerator — Circular Economy / Clean Tech Cohort",
+              "body": "Amazon / Ecolab / WRAP",
+              "tier": null,
+              "score": null,
+              "thematic_fit": 3,
+              "why_watchlist": "This programme was identified during discovery but was not selected for deep research. It showed partial thematic fit — verify eligibility and application process directly.",
+              "geography": "Europe (UK eligible)",
+              "applicant_type_match": null,
+              "timing": "timing_unknown",
+              "deadline": null,
+              "link": "https://sell.amazon.co.uk/programmes/sustainability-accelerator",
+              "link_type": "programme_page",
+              "link_status": "verified",
+              "trl_match": null,
+              "geography_match": null
+            },
+            {
+              "name": "Amazon Devices Climate Tech Accelerator 2026",
+              "body": "Amazon",
+              "tier": null,
+              "score": null,
+              "thematic_fit": 3,
+              "why_watchlist": "This programme was identified during discovery but was not selected for deep research. It showed partial thematic fit — verify eligibility and application process directly.",
+              "geography": "Global (UK eligible)",
+              "applicant_type_match": null,
+              "timing": "timing_unknown",
+              "deadline": null,
+              "link": "https://sustainability.aboutamazon.com/products-services/amazon-devices-climate-tech-accelerator",
+              "link_type": "unknown",
+              "link_status": "verified",
+              "trl_match": null,
+              "geography_match": null
+            },
+            {
+              "name": "Challenge Works (Nesta) — Manchester Prize (AI for Net Zero Energy System)",
+              "body": "Challenge Works / Nesta",
+              "tier": null,
+              "score": null,
+              "thematic_fit": 3,
+              "why_watchlist": "This programme was identified during discovery but was not selected for deep research. It showed partial thematic fit — verify eligibility and application process directly.",
+              "geography": "United Kingdom",
+              "applicant_type_match": null,
+              "timing": "timing_unknown",
+              "deadline": null,
+              "link": "https://challengeworks.org/about-challenge-prizes/explore-prizes/",
+              "link_type": "unknown",
+              "link_status": "verified",
+              "trl_match": null,
+              "geography_match": null
+            }
+          ],
+          "case_id": "thermify",
+          "ground_truth": {
+            "case_id": "thermify",
+            "recall": 1.0,
+            "recall_checks": [
+              {
+                "rule": "must_appear_in_main",
+                "pattern": "Innovate UK",
+                "passed": true,
+                "matched": "Innovate UK — Net Zero Heat Programme (specific competitions)"
+              },
+              {
+                "rule": "must_appear_in_main",
+                "pattern": "SMART",
+                "passed": true,
+                "matched": "Welsh Government SMART Flexible Innovation Support (SFIS) — Innovation Grant"
+              },
+              {
+                "rule": "must_appear_in_watchlist_or_main",
+                "pattern": "Ofgem",
+                "passed": true,
+                "matched": "Ofgem Strategic Innovation Fund — Innovation Challenges Discovery Autumn 2026"
+              },
+              {
+                "rule": "must_appear_in_watchlist_or_main",
+                "pattern": "EIC Accelerator",
+                "passed": true,
+                "matched": "EIC Accelerator 2026 — Deep Tech for Climate Adaptation Challenge"
+              },
+              {
+                "rule": "must_appear_in_watchlist_or_main",
+                "pattern": "KTP",
+                "passed": true,
+                "matched": "Innovate UK Knowledge Transfer Partnership (KTP) — 2026 to 2027 Round 4"
+              }
+            ],
+            "misses": [],
+            "exclusion_accuracy": 1.0,
+            "exclusion_checks": [
+              {
+                "rule": "must_not_appear_anywhere",
+                "pattern": "Energy Catalyst",
+                "passed": true,
+                "matched": null
+              },
+              {
+                "rule": "must_not_appear_anywhere",
+                "pattern": "EIC Pathfinder",
+                "passed": true,
+                "matched": null
+              }
+            ],
+            "violations": [],
+            "must_not_violations": 0
+          }
+        }
+      ]
+    },
+    "blind_spots": []
+  }
+}
